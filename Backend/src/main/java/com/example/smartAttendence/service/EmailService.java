@@ -12,6 +12,8 @@ import org.springframework.core.io.FileSystemResource;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import java.io.File;
 import java.time.LocalDate;
 
@@ -22,6 +24,26 @@ public class EmailService {
     
     @Autowired
     private JavaMailSender mailSender;
+
+    @Value("${twilio.account.sid:}")
+    private String twilioAccountSid;
+
+    @Value("${twilio.auth.token:}")
+    private String twilioAuthToken;
+
+    @Value("${twilio.phone.number:}")
+    private String twilioPhoneNumber;
+
+    @Value("${twilio.enabled:false}")
+    private boolean twilioEnabled;
+
+    @PostConstruct
+    public void initTwilio() {
+        if (twilioEnabled && twilioAccountSid != null && !twilioAccountSid.isEmpty()) {
+            com.twilio.Twilio.init(twilioAccountSid, twilioAuthToken);
+            logger.info("🚀 Twilio initialized for real SMS notifications");
+        }
+    }
     
     public void sendWelcomeEmail(String toEmail, String studentName, String registrationNumber, String temporaryPassword) {
         try {
@@ -159,11 +181,20 @@ public class EmailService {
     }
 
     public void sendOTPSMS(String mobile, String otp) {
-        logger.info("📱 OTP SMS SERVICE 📱");
-        logger.info("To: {}", mobile);
-        logger.info("Message: Your Smart Attendance OTP is: {}", otp);
-        logger.info("Valid for 10 minutes. Do not share this code.");
-        logger.info("--- OTP SMS SENT ---");
+        if (twilioEnabled) {
+            try {
+                com.twilio.rest.api.v2010.account.Message.creator(
+                    new com.twilio.type.PhoneNumber(mobile),
+                    new com.twilio.type.PhoneNumber(twilioPhoneNumber),
+                    "Your Smart Attendance OTP is: " + otp + ". Valid for 10 minutes."
+                ).create();
+                logger.info("✅ Real OTP SMS sent via Twilio to: {}", mobile);
+            } catch (Exception e) {
+                logger.error("❌ Failed to send Twilio SMS to: {}. Error: {}", mobile, e.getMessage());
+            }
+        } else {
+            logger.info("📱 [SIMULATED] OTP SMS to {}: {}", mobile, otp);
+        }
     }
 
     public void sendPasswordChangeConfirmation(String email, String studentName) {
