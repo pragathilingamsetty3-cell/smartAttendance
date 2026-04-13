@@ -1,0 +1,23 @@
+package com.example.smartAttendence;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+
+@EnableMethodSecurity
+@SpringBootApplication
+@EnableScheduling
+@EnableAsync
+@EnableCaching
+@EnableRedisRepositories(basePackages = "com.example.smartAttendence.redis.repository") // Only scan Redis repositories
+public class SmartAttendenceApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(SmartAttendenceApplication.class, args);
+    }
+}
+
+

@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #9b51e0;
+  --color-primary-hover: #b472f2;
+  --color-secondary: #2d9cdb;
+  --color-accent: #ff007f;
+  --color-obsidian-900: #0f0920;
+  --color-obsidian-800: #1a103c;
+  --color-obsidian-700: #251758;
+
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-obsidian-900 text-slate-200 antialiased font-sans min-h-screen selection:bg-primary/30;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl shadow-black/50;
+  }
+  
+  .glass-button {
+    @apply relative overflow-hidden bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-xl transition-all duration-300;
+  }
+  
+  .glass-card {
+    @apply bg-gradient-to-br from-obsidian-800/80 to-obsidian-900/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl;
+  }
+
+  .neon-border {
+    @apply border border-transparent blur-none relative before:absolute before:-inset-[1px] before:[border-radius:inherit] before:bg-gradient-to-r before:from-primary before:via-secondary before:to-primary before:-z-10 before:content-[''] before:opacity-50 hover:before:opacity-100 before:transition-opacity before:duration-500;
+  }
+
+  .animate-skeleton {
+    @apply relative overflow-hidden bg-obsidian-800/50 before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/5 before:to-transparent;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Custom glowing scrollbar for terminal */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(26, 16, 60, 0.4);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+  box-shadow: 0 0 10px var(--color-primary);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
+  box-shadow: 0 0 15px var(--color-secondary);
+}

@@ -1,0 +1,67 @@
+# --- Common ---
+.env
+.env.*
+!.env.example
+*.log
+*.tmp
+*.bak
+*.json
+!package.json
+!tsconfig.json
+!composer.json
+!pom.xml
+.DS_Store
+Thumbs.db
+
+# --- Java / Maven ---
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+.mvn/
+.metadata/
+.project
+.settings/
+.classpath
+build/
+bin/
+
+# --- Node / Frontend ---
+node_modules/
+dist/
+dist-ssr/
+build/
+.next/
+out/
+.vercel
+.eslintcache
+.stylelintcache
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# --- IDEs ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# --- Application Specific ---
+Backend/diag.log*
+Backend/keys.txt
+Backend/login_test.log
+Backend/target/
+Backend/src/main/resources/**/*.json
+Backend/src/main/resources/**/*.p12
+Backend/src/main/resources/**/*.jks
+frontend/web-dashboard/dist/
+frontend/web-dashboard/node_modules/
+frontend/mobile-sensor/node_modules/

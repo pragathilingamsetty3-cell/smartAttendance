@@ -1,0 +1,1 @@
+ALTER TABLE rooms ADD COLUMN sensor_url VARCHAR(255);
