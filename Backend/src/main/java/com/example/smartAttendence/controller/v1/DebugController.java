@@ -2,6 +2,7 @@ package com.example.smartAttendence.controller.v1;
 
 import com.example.smartAttendence.domain.User;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
+import com.example.smartAttendence.enums.Role;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,52 +27,20 @@ public class DebugController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @GetMapping("/test-passwords")
-    public ResponseEntity<Map<String, Object>> testPasswords() {
+    @GetMapping("/check-admin")
+    public ResponseEntity<Map<String, Object>> checkAdmin() {
         Map<String, Object> response = new HashMap<>();
-        
-        // Test faculty user
-        String facultyEmail = "v1.test.professor@smart.local";
-        String facultyTestPassword = "SecureTempPass123@";
-        
-        var facultyOpt = userV1Repository.findByEmail(facultyEmail);
-        if (facultyOpt.isPresent()) {
-            User faculty = facultyOpt.get();
-            String storedPassword = faculty.getPassword();
-            
-            Map<String, Object> facultyInfo = new HashMap<>();
-            facultyInfo.put("email", facultyEmail);
-            facultyInfo.put("role", faculty.getRole());
-            facultyInfo.put("passwordFormat", storedPassword.startsWith("$2") ? "BCrypt" : "Plain text");
-            facultyInfo.put("storedPassword", storedPassword);
-            facultyInfo.put("testPassword", facultyTestPassword);
-            facultyInfo.put("passwordMatches", passwordEncoder.matches(facultyTestPassword, storedPassword));
-            
-            response.put("faculty", facultyInfo);
-        } else {
-            response.put("faculty", "NOT FOUND");
-        }
-        
-        // Test admin user
         String adminEmail = "super.admin@smartattendence.com";
-        String adminTestPassword = "Mani_Smart_Attendance_2026";
         
-        var adminOpt = userV1Repository.findByEmail(adminEmail);
+        var adminOpt = userV1Repository.findByEmailIgnoreCase(adminEmail);
         if (adminOpt.isPresent()) {
             User admin = adminOpt.get();
-            String storedPassword = admin.getPassword();
-            
-            Map<String, Object> adminInfo = new HashMap<>();
-            adminInfo.put("email", adminEmail);
-            adminInfo.put("role", admin.getRole());
-            adminInfo.put("passwordFormat", storedPassword.startsWith("$2") ? "BCrypt" : "Plain text");
-            adminInfo.put("storedPassword", storedPassword);
-            adminInfo.put("testPassword", adminTestPassword);
-            adminInfo.put("passwordMatches", passwordEncoder.matches(adminTestPassword, storedPassword));
-            
-            response.put("admin", adminInfo);
+            response.put("status", "FOUND");
+            response.put("email", admin.getEmail());
+            response.put("role", admin.getRole());
+            response.put("isCorrectRole", Role.SUPER_ADMIN.equals(admin.getRole()));
         } else {
-            response.put("admin", "NOT FOUND");
+            response.put("status", "NOT FOUND");
         }
         
         return ResponseEntity.ok(response);

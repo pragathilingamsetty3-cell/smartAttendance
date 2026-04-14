@@ -117,7 +117,7 @@ public class FacultyV1Service {
      */
     public void rejectHallPass(UUID studentId, String reason) {
         // Send rejection notification
-        pushNotificationService.sendHallPassNotification(
+        notificationService.sendHallPassNotification(
             studentId, 
             false, // rejected
             0 // no duration

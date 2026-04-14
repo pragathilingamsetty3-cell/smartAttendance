@@ -34,11 +34,6 @@ public class EmailService {
                            "You requested to reset your password for the Smart Attendance System.\n\n" +
                            "🔢 Your One-Time Password (OTP): " + otp + "\n\n" +
                            "⏰ Validity: This OTP will expire in 15 minutes\n\n" +
-                           "📱 How to use:\n" +
-                           "1. Open the Smart Attendance app\n" +
-                           "2. Go to 'Forgot Password'\n" +
-                           "3. Enter this OTP when prompted\n" +
-                           "4. Set your new password\n\n" +
                            "🔒 Security Notice:\n" +
                            "• Never share this OTP with anyone\n" +
                            "• Our support team will never ask for your OTP\n" +
@@ -54,7 +49,53 @@ public class EmailService {
             throw new RuntimeException("Failed to send password reset OTP", e);
         }
     }
+
+    /**
+     * Compatibility alias for legacy PasswordResetService
+     */
+    public void sendPasswordResetOTP(String email, String name, String otp) {
+        sendPasswordResetOtp(email, otp);
+    }
     
+    /**
+     * Send simple text email
+     */
+    public void sendSimpleEmail(String to, String subject, String body) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(body);
+            mailSender.send(message);
+            logger.info("Email sent to: {}", to);
+        } catch (Exception e) {
+            logger.error("Failed to send email to: {}", to, e);
+        }
+    }
+
+    /**
+     * Send password change confirmation
+     */
+    public void sendPasswordChangeConfirmation(String toEmail, String name) {
+        String subject = "Security Alert: Password Changed";
+        String body = String.format(
+            "Dear %s,%n%n" +
+            "The password for your Smart Attendance System account was successfully changed.%n%n" +
+            "If you did not make this change, please contact the administrator immediately.%n%n" +
+            "Best regards,%n" +
+            "Smart Attendance Security Team",
+            name
+        );
+        sendSimpleEmail(toEmail, subject, body);
+    }
+
+    /**
+     * NO-OP Compatibility for SMS OTP
+     */
+    public void sendOTPSMS(String phoneNumber, String otp) {
+        logger.info("[SMS_SIMULATION] OTP would be sent to {}: {}", phoneNumber, otp);
+    }
+
     public void sendWeeklyReport(String toEmail, String facultyName, File reportFile) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
