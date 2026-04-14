@@ -25,25 +25,6 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    @Value("${twilio.account.sid:}")
-    private String twilioAccountSid;
-
-    @Value("${twilio.auth.token:}")
-    private String twilioAuthToken;
-
-    @Value("${twilio.phone.number:}")
-    private String twilioPhoneNumber;
-
-    @Value("${twilio.enabled:false}")
-    private boolean twilioEnabled;
-
-    @PostConstruct
-    public void initTwilio() {
-        if (twilioEnabled && twilioAccountSid != null && !twilioAccountSid.isEmpty()) {
-            com.twilio.Twilio.init(twilioAccountSid, twilioAuthToken);
-            logger.info("🚀 Twilio initialized for real SMS notifications");
-        }
-    }
     
     public void sendWelcomeEmail(String toEmail, String studentName, String registrationNumber, String temporaryPassword) {
         try {
@@ -181,20 +162,8 @@ public class EmailService {
     }
 
     public void sendOTPSMS(String mobile, String otp) {
-        if (twilioEnabled) {
-            try {
-                com.twilio.rest.api.v2010.account.Message.creator(
-                    new com.twilio.type.PhoneNumber(mobile),
-                    new com.twilio.type.PhoneNumber(twilioPhoneNumber),
-                    "Your Smart Attendance OTP is: " + otp + ". Valid for 10 minutes."
-                ).create();
-                logger.info("✅ Real OTP SMS sent via Twilio to: {}", mobile);
-            } catch (Exception e) {
-                logger.error("❌ Failed to send Twilio SMS to: {}. Error: {}", mobile, e.getMessage());
-            }
-        } else {
-            logger.info("📱 [SIMULATED] OTP SMS to {}: {}", mobile, otp);
-        }
+        // SMS integration removed as requested. OTP is now primarily sent via Email.
+        logger.info("📱 [SMS SKIPPED] Email took priority for OTP to {}: {}", mobile, otp);
     }
 
     public void sendPasswordChangeConfirmation(String email, String studentName) {

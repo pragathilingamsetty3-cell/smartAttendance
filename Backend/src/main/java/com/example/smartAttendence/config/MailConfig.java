@@ -80,7 +80,7 @@ public class MailConfig {
         }
 
         // 🔧 TEST MAIL CONNECTIVITY
-        // testMailConnectivity(); // Disabled to prevent blocking startup on bad credentials
+        testMailConnectivity(); // Enabled to verify Gmail password
     }
 
     /**

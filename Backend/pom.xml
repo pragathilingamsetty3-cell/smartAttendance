@@ -251,12 +251,6 @@
             <version>9.2.0</version>
         </dependency>
 
-        <!-- Twilio SDK for real SMS notifications -->
-        <dependency>
-            <groupId>com.twilio.sdk</groupId>
-            <artifactId>twilio</artifactId>
-            <version>10.1.0</version>
-        </dependency>
         
         <!-- ==========  TESTING DEPENDENCIES ========== -->
         

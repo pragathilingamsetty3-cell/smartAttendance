@@ -49,11 +49,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
-        
-        // 🔍 DIAGNOSTIC: Print authorization header for debugging
-        logger.debug("AUTHORIZATION HEADER: {}", authHeader);
-        
         // 🔐 COMPREHENSIVE TOKEN VALIDATION
         try {
             // 1. Validate Authorization Header

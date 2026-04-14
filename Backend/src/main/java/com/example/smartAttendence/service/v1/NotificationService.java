@@ -3,12 +3,14 @@ package com.example.smartAttendence.service.v1;
 import com.example.smartAttendence.event.WalkOutEvent;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
 import com.example.smartAttendence.service.EmailService;
+import com.example.smartAttendence.service.FirebaseService;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -17,10 +19,12 @@ public class NotificationService {
     
     private final UserV1Repository userV1Repository;
     private final EmailService emailService;
+    private final FirebaseService firebaseService;
 
-    public NotificationService(UserV1Repository userV1Repository, EmailService emailService) {
+    public NotificationService(UserV1Repository userV1Repository, EmailService emailService, FirebaseService firebaseService) {
         this.userV1Repository = userV1Repository;
         this.emailService = emailService;
+        this.firebaseService = firebaseService;
     }
 
     @Async
@@ -54,11 +58,27 @@ public class NotificationService {
         UUID studentId = event.studentId();
 
         userV1Repository.findById(studentId).ifPresent(user -> {
-            log.info("🚨 [SMS GATEWAY TRIGGERED] 🚨");
-            log.info("To: Parent of {}", user.getName());
-            log.info(
-                    "Message: URGENT - Student {} has left the classroom without authorization. Attendance revoked.",
-                    user.getName()
+            log.info("🚨 [AI SECURITY] Unauthorized Walkout: {}", user.getName());
+            
+            // Route to Firebase for real-time alert
+            if (firebaseService.isEnabled()) {
+                Map<String, String> data = new HashMap<>();
+                data.put("studentId", studentId.toString());
+                data.put("event", "WALKOUT");
+                
+                firebaseService.sendCustomNotification(
+                    "🚨 Security Alert: Unauthorized Exit",
+                    String.format("User %s has left the secure area without authorization.", user.getName()),
+                    data,
+                    "emergency"
+                );
+            }
+
+            // Route to Email for formal record
+            emailService.sendSimpleEmail(
+                user.getEmail(),
+                "URGENT: Unauthorized Area Exit Detected",
+                String.format("Dear %s,\n\nOur AI system detected you leaving the designated area without authorization. This event has been logged and reported to the system administrators.\n\nPlease return immediately or contact your supervisor.", user.getName())
             );
         });
     }
@@ -69,32 +89,32 @@ public class NotificationService {
     public void sendAttendanceAlert(com.example.smartAttendence.domain.User student, com.example.smartAttendence.entity.Timetable session, String alertType) {
         String studentName = student.getName();
         String subject = session.getSubject();
-        String parentMobile = student.getParentMobile();
-        String studentMobile = student.getStudentMobile();
 
         log.info("🤖 AI MONITOR [{}]: Initiating stakeholder notifications for {} ({})", 
                 alertType, studentName, student.getRegistrationNumber());
 
         boolean isWalkout = "UNAUTHORIZED_WALKOUT".equalsIgnoreCase(alertType);
-        String parentMessage = isWalkout 
-            ? String.format("URGENT: Your ward %s has been marked ABSENT because they left the %s session without authorization and did not return.", studentName, subject)
-            : String.format("Alert! Your ward %s is marked ABSENT for the %s session starting at %s.", studentName, subject, session.getStartTime());
+        String alertTitle = isWalkout ? "🚨 Security Alert: Class Walkout" : "🔔 Attendance Alert";
+        String message = isWalkout 
+            ? String.format("Attendance revoked for %s. Unauthorized exit from %s.", studentName, subject)
+            : String.format("You have been marked ABSENT for %s starting at %s.", subject, session.getStartTime());
 
-        if (parentMobile != null && !parentMobile.isEmpty()) {
-            log.info("📩 SMS SENT TO PARENT [{}]: {}", parentMobile, parentMessage);
+        // Route to Firebase (Primary for daily alerts)
+        if (firebaseService.isEnabled()) {
+            Map<String, String> data = new HashMap<>();
+            data.put("type", alertType);
+            data.put("subject", subject);
+            
+            firebaseService.sendCustomNotification(alertTitle, message, data, "attendance");
+            log.info("✅ Firebase alert sent to topic: attendance");
         }
 
-        if (studentMobile != null && !studentMobile.isEmpty()) {
-            String studentMessage = isWalkout
-                ? String.format("AI SECURITY ALERT: You have been marked ABSENT for leaving class %s unauthorized. This incident has been reported to parents.", subject)
-                : String.format("Attendance Alert: You have been marked ABSENT for %s. Please check in immediately if this is an error.", subject);
-            log.info("📩 SMS SENT TO STUDENT [{}]: {}", studentMobile, studentMessage);
-        }
-
-        if (student.getParentEmail() != null) {
-            String emailSubject = isWalkout ? "SECURITY ALERT: Unauthorized Class Departure" : "Official Attendance Notification - " + subject;
-            log.info("📧 EMAIL SENT TO PARENT [{}]: {} - STATUS: ABSENT", 
-                    student.getParentEmail(), emailSubject);
+        // Route to Email ONLY if it's a security walkout (user requested email for reports/onboarding, 
+        // but it's good practice for security alerts too). 
+        // For general "ABSENT" alerts, we stick to Firebase as requested.
+        if (isWalkout && student.getEmail() != null) {
+            emailService.sendSimpleEmail(student.getEmail(), alertTitle, message);
+            log.info("📧 Email security alert sent to: {}", student.getEmail());
         }
     }
 
@@ -118,15 +138,51 @@ public class NotificationService {
         log.info("🤖 AI PROMPT: Prompting student {} for biometric check-in (Session: {})", 
                 studentName, subject);
 
-        // SMS Notification
-        if (student.getStudentMobile() != null) {
-            log.info("📩 SMS PROMPT SENT [{}]: 🤖 AI ALERT: Your class for {} has started in Room {}. Please mark your presence via biometrics NOW.", 
-                    student.getStudentMobile(), subject, roomName);
-        }
+        // Route to Firebase (Engaging push notification)
+        if (firebaseService.isEnabled()) {
+            Map<String, String> data = new HashMap<>();
+            data.put("subject", subject);
+            data.put("room", roomName);
+            data.put("action", "CHECK_IN");
 
-        // Push Notification Simulation
-        log.info("🔔 PUSH NOTIFICATION SENT to {}: Subject: Class Started | Body: [AI] {} is live in {}. Tap to check-in.", 
-                student.getEmail(), subject, roomName);
+            firebaseService.sendCustomNotification(
+                "🚀 Class Started: " + subject,
+                String.format("Your class is live in %s. Tap to mark attendance via biometrics now!", roomName),
+                data,
+                "attendance"
+            );
+            log.info("✅ Firebase check-in prompt sent.");
+        }
+    }
+
+    /**
+     * Send Password Reset OTP
+     * Routed to EMAIL as requested
+     */
+    public void sendPasswordResetOtp(String email, String name, String otp) {
+        log.info("🔐 Sending password reset OTP to: {}", email);
+        emailService.sendPasswordResetOtp(email, otp);
+        
+        // Also send a Firebase notification as a security redundancy
+        if (firebaseService.isEnabled()) {
+            firebaseService.sendCustomNotification(
+                "🔐 Security Alert: Password Reset",
+                "A password reset was requested. If this wasn't you, secure your account now.",
+                null,
+                "security"
+            );
+        }
+    }
+
+    /**
+     * Send Monthly/Weekly Reports
+     * Routed to EMAIL with attachments
+     */
+    public void sendAttendanceReport(String email, String facultyName, byte[] reportData, boolean isMonthly) {
+        log.info("📊 Sending {} attendance report to: {}", isMonthly ? "monthly" : "weekly", email);
+        emailService.sendWeeklyReport(email, facultyName, reportData, 
+                java.time.LocalDate.now().minusDays(isMonthly ? 30 : 7), 
+                java.time.LocalDate.now());
     }
 }
 

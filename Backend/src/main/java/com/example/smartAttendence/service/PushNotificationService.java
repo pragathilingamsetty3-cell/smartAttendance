@@ -1,12 +1,22 @@
 package com.example.smartAttendence.service;
 
 import com.google.firebase.messaging.*;
+import com.example.smartAttendence.repository.v1.UserV1Repository;
+import com.example.smartAttendence.domain.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -21,9 +31,13 @@ public class PushNotificationService {
 
     private static final Logger logger = LoggerFactory.getLogger(PushNotificationService.class);
     private final FirebaseMessaging firebaseMessaging;
+    private final UserV1Repository userRepository;
 
-    public PushNotificationService(@Autowired(required = false) FirebaseMessaging firebaseMessaging) {
+    public PushNotificationService(
+            @Autowired(required = false) FirebaseMessaging firebaseMessaging,
+            UserV1Repository userRepository) {
         this.firebaseMessaging = firebaseMessaging;
+        this.userRepository = userRepository;
     }
 
     public void sendSessionStartNotification(String deviceToken, String sessionTitle, String roomName) {
@@ -345,24 +359,28 @@ public class PushNotificationService {
      */
     private void sendBulkNotificationToSessionStudents(com.example.smartAttendence.domain.ClassroomSession session,
                                                        String title, String body, Map<String, String> data) {
-        // TODO: Implement logic to get all enrolled students' device tokens
-        // This would typically involve:
-        // 1. Querying the section/students for the session
-        // 2. Getting their FCM tokens from user_tokens table
-        // 3. Sending bulk notification
+        if (session.getSection() == null) return;
+
+        List<User> students = userRepository.findBySectionIdAndRole(session.getSection().getId(), com.example.smartAttendence.enums.Role.STUDENT);
         
-        List<String> studentTokens = List.of(); // Placeholder
-        sendBulkNotification(studentTokens, title, body, data);
+        List<String> studentTokens = students.stream()
+            .map(User::getDeviceId)
+            .filter(token -> token != null && !token.isEmpty())
+            .collect(Collectors.toList());
+
+        if (!studentTokens.isEmpty()) {
+            sendBulkNotification(studentTokens, title, body, data);
+            logger.info("✅ Bulk notification sent to {} students in section {}", studentTokens.size(), session.getSection().getId());
+        }
     }
 
     /**
      * Retrieve FCM token for a user from database
-     * TODO: Implement token retrieval based on your user entity structure
+     * In this project, getDeviceId() stores the FCM Registration Token
      */
     private String getFcmTokenForUser(UUID userId) {
-        // TODO: Implement token retrieval from database
-        // This would typically involve querying a user_tokens table or similar
-        // For now, return null to indicate no token available
-        return null;
+        return userRepository.findById(userId)
+            .map(User::getDeviceId)
+            .orElse(null);
     }
 }
