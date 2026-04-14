@@ -45,6 +45,7 @@ public class DeviceVerificationFilter extends OncePerRequestFilter {
                 response.getWriter().write("{\"error\":\"Device verification failed\"}");
                 return;
             }
+        }
         } catch (Throwable t) {
             logger.error("🚨 [SENTINEL] DeviceFilter CRASHED but failing-open: {}", t.getMessage(), t);
         }

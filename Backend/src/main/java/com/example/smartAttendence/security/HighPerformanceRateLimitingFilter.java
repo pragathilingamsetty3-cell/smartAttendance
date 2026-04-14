@@ -103,6 +103,7 @@ public class HighPerformanceRateLimitingFilter extends OncePerRequestFilter {
             response.setStatus(429);
             response.getWriter().write("{\"error\":\"Rate limit exceeded\",\"retryAfter\":60}");
             return;
+        }
         } catch (Throwable t) {
             logger.error("🚨 [SENTINEL] RateLimitFilter CRASHED but failing-open: {}", t.getMessage(), t);
         }

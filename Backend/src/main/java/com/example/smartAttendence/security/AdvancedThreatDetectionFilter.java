@@ -79,6 +79,7 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
                     String.format("High threat detected: endpoint=%s, ua=%s", endpoint, userAgent));
             }
             return;
+        }
         } catch (Throwable t) {
             logger.error("🚨 [SENTINEL] ThreatDetectionFilter CRASHED but failing-open: {}", t.getMessage(), t);
         }
