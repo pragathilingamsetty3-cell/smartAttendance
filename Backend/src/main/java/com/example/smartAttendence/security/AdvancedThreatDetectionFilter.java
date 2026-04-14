@@ -103,14 +103,14 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
         
         // LAYER 2: USER AGENT ANALYSIS
         if (isSuspiciousUserAgent(userAgent)) {
-            logger.warn("Suspicious user agent detected from IP: {}", clientIP);
-            return ThreatLevel.HIGH;
+            logger.info("Suspicious or empty User-Agent detected for IP: {} (Permitted in Production)", clientIP);
+            return ThreatLevel.LOW; // Advice-only in production launch
         }
         
         // LAYER 3: GEOLOCATION ANALYSIS
         if (isSuspiciousGeoLocation(clientIP)) {
-            logger.warn("Suspicious geolocation detected for IP: {}", clientIP);
-            return ThreatLevel.HIGH;
+            logger.info("External geolocation detected for IP: {} (Permitted in Production)", clientIP);
+            return ThreatLevel.LOW; // Advice-only in production launch
         }
         
         // LAYER 4: BEHAVIORAL ANALYSIS
