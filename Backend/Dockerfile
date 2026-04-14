@@ -18,8 +18,8 @@ WORKDIR /app
 # Copy the build artifact from build stage
 COPY --from=build /app/target/smartAttendence-0.0.1-SNAPSHOT.jar app.jar
 
-# 🛡️ EXPOSE the standard port (Render will proxy this to 443)
-EXPOSE 8443
+# 🛡️ Dynamic port exposure (Render will provide the PORT env var)
+# No hardcoded EXPOSE needed, or use a comment
 
 # 🧠 MEMORY OPTIMIZATION FOR 512MB RAM
 # -XX:MaxRAMPercentage: Ensures JVM doesn't exceed 75% of container RAM (around 380MB)
