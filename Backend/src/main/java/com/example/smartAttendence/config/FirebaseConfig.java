@@ -32,19 +32,32 @@ public class FirebaseConfig {
         }
 
         try {
-            // Load the JSON key file from the classpath
-            var resource = new org.springframework.core.io.ClassPathResource(serviceAccountPath);
-            if (!resource.exists()) {
-                throw new IOException("Firebase key file not found at: " + serviceAccountPath);
+            // 📡 SMART LOADING: Check FileSystem (Render) then ClassPath (Local)
+            java.io.File file = new java.io.File(serviceAccountPath);
+            java.io.InputStream inputStream;
+
+            if (file.exists()) {
+                inputStream = new java.io.FileInputStream(file);
+                logger.info("✅ Firebase initializing via FileSystem: {}", serviceAccountPath);
+            } else {
+                // Fallback to ClassPath (inside the JAR)
+                var resource = new org.springframework.core.io.ClassPathResource(serviceAccountPath);
+                if (!resource.exists()) {
+                    // Try to see if it's in a subdirectory in classpath
+                    logger.warn("⚠️ File not found at root, checking for variants...");
+                    throw new IOException("Firebase key file not found at: " + serviceAccountPath);
+                }
+                inputStream = resource.getInputStream();
+                logger.info("✅ Firebase initializing via ClassPath: {}", serviceAccountPath);
             }
 
             FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(resource.getInputStream()))
+                    .setCredentials(GoogleCredentials.fromStream(inputStream))
                     .build();
 
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options);
-                logger.info("✅ Firebase successfully initialized via JSON file: {}", serviceAccountPath);
+                logger.info("🚀 FirebaseApp initialized successfully!");
             }
 
             return FirebaseMessaging.getInstance();
