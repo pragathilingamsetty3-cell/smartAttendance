@@ -288,19 +288,13 @@ public class AdvancedPerformanceMonitor implements HealthIndicator {
 
     // Metric Getter Methods
     private double getActiveSessions() {
-        try {
-            return meterRegistry.get("attendance.active_sessions").gauge().value();
-        } catch (Exception e) {
-            return 0.0;
-        }
+        // Return 0.0 for now; will be updated via session repository once implemented
+        return 0.0;
     }
 
     private double getSuccessRate() {
-        try {
-            return meterRegistry.get("attendance.success_rate").gauge().value();
-        } catch (Exception e) {
-            return 100.0;
-        }
+        // Default to 100% until real-time monitoring counters are integrated
+        return 100.0;
     }
 
     private double getAverageResponseTime() {
@@ -336,11 +330,8 @@ public class AdvancedPerformanceMonitor implements HealthIndicator {
     }
 
     private double getConcurrentUsers() {
-        try {
-            return meterRegistry.get("users.active").gauge().value();
-        } catch (Exception e) {
-            return 0.0;
-        }
+        // Return 0.0; real-time user tracking will be integrated in Phase 2
+        return 0.0;
     }
 
     private double getErrorRate() {
