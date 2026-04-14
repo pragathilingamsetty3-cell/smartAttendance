@@ -14,7 +14,6 @@ import com.example.smartAttendence.dto.v1.UpdateUserStatusRequest;
 import com.example.smartAttendence.dto.v1.UserUpdateRequest;
 import com.example.smartAttendence.entity.Room;
 import com.example.smartAttendence.repository.v1.ClassroomSessionV1Repository;
-import com.example.smartAttendence.service.ai.AIAssistantService;
 import com.example.smartAttendence.service.v1.AdminV1Service;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -32,12 +31,10 @@ import java.util.UUID;
 public class AdminV1Controller {
 
     private final AdminV1Service adminV1Service;
-    private final AIAssistantService aiAssistantService;
     private final ClassroomSessionV1Repository classroomSessionRepository;
 
-    public AdminV1Controller(AdminV1Service adminV1Service, AIAssistantService aiAssistantService, ClassroomSessionV1Repository classroomSessionRepository) {
+    public AdminV1Controller(AdminV1Service adminV1Service, ClassroomSessionV1Repository classroomSessionRepository) {
         this.adminV1Service = adminV1Service;
-        this.aiAssistantService = aiAssistantService;
         this.classroomSessionRepository = classroomSessionRepository;
     }
 
@@ -314,37 +311,6 @@ public class AdminV1Controller {
         if (numPoints == 5) return "PENTAGON";
         if (numPoints > 8) return "COMPLEX";
         return "POLYGON";
-    }
-
-    /**
-     * 4. AI Assistant Query
-     * POST /api/v1/admin/ask-ai
-     */
-    @PostMapping("/ask-ai")
-    public ResponseEntity<Map<String, Object>> askAI(@RequestBody Map<String, String> request) {
-        try {
-            String adminQuestion = request.get("question");
-            if (adminQuestion == null || adminQuestion.trim().isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Question is required"));
-            }
-
-            // Fetch system stats as context
-            String contextData = adminV1Service.getSystemStats();
-            
-            // Get AI response
-            String aiResponse = aiAssistantService.askSystemQuestion(adminQuestion, contextData);
-            
-            return ResponseEntity.ok()
-                    .body(Map.of(
-                        "question", adminQuestion,
-                        "answer", aiResponse,
-                        "context", "System statistics provided"
-                    ));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Failed to get AI response: " + e.getMessage()));
-        }
     }
 
     /**

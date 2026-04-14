@@ -14,16 +14,13 @@ import java.util.UUID;
 public class AIAnalyticsController {
 
     private final AISpatialMonitoringEngine spatialEngine;
-    private final com.example.smartAttendence.service.ai.AIAssistantService aiAssistantService;
     private final com.example.smartAttendence.service.v1.AdminV1Service adminV1Service;
     private final com.example.smartAttendence.service.v1.AIAnalyticsV1Service aiAnalyticsV1Service;
 
     public AIAnalyticsController(AISpatialMonitoringEngine spatialEngine, 
-                                com.example.smartAttendence.service.ai.AIAssistantService aiAssistantService,
                                 com.example.smartAttendence.service.v1.AdminV1Service adminV1Service,
                                 com.example.smartAttendence.service.v1.AIAnalyticsV1Service aiAnalyticsV1Service) {
         this.spatialEngine = spatialEngine;
-        this.aiAssistantService = aiAssistantService;
         this.adminV1Service = adminV1Service;
         this.aiAnalyticsV1Service = aiAnalyticsV1Service;
     }
@@ -216,66 +213,5 @@ public class AIAnalyticsController {
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<?> getModelMetrics() {
         return ResponseEntity.ok(aiAnalyticsV1Service.getModelMetrics());
-    }
-
-    /**
-     * AI Assistant Query
-     * POST /api/v1/ai-analytics/ask-ai
-     */
-    @PostMapping("/ask-ai")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
-    public ResponseEntity<?> askAI(@RequestBody Map<String, String> request) {
-        try {
-            String adminQuestion = request.get("question");
-            if (adminQuestion == null || adminQuestion.trim().isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "Question is required"));
-            }
-
-            // Fetch system stats as context
-            String contextData = adminV1Service.getSystemStats();
-            
-            // Get AI response
-            String aiResponse = aiAssistantService.askSystemQuestion(adminQuestion, contextData);
-            
-            return ResponseEntity.ok()
-                    .body(Map.of(
-                        "question", adminQuestion,
-                        "answer", aiResponse,
-                        "status", "SUCCESS"
-                    ));
-        } catch (Exception e) {
-            return ResponseEntity.status(500)
-                    .body(Map.of("error", "AI Assistant failed: " + e.getMessage()));
-        }
-    }
-
-    /**
-     * AI Weekly Insights
-     * GET /api/v1/ai-analytics/weekly-insights
-     */
-    @GetMapping("/weekly-insights")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'FACULTY')")
-    public ResponseEntity<?> getWeeklyInsights() {
-        try {
-            // Aggregate attendance data for context
-            var stats = adminV1Service.getDashboardStats();
-            String statsJson = String.format(
-                "{\"totalStudents\": %d, \"attendanceRate\": %.1f, \"anomalies\": %d, \"verifiedCount\": %d}",
-                stats.totalStudents(), stats.attendanceRate(), stats.anomalies(), stats.verifiedCount()
-            );
-
-            String insights = aiAssistantService.generateWeeklyInsights(statsJson);
-            
-            return ResponseEntity.ok()
-                    .body(Map.of(
-                        "insights", insights,
-                        "generatedAt", java.time.Instant.now(),
-                        "status", "SUCCESS"
-                    ));
-        } catch (Exception e) {
-            return ResponseEntity.status(500)
-                    .body(Map.of("error", "AI Insights generation failed: " + e.getMessage()));
-        }
     }
 }
