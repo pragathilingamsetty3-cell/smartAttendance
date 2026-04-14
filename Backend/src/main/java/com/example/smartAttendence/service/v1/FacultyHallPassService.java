@@ -4,7 +4,6 @@ import com.example.smartAttendence.dto.v1.HallPassRequestDTO;
 import com.example.smartAttendence.dto.v1.HallPassApprovalRequest;
 import com.example.smartAttendence.dto.v1.HallPassDenialRequest;
 import com.example.smartAttendence.dto.v1.HallPassStatusDTO;
-import com.example.smartAttendence.service.PushNotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +17,10 @@ import java.util.UUID;
 @Transactional
 public class FacultyHallPassService {
 
-    private final PushNotificationService pushNotificationService;
-    
     // In-memory storage for demo - in production, this would be a database table
     private final List<HallPassStatusDTO> hallPassRequests = new ArrayList<>();
 
-    public FacultyHallPassService(@Autowired(required = false) PushNotificationService pushNotificationService) {
-        this.pushNotificationService = pushNotificationService;
+    public FacultyHallPassService() {
         seedInitialData();
     }
 

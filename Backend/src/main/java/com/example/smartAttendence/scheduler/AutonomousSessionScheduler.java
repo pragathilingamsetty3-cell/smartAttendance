@@ -8,7 +8,7 @@ import com.example.smartAttendence.repository.TimetableRepository;
 import com.example.smartAttendence.repository.v1.AcademicCalendarV1Repository;
 import com.example.smartAttendence.repository.v1.ClassroomSessionV1Repository;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
-import com.example.smartAttendence.service.PushNotificationService;
+import com.example.smartAttendence.service.v1.NotificationService;
 import com.example.smartAttendence.service.v1.SharedUtilityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -39,7 +39,7 @@ public class AutonomousSessionScheduler {
     private final AcademicCalendarV1Repository academicCalendarRepository;
     private final ClassroomSessionV1Repository sessionRepository;
     private final UserV1Repository userRepository;
-    private final PushNotificationService pushNotificationService;
+    private final NotificationService notificationService;
     private final SharedUtilityService sharedUtilityService;
     private final GeometryFactory geometryFactory;
 
@@ -48,14 +48,14 @@ public class AutonomousSessionScheduler {
             AcademicCalendarV1Repository academicCalendarRepository,
             ClassroomSessionV1Repository sessionRepository,
             UserV1Repository userRepository,
-            @Autowired(required = false) PushNotificationService pushNotificationService,
+            NotificationService notificationService,
             SharedUtilityService sharedUtilityService
     ) {
         this.timetableRepository = timetableRepository;
         this.academicCalendarRepository = academicCalendarRepository;
         this.sessionRepository = sessionRepository;
         this.userRepository = userRepository;
-        this.pushNotificationService = pushNotificationService;
+        this.notificationService = notificationService;
         this.sharedUtilityService = sharedUtilityService;
         this.geometryFactory = new GeometryFactory(new PrecisionModel(), SRID_WGS84);
     }
@@ -165,12 +165,12 @@ public class AutonomousSessionScheduler {
     }
 
     private void sendSessionStartNotifications(ClassroomSession session, Timetable timetable) {
-        if (timetable.getSection() == null || pushNotificationService == null) return;
+        if (timetable.getSection() == null) return;
         
         List<User> students = sharedUtilityService.getStudentsBySection(timetable.getSection().getId());
         for (User student : students) {
             try {
-                pushNotificationService.sendClassStartNotification(
+                notificationService.sendClassStartNotification(
                     student.getId(), session.getSubject(), session.getRoom().getName(),
                     LocalDateTime.ofInstant(session.getStartTime(), ZoneId.systemDefault())
                 );
@@ -181,12 +181,12 @@ public class AutonomousSessionScheduler {
     }
 
     private void sendClassReminderNotifications(Timetable timetable) {
-        if (timetable.getSection() == null || pushNotificationService == null) return;
+        if (timetable.getSection() == null) return;
         
         List<User> students = userRepository.findBySectionAndRole(timetable.getSection(), com.example.smartAttendence.enums.Role.STUDENT);
         for (User student : students) {
             try {
-                pushNotificationService.sendClassReminderNotification(
+                notificationService.sendClassReminderNotification(
                     student.getId(), timetable.getSubject(), timetable.getRoom().getName(), timetable.getStartTime()
                 );
             } catch (Exception e) {

@@ -10,7 +10,7 @@ import com.example.smartAttendence.repository.v1.ClassroomSessionV1Repository;
 import com.example.smartAttendence.repository.EmergencySessionChangeRepository;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
 import com.example.smartAttendence.repository.RoomRepository;
-import com.example.smartAttendence.service.PushNotificationService;
+import com.example.smartAttendence.service.v1.NotificationService;
 import com.example.smartAttendence.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,7 +28,7 @@ public class EmergencySessionService {
     private final ClassroomSessionV1Repository sessionRepository;
     private final UserV1Repository userRepository;
     private final RoomRepository roomRepository;
-    private final PushNotificationService pushNotificationService;
+    private final NotificationService notificationService;
     private final EmailService emailService;
     
     public EmergencySessionService(
@@ -36,13 +36,13 @@ public class EmergencySessionService {
             ClassroomSessionV1Repository sessionRepository,
             UserV1Repository userRepository,
             RoomRepository roomRepository,
-            @Autowired(required = false) PushNotificationService pushNotificationService,
+            NotificationService notificationService,
             EmailService emailService) {
         this.emergencyChangeRepository = emergencyChangeRepository;
         this.sessionRepository = sessionRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
-        this.pushNotificationService = pushNotificationService;
+        this.notificationService = notificationService;
         this.emailService = emailService;
     }
     
@@ -203,9 +203,7 @@ public class EmergencySessionService {
     private void sendEmergencyNotifications(EmergencySessionChange change, ClassroomSession session) {
         if (change.getNotifyStudents()) {
             // Send push notifications to all enrolled students
-            if (pushNotificationService != null) {
-                pushNotificationService.sendEmergencyChangeNotification(session, change);
-            }
+            notificationService.sendEmergencyChangeNotification(session, change);
         }
         
         if (change.getNotifyParents()) {
@@ -216,9 +214,7 @@ public class EmergencySessionService {
     
     private void sendSubstituteNotifications(EmergencySessionChange change, ClassroomSession session, SubstituteClaimRequest request) {
         if (request.notifyStudents() != null && request.notifyStudents()) {
-            if (pushNotificationService != null) {
-                pushNotificationService.sendSubstituteNotification(session, change);
-            }
+            notificationService.sendSubstituteNotification(session, change);
         }
         
         if (request.notifyDepartment() != null && request.notifyDepartment()) {

@@ -128,8 +128,6 @@ public class EmailService {
         }
     }
 
-    }
-
     public void sendEmergencyChangeEmail(com.example.smartAttendence.domain.ClassroomSession session,
                                          com.example.smartAttendence.entity.EmergencySessionChange change) {
         try {
