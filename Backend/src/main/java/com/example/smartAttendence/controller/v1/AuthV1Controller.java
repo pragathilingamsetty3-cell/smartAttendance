@@ -49,110 +49,109 @@ public class AuthV1Controller {
      */
     @PostMapping(value = "/login", consumes = "application/json")
     public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
-        try {
             log.info("🔐 Login attempt for email: {}", request.getEmail());
             
             // 🔐 ENHANCED INPUT VALIDATION
-            // Validate email
             AdvancedInputValidator.ValidationResult emailValidation = advancedInputValidator.validateEmail(request.getEmail());
             if (!emailValidation.isValid()) {
-                log.warn("❌ Email validation failed: {}", emailValidation.getErrorMessage());
+                log.warn("❌ Email validation failed for {}: {}", request.getEmail(), emailValidation.getErrorMessage());
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "Invalid email format: " + emailValidation.getErrorMessage()));
             }
             
-            // Basic password check (no security validation for login - let auth service handle it)
             if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
-                log.warn("❌ Password is null or empty");
+                log.warn("❌ LOGIN FAILED: Missing password for {}", request.getEmail());
                 return ResponseEntity.badRequest()
                         .body(Map.of("error", "Password is required"));
             }
             
-            log.info("✅ Input validation passed, attempting login...");
+            log.info("🔍 [DIAGNOSTIC] Step 1: Attempting AuthenticationService.login...");
             AuthenticationService.LoginResult result = unifiedAuthService.login(request.getEmail(), request.getPassword());
             
-            log.info("✅ Login successful for: {}", result.user().getEmail());
+            if (result == null || result.user() == null) {
+                log.error("❌ [DIAGNOSTIC] Step 1 FAILED: AuthenticationService returned null user!");
+                throw new RuntimeException("Authentication service failed to return a valid user object");
+            }
+
+            log.info("✅ [DIAGNOSTIC] Step 1 SUCCESS: User verified: {}", result.user().getEmail());
 
             // 🔐 ADVANCED ZERO-TRUST TOKEN GENERATION
+            log.info("🔍 [DIAGNOSTIC] Step 2: Generating Device Fingerprint...");
             String deviceFingerprint = generateDeviceFingerprint(httpRequest);
             String sessionId = java.util.UUID.randomUUID().toString();
             String clientIP = getClientIP(httpRequest);
             String userAgent = httpRequest.getHeader("User-Agent");
             String geoLocation = getGeoLocation(clientIP);
             
-            log.debug("🔐 Generating JWT token for user: {}", result.user().getEmail());
-            log.debug("🔐 Device fingerprint: {}", deviceFingerprint);
-            log.debug("🔐 Session ID: {}", sessionId);
-            log.debug("🔐 Client IP: {}", clientIP);
-            log.debug("🔐 User Agent: {}", userAgent);
-            log.debug("🔐 Geo Location: {}", geoLocation);
+            log.info("🔍 [DIAGNOSTIC] Step 3: Attempting JWT Generation...");
+            String accessToken;
+            try {
+                accessToken = jwtUtil.generateToken(
+                    result.user().getEmail(), 
+                    result.user().getRole() != null ? result.user().getRole().toString() : "UNKNOWN", 
+                    deviceFingerprint, 
+                    sessionId,
+                    clientIP,
+                    userAgent,
+                    geoLocation
+                );
+                log.info("✅ [DIAGNOSTIC] Step 3 SUCCESS: JWT Token Generated");
+            } catch (Exception e) {
+                log.error("❌ [DIAGNOSTIC] Step 3 FAILED: JWT Generation Error: {}", e.getMessage(), e);
+                throw e;
+            }
             
-            String accessToken = jwtUtil.generateToken(
-                result.user().getEmail(), 
-                result.user().getRole().toString(), 
-                deviceFingerprint, 
-                sessionId,
-                clientIP,
-                userAgent,
-                geoLocation
-            );
-            
-            log.debug("🔐 JWT token generated successfully");
-            
+            log.info("🔍 [DIAGNOSTIC] Step 4: Creating Refresh Token...");
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(result.user());
-            log.debug("🔐 Refresh token created successfully");
+            log.info("✅ [DIAGNOSTIC] Step 4 SUCCESS: Refresh Token Created");
+
+            // 🛡️ DEFENSIVE RESPONSE BUILDING
+            java.util.Map<String, Object> response = new java.util.HashMap<>();
+            response.put("accessToken", accessToken);
+            response.put("refreshToken", refreshToken != null ? refreshToken.getToken() : null);
+            response.put("tokenType", "Bearer");
+            response.put("expiresIn", 15 * 60);
 
             if (result.status() == AuthenticationService.LoginStatus.REQUIRE_SETUP) {
-                log.debug("🔐 Building response for first login setup");
-                Map<String, Object> response = Map.of(
-                    "message", "First login detected. Setup required.",
-                    "requiresFirstLoginSetup", true,
-                    "accessToken", accessToken,
-                    "refreshToken", refreshToken.getToken(),
-                    "tokenType", "Bearer",
-                    "expiresIn", 15 * 60,
-                    "user", Map.of(
-                        "id", result.user().getId(),
-                        "email", result.user().getEmail(),
-                        "name", result.user().getName(),
-                        "role", result.user().getRole()
-                    )
-                );
-                log.debug("🔐 Response built successfully for first login");
+                log.info("🔐 [DIAGNOSTIC] First login flow detected");
+                response.put("message", "First login detected. Setup required.");
+                response.put("requiresFirstLoginSetup", true);
+                response.put("user", java.util.Map.of(
+                    "id", result.user().getId() != null ? result.user().getId().toString() : "null",
+                    "email", result.user().getEmail(),
+                    "name", result.user().getName(),
+                    "role", result.user().getRole() != null ? result.user().getRole().toString() : "null"
+                ));
                 return ResponseEntity.status(202).body(response);
             }
 
-            // 🔐 Resolve Department UUID for Dynamic UI Support
+            // 🔐 Resolve Department UUID
+            log.info("🔍 [DIAGNOSTIC] Step 5: Resolving Department UUID...");
             String rawDept = result.user().getDepartment();
             UUID deptUuid = securityUtils.resolveDepartmentUuid(rawDept);
             
-            log.debug("🔐 Building response for successful login");
-            Map<String, Object> response = Map.of(
-                "message", "Login successful",
-                "requiresFirstLoginSetup", false,
-                "accessToken", accessToken,
-                "refreshToken", refreshToken.getToken(),
-                "tokenType", "Bearer",
-                "expiresIn", 15 * 60, // 15 minutes in seconds
-                "user", Map.of(
-                    "id", result.user().getId(),
-                    "email", result.user().getEmail(),
-                    "name", result.user().getName(),
-                    "role", result.user().getRole(),
-                    "department", deptUuid != null ? deptUuid.toString() : "",
-                    "sectionId", result.user().getSectionId() != null ? result.user().getSectionId().toString() : ""
-                )
-            );
-            log.debug("🔐 Response built successfully for login");
+            log.info("✅ [DIAGNOSTIC] Step 5 SUCCESS: Finalizing successful response");
+            response.put("message", "Login successful");
+            response.put("requiresFirstLoginSetup", false);
+            response.put("user", java.util.Map.of(
+                "id", result.user().getId() != null ? result.user().getId().toString() : "null",
+                "email", result.user().getEmail(),
+                "name", result.user().getName(),
+                "role", result.user().getRole() != null ? result.user().getRole().toString() : "null",
+                "department", deptUuid != null ? deptUuid.toString() : "",
+                "sectionId", result.user().getSectionId() != null ? result.user().getSectionId().toString() : ""
+            ));
+
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            log.warn("❌ IllegalArgumentException: {}", e.getMessage());
+            log.warn("❌ LOGIN FAILED (Bad Credentials): {}", e.getMessage());
             return ResponseEntity.badRequest()
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("❌ General Exception: {}", e.getMessage(), e);
+            log.error("🛑 CRITICAL LOGIN EXCEPTION: {} at line {}", e.getMessage(), 
+                e.getStackTrace().length > 0 ? e.getStackTrace()[0].getLineNumber() : "unknown", e);
             return ResponseEntity.status(500)
-                    .body(Map.of("error", "Login failed: " + e.getMessage()));
+                    .body(Map.of("error", "Login failed: Server internal error. Check logs for trace."));
         }
     }
 
