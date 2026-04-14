@@ -79,8 +79,8 @@ public class MailConfig {
             logger.info("✅ Email password length: {} characters", mailPassword.length());
         }
 
-        // 🔧 TEST MAIL CONNECTIVITY
-        testMailConnectivity(); // Enabled to verify Gmail password
+        // 🔧 TEST MAIL CONNECTIVITY (Async to prevent startup hang)
+        new Thread(this::testMailConnectivity).start();
     }
 
     /**

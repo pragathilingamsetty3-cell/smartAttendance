@@ -24,10 +24,32 @@ public class FirebaseConfig {
     @Value("${firebase.service-account-path}")
     private String serviceAccountPath;
 
+    @Value("${FIREBASE_KEY_BASE64:}")
+    private String firebaseKeyBase64;
+
     @Bean
     public FirebaseMessaging firebaseMessaging() throws IOException {
+        // 📡 HIGHEST PRIORITY: Base64 String (Cloud Production)
+        if (firebaseKeyBase64 != null && !firebaseKeyBase64.trim().isEmpty()) {
+            try {
+                byte[] decodedKey = Base64.getDecoder().decode(firebaseKeyBase64.trim());
+                FirebaseOptions options = FirebaseOptions.builder()
+                        .setCredentials(GoogleCredentials.fromStream(new ByteArrayInputStream(decodedKey)))
+                        .build();
+                
+                if (FirebaseApp.getApps().isEmpty()) {
+                    FirebaseApp.initializeApp(options);
+                    logger.info("🚀 Firebase initialized via FIREBASE_KEY_BASE64 string!");
+                }
+                return FirebaseMessaging.getInstance();
+            } catch (Exception e) {
+                logger.error("❌ Failed to initialize Firebase from Base64: {}", e.getMessage());
+                // Fall through to file loading if Base64 fails
+            }
+        }
+
         if (serviceAccountPath == null || serviceAccountPath.trim().isEmpty()) {
-            logger.error("❌ Firebase is enabled but FIREBASE_SERVICE_ACCOUNT_PATH is missing!");
+            logger.error("❌ Firebase is enabled but neither FIREBASE_KEY_BASE64 nor path is provided!");
             return null;
         }
 
