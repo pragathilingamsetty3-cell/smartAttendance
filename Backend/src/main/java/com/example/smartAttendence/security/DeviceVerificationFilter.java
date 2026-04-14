@@ -4,6 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,8 @@ import java.util.Arrays;
 
 @Component
 public class DeviceVerificationFilter extends OncePerRequestFilter {
+    
+    private static final Logger logger = LoggerFactory.getLogger(DeviceVerificationFilter.class);
 
     @Autowired
     private StringRedisTemplate redisTemplate;
