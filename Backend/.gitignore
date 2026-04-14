@@ -47,6 +47,8 @@ build/
 *.cer
 keystore/
 certs/
+src/main/resources/firebase/*.json
+*.jks
 
 ### 🔐 SECURITY - LOGS WITH SENSITIVE DATA ###
 logs/
