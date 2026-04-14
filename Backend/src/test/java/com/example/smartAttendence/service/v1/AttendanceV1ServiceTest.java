@@ -8,7 +8,10 @@ import com.example.smartAttendence.dto.v1.HallPassRequestDTO;
 import com.example.smartAttendence.event.WalkOutEvent;
 import com.example.smartAttendence.repository.v1.AttendanceRecordV1Repository;
 import com.example.smartAttendence.repository.v1.ClassroomSessionV1Repository;
+import com.example.smartAttendence.repository.v1.SecurityAlertV1Repository;
+import com.example.smartAttendence.repository.v1.UserV1Repository;
 import com.example.smartAttendence.security.SecurityAuditLogger;
+import com.example.smartAttendence.service.ai.AILearningOptimizer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,6 +59,15 @@ class AttendanceV1ServiceTest {
     private ApplicationEventPublisher eventPublisher;
 
     @Mock
+    private UserV1Repository userRepository;
+
+    @Mock
+    private AILearningOptimizer aiLearningOptimizer;
+
+    @Mock
+    private SecurityAlertV1Repository securityAlertRepository;
+
+    @Mock
     private SecurityAuditLogger securityAuditLogger;
 
     @Mock
@@ -83,6 +95,17 @@ class AttendanceV1ServiceTest {
         testSession = createTestSession();
         testHeartbeatPing = createTestHeartbeatPing();
         testHallPassRequest = createTestHallPassRequest();
+
+        // 🛡️ Setup default mock student for all lookups
+        User testStudent = new User();
+        testStudent.setId(testStudentId);
+        testStudent.setEmail("test-student@university.edu");
+        testStudent.setName("Test Student");
+        testStudent.setDeviceId("device-fingerprint-123");
+        testStudent.setBiometricSignature("biometric-signature-123");
+        
+        when(userRepository.findById(testStudentId)).thenReturn(Optional.of(testStudent));
+        when(attendanceRecordRepository.existsBySession_IdAndStudent_Id(any(), any())).thenReturn(false);
     }
 
     // ========== HALL PASS TESTS ==========
@@ -417,6 +440,9 @@ class AttendanceV1ServiceTest {
         room.setBoundaryPolygon(createTestGeofencePolygon());
         session.setRoom(room);
         
+        session.setStartTime(Instant.now().minusSeconds(3600)); // Started 1 hour ago
+        session.setEndTime(Instant.now().plusSeconds(3600));   // Ends in 1 hour
+        
         return session;
     }
 
@@ -448,7 +474,7 @@ class AttendanceV1ServiceTest {
                 false,     // isDeviceMoving
                 Instant.now(),
                 "device-fingerprint-123",
-                null,      // biometricSignature
+                "biometric-signature-123", // biometricSignature
                 85,        // batteryLevel
                 false,      // isCharging
                 true,       // isScreenOn

@@ -7,7 +7,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-import com.google.genai.Client;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 @SpringBootTest(
@@ -37,9 +36,6 @@ class SimpleConfigTest {
 
     @MockitoBean
     private JavaMailSender javaMailSender;
-
-    @MockitoBean
-    private Client googleGenAiClient;
 
     @MockitoBean
     private FirebaseMessaging firebaseMessaging;

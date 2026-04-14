@@ -138,6 +138,8 @@ class AttendanceV1ControllerTest {
             .thenReturn(new com.example.smartAttendence.service.ai.AILearningOptimizer.AIOptimizationResult(
                 60L, "BALANCED", 0.85, "Medium confidence based on historical data", 100, 0.85));
 
+        when(attendanceService.calculateOptimalInterval(any(EnhancedHeartbeatPing.class))).thenReturn(60L);
+
         doNothing().when(attendanceService).processEnhancedHeartbeat(any(EnhancedHeartbeatPing.class), eq(false));
 
         // Act & Assert

@@ -8,8 +8,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-import com.google.genai.Client;
-
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(
@@ -39,9 +37,6 @@ class FirebaseConfigTest {
 
     @MockitoBean
     private JavaMailSender javaMailSender;
-
-    @MockitoBean
-    private Client googleGenAiClient;
 
     @MockitoBean
     private FirebaseMessaging firebaseMessaging;
