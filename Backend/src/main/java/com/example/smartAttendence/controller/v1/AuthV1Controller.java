@@ -49,6 +49,7 @@ public class AuthV1Controller {
      */
     @PostMapping(value = "/login", consumes = "application/json")
     public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
+        try {
             log.info("🔐 Login attempt for email: {}", request.getEmail());
             
             // 🔐 ENHANCED INPUT VALIDATION
