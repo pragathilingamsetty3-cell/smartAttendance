@@ -1,6 +1,7 @@
 package com.example.smartAttendence.security;
 
 import jakarta.annotation.PostConstruct;
+import com.github.benmanes.caffeine.cache.Cache;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +25,9 @@ public class HighPerformanceRateLimitingFilter extends OncePerRequestFilter {
 
     @Autowired
     private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private Cache<String, Boolean> rateLimitCache;
 
     // 🔐 ENHANCED RATE LIMIT CONFIGURATION - OPTIMIZED FOR UNIVERSITY SCALE (15K+ USERS)
     @Value("${rate-limit.global.requests-per-minute}") 
@@ -73,8 +77,16 @@ public class HighPerformanceRateLimitingFilter extends OncePerRequestFilter {
         
         String endpoint = request.getRequestURI();
         try {
-            logger.info("🔍 [SENTINEL] RateLimitFilter starting for: {}", endpoint);
             String clientIP = getClientIP(request);
+            
+            // 🚀 SPEED-SHIELD: Check local memory cache first
+            if (Boolean.TRUE.equals(rateLimitCache.getIfPresent(clientIP))) {
+                logger.debug("⚡ [SPEED-SHIELD] RateLimit check SKIPPED (Local Memory hit) for IP: {}", clientIP);
+                filterChain.doFilter(request, response);
+                return;
+            }
+            
+            logger.info("🔍 [SENTINEL] RateLimitFilter starting for: {}", endpoint);
         
         // 🚀 PERFORMANCE OPTIMIZATION - Bypass rate limiting for localhost
         if ("127.0.0.1".equals(clientIP) || "0:0:0:0:0:0:0:1".equals(clientIP) || "::1".equals(clientIP)) {
@@ -104,6 +116,10 @@ public class HighPerformanceRateLimitingFilter extends OncePerRequestFilter {
             response.getWriter().write("{\"error\":\"Rate limit exceeded\",\"retryAfter\":60}");
             return;
         }
+        
+        // If we reached here, the check passed. Store in L1 cache for 1 minute.
+        rateLimitCache.put(clientIP, true);
+        
         } catch (Throwable t) {
             logger.error("🚨 [SENTINEL] RateLimitFilter CRASHED but failing-open: {}", t.getMessage(), t);
         }

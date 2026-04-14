@@ -27,6 +27,9 @@ public class DeviceVerificationFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private Cache<String, Boolean> deviceVerificationCache;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) 
             throws ServletException, IOException {
@@ -42,9 +45,16 @@ public class DeviceVerificationFilter extends OncePerRequestFilter {
             return;
         }
         
-        // 🔐 DEVICE VERIFICATION FOR SENSITIVE ENDPOINTS
-            String deviceFingerprint = generateDeviceFingerprint(request);
-            String sessionId = request.getHeader("X-Session-ID");
+        String deviceFingerprint = generateDeviceFingerprint(request);
+        String sessionId = request.getHeader("X-Session-ID");
+
+        // 🚀 SPEED-SHIELD: Check local memory cache first
+        String cacheKey = deviceFingerprint + ":" + sessionId;
+        if (Boolean.TRUE.equals(deviceVerificationCache.getIfPresent(cacheKey))) {
+            logger.debug("⚡ [SPEED-SHIELD] Device verification SKIPPED (Local Memory hit) for Session: {}", sessionId);
+            filterChain.doFilter(request, response);
+            return;
+        }
             
             if (sessionId == null || sessionId.isEmpty()) {
                 // 🔐 SMART FALLBACK: Extract from JWT if header is missing
@@ -66,6 +76,9 @@ public class DeviceVerificationFilter extends OncePerRequestFilter {
                 response.getWriter().write("{\"error\":\"Device verification failed\"}");
                 return;
             }
+
+            // ✅ [SPEED-SHIELD] Passed. Cache the verification for 5 minutes.
+            deviceVerificationCache.put(cacheKey, true);
         } catch (Throwable t) {
             logger.error("🚨 [SENTINEL] DeviceFilter CRASHED but failing-open: {}", t.getMessage(), t);
         }

@@ -1,5 +1,6 @@
 package com.example.smartAttendence.security;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,6 +33,9 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
     @Autowired
     private HandlerInterceptor securityAuditLogger;
 
+    @Autowired
+    private Cache<String, Integer> threatAnalysisCache;
+
     private final Map<String, Instant> lastRequestTime = new ConcurrentHashMap<>();
     private final Map<String, Integer> requestCounts = new ConcurrentHashMap<>();
 
@@ -42,9 +46,25 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
         String endpoint = request.getRequestURI();
         
         try {
-            logger.info("🔍 [SENTINEL] ThreatDetectionFilter starting for: {}", endpoint);
             String clientIP = getClientIP(request);
             String userAgent = request.getHeader("User-Agent");
+
+            // 🚀 SPEED-SHIELD: Layer 1 - Skip heavy analysis for non-sensitive public endpoints
+            if (isStaticOrPublicAsset(endpoint)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            // 🚀 SPEED-SHIELD: Layer 2 - Check local memory cache first
+            String cacheKey = clientIP + ":" + (userAgent != null ? userAgent.hashCode() : 0);
+            Integer cachedThreatLevelOrdinal = threatAnalysisCache.getIfPresent(cacheKey);
+            if (cachedThreatLevelOrdinal != null && cachedThreatLevelOrdinal <= ThreatLevel.LOW.ordinal()) {
+                logger.debug("⚡ [SPEED-SHIELD] Threat analysis SKIPPED (Local Memory hit) for IP: {}", clientIP);
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            logger.info("🔍 [SENTINEL] ThreatDetectionFilter starting for: {}", endpoint);
         
         // 🔐 SECURITY: Bypass threat detection for health checks and CORS preflight
         if (endpoint.startsWith("/actuator/") || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
@@ -80,6 +100,11 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
             }
             return;
         }
+
+        // ✅ [SPEED-SHIELD] Passed. Cache the analysis result for 5 minutes.
+        String cacheKey = clientIP + ":" + userAgent.hashCode();
+        threatAnalysisCache.put(cacheKey, threatLevel.ordinal());
+        
         } catch (Throwable t) {
             logger.error("🚨 [SENTINEL] ThreatDetectionFilter CRASHED but failing-open: {}", t.getMessage(), t);
         }
@@ -87,6 +112,12 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
     
+    private boolean isStaticOrPublicAsset(String endpoint) {
+        return endpoint.contains("/css/") || endpoint.contains("/js/") || 
+               endpoint.contains("/images/") || endpoint.contains("/favicon") ||
+               endpoint.endsWith(".png") || endpoint.endsWith(".jpg") || endpoint.endsWith(".svg");
+    }
+
     private ThreatLevel analyzeThreat(HttpServletRequest request, String clientIP, String userAgent) {
         // 🔐 SECURITY: Comprehensive localhost bypass
         if ("127.0.0.1".equals(clientIP) || "0:0:0:0:0:0:0:1".equals(clientIP) || "::1".equals(clientIP)) {
