@@ -9,7 +9,8 @@ RUN mvn dependency:go-offline -B
 # Copy source code and build
 COPY src ./src
 # Skip tests for faster deployment and reduced memory footprint during build
-RUN MAVEN_OPTS="-Xmx192m -XX:MaxMetaspaceSize=128m -Xss256k" mvn clean package -B -DskipTests -q
+# Skip tests for faster deployment and reduced memory footprint during build
+RUN MAVEN_OPTS="-Xmx224m -XX:MaxMetaspaceSize=128m" mvn clean package -B -DskipTests
 
 # 🚀 Run Stage
 FROM eclipse-temurin:21-jre-alpine
