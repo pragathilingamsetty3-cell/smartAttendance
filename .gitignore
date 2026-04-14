@@ -22,7 +22,7 @@ target/
 *.zip
 *.tar.gz
 *.rar
-.mvn/
+# .mvn/ (Removed to allow Maven wrapper)
 .metadata/
 .project
 .settings/
