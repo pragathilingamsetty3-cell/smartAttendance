@@ -27,6 +27,7 @@ public class SuperAdminInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        logger.info("🔍 [DIAGNOSTIC] SuperAdminInitializer starting check...");
         String adminEmail = "super.admin@smartattendence.com";
         
         if (userRepository.findByEmailIgnoreCase(adminEmail).isEmpty()) {
