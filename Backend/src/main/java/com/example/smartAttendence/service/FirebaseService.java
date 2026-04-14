@@ -29,9 +29,6 @@ public class FirebaseService {
 
     private static final Logger logger = LoggerFactory.getLogger(FirebaseService.class);
 
-    @Value("${FIREBASE_PROJECT_ID:disabled}")
-    private String projectId;
-
     private final FirebaseMessaging firebaseMessaging;
 
     public FirebaseService(@Autowired(required = false) FirebaseMessaging firebaseMessaging) {
@@ -68,10 +65,10 @@ public class FirebaseService {
     }
 
     /**
-     * Check if Firebase is enabled
+     * Check if Firebase is enabled (Messaging bean is present)
      */
     public boolean isEnabled() {
-        return !projectId.equals("disabled");
+        return firebaseMessaging != null;
     }
 
     /**
@@ -202,17 +199,13 @@ public class FirebaseService {
         }
     }
 
-    /**
-     * Initialize Firebase service
-     */
     @PostConstruct
     public void initialize() {
-        if (isEnabled()) {
-            logger.info("🔥 Firebase Service initialized for project: {}", projectId);
-            logger.info("📱 Push notifications enabled");
-            logger.info("🔄 Real-time messaging ready");
+        if (isInitialized()) {
+            logger.info("🔥 Firebase Service is ENABLED and READY");
+            logger.info("📱 Push notifications active");
         } else {
-            logger.info("🔥 Firebase Service is disabled");
+            logger.warn("⚠️ Firebase Service is currently in standby (Waiting for connection)");
         }
     }
 }
