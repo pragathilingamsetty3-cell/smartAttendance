@@ -48,7 +48,7 @@ public class FirebaseService {
 
             // Test basic Firebase functionality
             FirebaseApp.getInstance().getOptions();
-            logger.info("Firebase connection test successful for project: {}", projectId);
+            logger.info("Firebase connection test successful!");
             return true;
 
         } catch (Exception e) {
@@ -61,7 +61,7 @@ public class FirebaseService {
      * Get Firebase project ID
      */
     public String getProjectId() {
-        return projectId;
+        return isInitialized() ? FirebaseApp.getInstance().getOptions().getProjectId() : "not-initialized";
     }
 
     /**
