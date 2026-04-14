@@ -45,8 +45,8 @@ public class MailConfig {
     public void debugMailConfiguration() {
         logger.debug("🔧 MAIL CONFIGURATION DEBUG:");
         logger.debug("==========================================");
-        logger.debug("📧 EMAIL_USERNAME: [{}]", mailUsername);
-        logger.debug("🔐 EMAIL_PASSWORD: [{}]", mailPassword);
+        logger.debug("📧 EMAIL_USERNAME: [REDACTED]");
+        logger.debug("🔐 EMAIL_PASSWORD: [********]");
         logger.debug("🌐 MAIL_HOST: [{}]", mailHost);
         logger.debug("🚪 MAIL_PORT: [{}]", mailPort);
         logger.debug("🔐 SMTP_AUTH: [{}]", smtpAuth);
@@ -56,8 +56,8 @@ public class MailConfig {
         logger.debug("==========================================");
         
         logger.info("🔧 MAIL CONFIGURATION DEBUG:");
-        logger.info("📧 EMAIL_USERNAME: [{}]", mailUsername);
-        logger.info("🔐 EMAIL_PASSWORD: [{}]", mailPassword);
+        logger.info("📧 EMAIL_USERNAME: [REDACTED]");
+        logger.info("🔐 EMAIL_PASSWORD: [********]");
         logger.info("🌐 MAIL_HOST: [{}]", mailHost);
         logger.info("🚪 MAIL_PORT: [{}]", mailPort);
         logger.info("🔐 SMTP_AUTH: [{}]", smtpAuth);
