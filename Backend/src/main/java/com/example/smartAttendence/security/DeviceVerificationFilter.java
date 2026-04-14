@@ -24,6 +24,9 @@ public class DeviceVerificationFilter extends OncePerRequestFilter {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) 
             throws ServletException, IOException {
@@ -40,16 +43,29 @@ public class DeviceVerificationFilter extends OncePerRequestFilter {
         }
         
         // 🔐 DEVICE VERIFICATION FOR SENSITIVE ENDPOINTS
-        if (requiresDeviceVerification(endpoint)) {
             String deviceFingerprint = generateDeviceFingerprint(request);
             String sessionId = request.getHeader("X-Session-ID");
             
+            if (sessionId == null || sessionId.isEmpty()) {
+                // 🔐 SMART FALLBACK: Extract from JWT if header is missing
+                String authHeader = request.getHeader("Authorization");
+                if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                    try {
+                        String token = authHeader.substring(7);
+                        sessionId = jwtUtil.extractSessionId(token);
+                        logger.info("🔍 [SENTINEL] DeviceFilter found SessionID in JWT: {}", sessionId);
+                    } catch (Exception e) {
+                        logger.warn("⚠️ [SENTINEL] DeviceFilter could not extract SessionID from JWT");
+                    }
+                }
+            }
+            
             if (!isDeviceVerified(deviceFingerprint, sessionId)) {
+                logger.warn("🚨 [SENTINEL] Device verification FAILED for IP: {} (SessionID: {})", clientIP, sessionId);
                 response.setStatus(401);
                 response.getWriter().write("{\"error\":\"Device verification failed\"}");
                 return;
             }
-        }
         } catch (Throwable t) {
             logger.error("🚨 [SENTINEL] DeviceFilter CRASHED but failing-open: {}", t.getMessage(), t);
         }

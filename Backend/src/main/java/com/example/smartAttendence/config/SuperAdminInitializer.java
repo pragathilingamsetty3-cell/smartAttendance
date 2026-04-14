@@ -4,6 +4,9 @@ import com.example.smartAttendence.domain.User;
 import com.example.smartAttendence.domain.UserStatus;
 import com.example.smartAttendence.enums.Role;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
+import com.example.smartAttendence.repository.v1.ClassroomSessionV1Repository;
+import com.example.smartAttendence.repository.v1.AttendanceRecordV1Repository;
+import com.example.smartAttendence.repository.SectionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -20,10 +23,21 @@ public class SuperAdminInitializer implements CommandLineRunner {
     
     private final UserV1Repository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ClassroomSessionV1Repository sessionRepository;
+    private final AttendanceRecordV1Repository attendanceRepository;
+    private final SectionRepository sectionRepository;
 
-    public SuperAdminInitializer(UserV1Repository userRepository, PasswordEncoder passwordEncoder) {
+    public SuperAdminInitializer(
+            UserV1Repository userRepository, 
+            PasswordEncoder passwordEncoder,
+            ClassroomSessionV1Repository sessionRepository,
+            AttendanceRecordV1Repository attendanceRepository,
+            SectionRepository sectionRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.sessionRepository = sessionRepository;
+        this.attendanceRepository = attendanceRepository;
+        this.sectionRepository = sectionRepository;
     }
 
     @Override
@@ -51,6 +65,22 @@ public class SuperAdminInitializer implements CommandLineRunner {
             } else {
                 logger.info("SuperAdmin account already exists.");
             }
+            
+            // 🚀 DASHBOARD WARM-UP (Background)
+            new Thread(() -> {
+                try {
+                    logger.info("🔥 [WARM-UP] Starting Dashboard background warming...");
+                    long userCount = userRepository.count();
+                    long sessionCount = sessionRepository.count();
+                    long attendanceCount = attendanceRepository.count();
+                    long sectionCount = sectionRepository.count();
+                    logger.info("✅ [WARM-UP] Dashboard Ready. Users: {}, Sessions: {}, Records: {}, Sections: {}", 
+                        userCount, sessionCount, attendanceCount, sectionCount);
+                } catch (Exception e) {
+                    logger.warn("⚠️ [WARM-UP] Dashboard warming had a hiccups, but ignoring: {}", e.getMessage());
+                }
+            }).start();
+            
         } catch (Exception e) {
             logger.error("❌ Critical Error during SuperAdmin initialization: {}", e.getMessage());
         }
