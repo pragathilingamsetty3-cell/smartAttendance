@@ -29,6 +29,6 @@ ENTRYPOINT ["java", \
     "-XX:MaxRAMPercentage=70.0", \
     "-XX:MinRAMPercentage=50.0", \
     "-Xss256k", \
-    "-XX:TieredStopAtLevel=1", \
+    "-Dspring.profiles.active=prod", \
     "-Djava.security.egd=file:/dev/./urandom", \
     "-jar", "app.jar"]
