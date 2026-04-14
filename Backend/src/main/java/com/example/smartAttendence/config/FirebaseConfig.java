@@ -32,8 +32,8 @@ public class FirebaseConfig {
         // 📡 HIGHEST PRIORITY: Base64 String (Cloud Production)
         if (firebaseKeyBase64 != null && !firebaseKeyBase64.trim().isEmpty()) {
             try {
-                // 🛡️ HARDENING: Remove all whitespace (spaces, newlines, tabs) which cause "Illegal character" errors
-                String sanitizedKey = firebaseKeyBase64.replaceAll("\\s", "");
+                // 🛡️ HARDENING: Aggressively remove anything that is NOT a valid Base64 character (including '\', quotes, spaces, etc.)
+                String sanitizedKey = firebaseKeyBase64.replaceAll("[^a-zA-Z0-9+/=]", "");
                 byte[] decodedKey = Base64.getDecoder().decode(sanitizedKey);
                 FirebaseOptions options = FirebaseOptions.builder()
                         .setCredentials(GoogleCredentials.fromStream(new ByteArrayInputStream(decodedKey)))
