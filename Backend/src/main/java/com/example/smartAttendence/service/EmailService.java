@@ -25,39 +25,6 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    
-    public void sendWelcomeEmail(String toEmail, String studentName, String registrationNumber, String temporaryPassword) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(toEmail);
-            message.setSubject("Welcome to Smart Attendance System - Account Created");
-            message.setText("Dear " + studentName + ",\n\n" +
-                           "Welcome to the Smart Attendance System! Your account has been successfully created.\n\n" +
-                           "🎓 Student Details:\n" +
-                           "• Name: " + studentName + "\n" +
-                           "• Registration Number: " + registrationNumber + "\n" +
-                           "• Email: " + toEmail + "\n" +
-                           "• Temporary Password: " + temporaryPassword + "\n\n" +
-                           "📱 Next Steps:\n" +
-                           "1. Download the Smart Attendance mobile app\n" +
-                           "2. Login with your email and temporary password\n" +
-                           "3. Change your password immediately after first login\n" +
-                           "4. Enable biometric authentication for faster check-ins\n\n" +
-                           "🔐 Security Notice:\n" +
-                           "This is a temporary password. Please change it immediately after your first login.\n\n" +
-                           "For technical support, contact your system administrator.\n\n" +
-                           "Best regards,\n" +
-                           "Smart Attendance Team\n" +
-                           "📧 powered by AI-scheduled attendance management");
-            
-            mailSender.send(message);
-            logger.info("Welcome email sent successfully to: {}", toEmail);
-        } catch (Exception e) {
-            logger.error("Failed to send welcome email to: {}", toEmail, e);
-            throw new RuntimeException("Failed to send welcome email", e);
-        }
-    }
-    
     public void sendPasswordResetOtp(String toEmail, String otp) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
@@ -161,56 +128,6 @@ public class EmailService {
         }
     }
 
-    public void sendOTPSMS(String mobile, String otp) {
-        // SMS integration removed as requested. OTP is now primarily sent via Email.
-        logger.info("📱 [SMS SKIPPED] Email took priority for OTP to {}: {}", mobile, otp);
-    }
-
-    public void sendPasswordChangeConfirmation(String email, String studentName) {
-        logger.info("✅ PASSWORD CHANGE CONFIRMATION ✅");
-        logger.info("To: {}", email);
-        logger.info("Subject: Password Changed Successfully");
-        logger.info("Body:");
-        logger.info("Dear {},", studentName);
-        logger.info("Your password has been changed successfully.");
-        logger.info("If you didn't make this change, please contact support immediately.");
-        logger.info("--- CONFIRMATION EMAIL SENT ---");
-    }
-
-    public void sendSimpleEmail(String toEmail, String subject, String body) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(toEmail);
-            message.setSubject(subject);
-            message.setText(body);
-            
-            mailSender.send(message);
-            logger.info("Simple email sent successfully to: {}", toEmail);
-        } catch (Exception e) {
-            logger.error("Failed to send simple email to: {}", toEmail, e);
-            // Don't throw exception - allow caller to handle gracefully
-        }
-    }
-
-    public void sendPasswordResetOTP(String email, String studentName, String otp) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(email);
-            message.setSubject("Password Reset OTP - Smart Attendance");
-            message.setText("Dear " + studentName + ",\n\n" +
-                           "You have requested to reset your password.\n\n" +
-                           "🔐 Your OTP: " + otp + "\n\n" +
-                           "⚠️ This OTP is valid for 10 minutes only.\n" +
-                           "🔒 Please do not share this OTP with anyone.\n\n" +
-                           "If you didn't request this password reset, please contact support immediately.\n\n" +
-                           "Best regards,\n" +
-                           "Smart Attendance Team");
-            
-            mailSender.send(message);
-            logger.info("Password reset OTP email sent successfully to: {}", email);
-        } catch (Exception e) {
-            logger.error("Failed to send password reset OTP email to: {}", email, e);
-        }
     }
 
     public void sendEmergencyChangeEmail(com.example.smartAttendence.domain.ClassroomSession session,

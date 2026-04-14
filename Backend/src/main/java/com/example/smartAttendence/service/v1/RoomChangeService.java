@@ -18,8 +18,8 @@ import com.example.smartAttendence.repository.RoomRepository;
 import com.example.smartAttendence.repository.SectionRepository;
 import com.example.smartAttendence.repository.CRLRAssignmentRepository;
 import com.example.smartAttendence.repository.TimetableRepository;
-import com.example.smartAttendence.service.PushNotificationService;
 import com.example.smartAttendence.service.EmailService;
+import com.example.smartAttendence.service.v1.NotificationService;
 import com.example.smartAttendence.service.v1.SharedUtilityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,7 +46,7 @@ public class RoomChangeService {
     private final UserV1Repository userRepository;
     private final RoomRepository roomRepository;
     private final SectionRepository sectionRepository;
-    private final PushNotificationService pushNotificationService;
+    private final NotificationService notificationService;
     private final EmailService emailService;
     private final CRLRAssignmentRepository crLrAssignmentRepository;
     private final TimetableRepository timetableRepository;
@@ -60,7 +60,7 @@ public class RoomChangeService {
             UserV1Repository userRepository,
             RoomRepository roomRepository,
             SectionRepository sectionRepository,
-            @Autowired(required = false) PushNotificationService pushNotificationService,
+            NotificationService notificationService,
             EmailService emailService,
             CRLRAssignmentRepository crLrAssignmentRepository,
             TimetableRepository timetableRepository,
@@ -71,7 +71,7 @@ public class RoomChangeService {
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
         this.sectionRepository = sectionRepository;
-        this.pushNotificationService = pushNotificationService;
+        this.notificationService = notificationService;
         this.emailService = emailService;
         this.crLrAssignmentRepository = crLrAssignmentRepository;
         this.timetableRepository = timetableRepository;
@@ -474,11 +474,9 @@ public class RoomChangeService {
     
     private void sendRoomChangeNotifications(RoomChangeTransition transition, ClassroomSession session, QRRoomChangeRequest request) {
         if (request.notifyStudents()) {
-            if (pushNotificationService != null) {
-                pushNotificationService.sendEmergencyRoomChangeNotification(
-                    session, transition.getOriginalRoomId(), transition.getNewRoomId(), transition.getReason()
-                );
-            }
+            notificationService.sendEmergencyRoomChangeNotification(
+                session, transition.getOriginalRoomId(), transition.getNewRoomId(), transition.getReason()
+            );
         }
         
         if (request.notifyFaculty()) {
@@ -493,14 +491,12 @@ public class RoomChangeService {
     
     private void sendWeeklySwapNotifications(RoomChangeTransition transition, WeeklyRoomSwap swapConfig) {
         // Send notifications about the room swap
-        if (pushNotificationService != null) {
-            pushNotificationService.sendEmergencyRoomChangeNotification(
-                transition.getSession(),
-                swapConfig.getOriginalRoom().getId(),
-                swapConfig.getNewRoom().getId(),
-                swapConfig.getReason() != null ? swapConfig.getReason() : "Weekly room swap"
-            );
-        }
+        notificationService.sendEmergencyRoomChangeNotification(
+            transition.getSession(),
+            swapConfig.getOriginalRoom().getId(),
+            swapConfig.getNewRoom().getId(),
+            swapConfig.getReason() != null ? swapConfig.getReason() : "Weekly room swap"
+        );
         
         // Log the notification
         logger.info("Weekly room swap notification sent for swap on {} from {} to {}", 

@@ -156,6 +156,49 @@ public class NotificationService {
     }
 
     /**
+     * Send Push Notification for Hall Pass Status
+     */
+    public void sendHallPassNotification(UUID studentId, boolean approved, int durationMinutes) {
+        userV1Repository.findById(studentId).ifPresent(user -> {
+            String title = approved ? "🎟️ Hall Pass Approved" : "❌ Hall Pass Denied";
+            String body = approved ? 
+                String.format("Your hall pass for %d minutes has been approved. Please return promptly.", durationMinutes) :
+                "Your hall pass request has been denied by faculty.";
+            
+            if (firebaseService.isEnabled()) {
+                Map<String, String> data = new HashMap<>();
+                data.put("type", "HALL_PASS");
+                data.put("approved", String.valueOf(approved));
+                data.put("duration", String.valueOf(durationMinutes));
+
+                firebaseService.sendCustomNotification(title, body, data, "hall_pass_" + studentId);
+                log.info("✅ Hall pass notification sent to user: {}", studentId);
+            }
+        });
+    }
+
+    /**
+     * Send Emergency Room Change Notification to Students
+     */
+    public void sendEmergencyRoomChangeNotification(com.example.smartAttendence.domain.ClassroomSession session, 
+                                                   UUID oldRoomId, UUID newRoomId, String reason) {
+        log.info("🚨 [EMERGENCY] Room changed for session {}. Reason: {}", session.getId(), reason);
+        
+        String title = "🔄 Room Change Alert";
+        String body = String.format("Your %s class has been moved. Reason: %s", session.getSubject(), reason);
+        
+        if (firebaseService.isEnabled()) {
+            Map<String, String> data = new HashMap<>();
+            data.put("type", "ROOM_CHANGE");
+            data.put("sessionId", session.getId().toString());
+            data.put("newRoomId", newRoomId.toString());
+
+            firebaseService.sendCustomNotification(title, body, data, "section_" + session.getSection().getId());
+            log.info("✅ Emergency room change broadcast to section: {}", session.getSection().getId());
+        }
+    }
+
+    /**
      * Send Password Reset OTP
      * Routed to EMAIL as requested
      */

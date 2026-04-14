@@ -1,11 +1,12 @@
 import { Client } from '@stomp/stompjs';
+import { API_CONFIG } from '../utils/constants';
 
 class WebSocketClient {
   private client: Client;
 
   constructor() {
     this.client = new Client({
-      brokerURL: process.env.NEXT_PUBLIC_WS_URL || 'wss://localhost:8443/ws',
+      brokerURL: API_CONFIG.WS_URL,
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,

@@ -1,8 +1,8 @@
 package com.example.smartAttendence.service.v1;
 
 import com.example.smartAttendence.dto.v1.HallPassRequestDTO;
-import com.example.smartAttendence.service.PushNotificationService;
 import com.example.smartAttendence.service.v1.AttendanceV1Service;
+import com.example.smartAttendence.service.v1.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,19 +16,19 @@ import java.util.UUID;
 public class FacultyV1Service {
 
     private final AttendanceV1Service attendanceService;
-    private final PushNotificationService pushNotificationService;
+    private final NotificationService notificationService;
     private final com.example.smartAttendence.repository.v1.ClassroomSessionV1Repository sessionRepository;
     private final com.example.smartAttendence.repository.v1.AttendanceRecordV1Repository attendanceRepository;
     private final com.example.smartAttendence.repository.v1.UserV1Repository userRepository;
 
     public FacultyV1Service(
             AttendanceV1Service attendanceService,
-            @Autowired(required = false) PushNotificationService pushNotificationService,
+            NotificationService notificationService,
             com.example.smartAttendence.repository.v1.ClassroomSessionV1Repository sessionRepository,
             com.example.smartAttendence.repository.v1.AttendanceRecordV1Repository attendanceRepository,
             com.example.smartAttendence.repository.v1.UserV1Repository userRepository) {
         this.attendanceService = attendanceService;
-        this.pushNotificationService = pushNotificationService;
+        this.notificationService = notificationService;
         this.sessionRepository = sessionRepository;
         this.attendanceRepository = attendanceRepository;
         this.userRepository = userRepository;
@@ -90,13 +90,11 @@ public class FacultyV1Service {
         attendanceService.grantHallPass(request);
 
         // Send notification to student
-        if (pushNotificationService != null) {
-            pushNotificationService.sendHallPassNotification(
-                request.studentId(), 
-                true, // approved
-                request.requestedMinutes()
-            );
-        }
+        notificationService.sendHallPassNotification(
+            request.studentId(), 
+            true, // approved
+            request.requestedMinutes()
+        );
     }
 
     /**

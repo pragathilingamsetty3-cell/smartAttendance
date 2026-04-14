@@ -51,6 +51,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 🔐 COMPREHENSIVE TOKEN VALIDATION
         try {
+            final String authHeader = request.getHeader("Authorization");
+
             // 1. Validate Authorization Header
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 filterChain.doFilter(request, response);
@@ -160,34 +162,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getServletPath();
-        
-        // 🔐 PUBLIC ENDPOINTS THAT DON'T REQUIRE AUTHENTICATION
-        List<String> publicEndpoints = Arrays.asList(
-            "/api/v1/auth/login",
-            "/api/v1/auth/register", 
-            "/api/v1/auth/forgot-password",
-            "/api/v1/auth/reset-password",
-            "/actuator/health",
-            "/actuator/info",
-            "/error",
-            "/v3/api-docs",
-            "/swagger-ui"
-        );
-        
-        // 🔐 CHECK IF PATH IS PUBLIC
-        boolean isPublicEndpoint = publicEndpoints.stream()
-            .anyMatch(path::startsWith);
-        
-        if (isPublicEndpoint) {
-            return true;
-        }
-        
-        return false;
     }
 
     /**

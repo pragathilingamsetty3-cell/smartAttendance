@@ -1,15 +1,10 @@
 import axios from "axios";
 import { getDeviceFingerprint } from "./utils";
 import { useAuthStore } from "../stores/authStore";
-
-const baseURL = process.env.NEXT_PUBLIC_API_URL;
-
-if (!baseURL && process.env.NODE_ENV === 'production') {
-  console.warn("⚠️ NEXT_PUBLIC_API_URL is missing in production environment!");
-}
+import { API_CONFIG } from "../utils/constants";
 
 const apiClient = axios.create({
-  baseURL: baseURL || "https://localhost:8443",
+  baseURL: API_CONFIG.BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
