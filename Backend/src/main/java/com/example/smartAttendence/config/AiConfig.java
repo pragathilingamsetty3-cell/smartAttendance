@@ -23,14 +23,15 @@ public class AiConfig {
     @Bean
     @Primary
     public Client googleGenAiClient() {
+        String keyToUse = apiKey;
         if (apiKey == null || apiKey.trim().isEmpty() || apiKey.contains("${")) {
-            log.warn("⚠️ AI Configuration: No Gemini API Key found. AI features will be DISABLED.");
-            return null;
+            log.warn("⚠️ AI Configuration: No Gemini API Key found. AI features will run in LOCAL FALLBACK MODE.");
+            keyToUse = "dummy-key-to-satisfy-spring-boot-startup";
         }
         
         try {
             return Client.builder()
-                    .apiKey(apiKey)
+                    .apiKey(keyToUse)
                     .build();
         } catch (Exception e) {
             log.error("❌ Failed to initialize Google GenAI Client: {}", e.getMessage());
