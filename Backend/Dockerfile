@@ -26,8 +26,9 @@ COPY --from=build /app/target/smartAttendence-0.0.1-SNAPSHOT.jar app.jar
 # -Xss: Smaller thread stack size (256k) to save memory
 ENTRYPOINT ["java", \
     "-XX:InitialRAMPercentage=40.0", \
-    "-XX:MaxRAMPercentage=75.0", \
+    "-XX:MaxRAMPercentage=70.0", \
     "-XX:MinRAMPercentage=50.0", \
     "-Xss256k", \
+    "-XX:TieredStopAtLevel=1", \
     "-Djava.security.egd=file:/dev/./urandom", \
     "-jar", "app.jar"]

@@ -3,7 +3,7 @@ package com.example.smartAttendence.config;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -35,13 +35,13 @@ import com.google.firebase.messaging.FirebaseMessaging;
 @ActiveProfiles("test")
 class SimpleConfigTest {
 
-    @MockBean
+    @MockitoBean
     private JavaMailSender javaMailSender;
 
-    @MockBean
+    @MockitoBean
     private Client googleGenAiClient;
 
-    @MockBean
+    @MockitoBean
     private FirebaseMessaging firebaseMessaging;
 
     @Test

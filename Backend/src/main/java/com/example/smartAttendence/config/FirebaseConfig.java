@@ -85,8 +85,8 @@ public class FirebaseConfig {
             return FirebaseMessaging.getInstance();
 
         } catch (Exception e) {
-            logger.error("❌ Failed to initialize Firebase: {}", e.getMessage());
-            throw new RuntimeException("Firebase initialization failed: " + e.getMessage(), e);
+            logger.error("⚠️ Firebase initialization failed: {}. Continuing without Firebase features.", e.getMessage());
+            return null;
         }
     }
 }

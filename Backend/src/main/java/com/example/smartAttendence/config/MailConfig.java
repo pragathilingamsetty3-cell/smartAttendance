@@ -41,6 +41,9 @@ public class MailConfig {
     @Value("${spring.mail.properties.mail.smtp.ssl.trust}")
     private String sslTrust;
 
+    @Value("${mail.test-on-startup:false}")
+    private boolean testOnStartup;
+
     @PostConstruct
     public void debugMailConfiguration() {
         logger.debug("🔧 MAIL CONFIGURATION DEBUG:");
@@ -79,8 +82,13 @@ public class MailConfig {
             logger.info("✅ Email password length: {} characters", mailPassword.length());
         }
 
-        // 🔧 TEST MAIL CONNECTIVITY (Async to prevent startup hang)
-        new Thread(this::testMailConnectivity).start();
+        // 🔧 TEST MAIL CONNECTIVITY (Optional to prevent Gmail throttling)
+        if (testOnStartup) {
+            logger.info("🧪 Startup mail connectivity test is ENABLED. Attempting test...");
+            new Thread(this::testMailConnectivity).start();
+        } else {
+            logger.info("ℹ️ Startup mail connectivity test is DISABLED. Use 'mail.test-on-startup=true' to enable.");
+        }
     }
 
     /**
