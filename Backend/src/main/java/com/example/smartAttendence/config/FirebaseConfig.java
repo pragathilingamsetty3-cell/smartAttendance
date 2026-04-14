@@ -30,9 +30,9 @@ public class FirebaseConfig {
     @Bean
     public FirebaseMessaging firebaseMessaging() throws IOException {
         // 📡 HIGHEST PRIORITY: Base64 String (Cloud Production)
-        if (firebaseKeyBase64 != null && !firebaseKeyBase64.trim().isEmpty()) {
-            try {
-                byte[] decodedKey = Base64.getDecoder().decode(firebaseKeyBase64.trim());
+                // 🛡️ HARDENING: Remove all whitespace (spaces, newlines, tabs) which cause "Illegal character" errors
+                String sanitizedKey = firebaseKeyBase64.replaceAll("\\s", "");
+                byte[] decodedKey = Base64.getDecoder().decode(sanitizedKey);
                 FirebaseOptions options = FirebaseOptions.builder()
                         .setCredentials(GoogleCredentials.fromStream(new ByteArrayInputStream(decodedKey)))
                         .build();
