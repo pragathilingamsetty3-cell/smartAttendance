@@ -35,8 +35,13 @@ public class FirebaseConfig {
                 // 🛡️ HARDENING: Aggressively remove anything that is NOT a valid Base64 character (including '\', quotes, spaces, etc.)
                 String sanitizedKey = firebaseKeyBase64.replaceAll("[^a-zA-Z0-9+/=]", "");
                 byte[] decodedKey = Base64.getDecoder().decode(sanitizedKey);
+                
+                // 🛡️ DEEP JSON HARDENING: Fix literal '\n' escaping inside the private_key JSON field
+                String jsonString = new String(decodedKey, java.nio.charset.StandardCharsets.UTF_8);
+                jsonString = jsonString.replace("\\n", "\n");
+                
                 FirebaseOptions options = FirebaseOptions.builder()
-                        .setCredentials(GoogleCredentials.fromStream(new ByteArrayInputStream(decodedKey)))
+                        .setCredentials(GoogleCredentials.fromStream(new ByteArrayInputStream(jsonString.getBytes(java.nio.charset.StandardCharsets.UTF_8))))
                         .build();
                 
                 if (FirebaseApp.getApps().isEmpty()) {
