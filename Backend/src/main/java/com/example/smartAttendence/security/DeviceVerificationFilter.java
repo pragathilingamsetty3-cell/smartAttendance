@@ -27,7 +27,9 @@ public class DeviceVerificationFilter extends OncePerRequestFilter {
         String endpoint = request.getRequestURI();
         String clientIP = getClientIP(request);
         
-        // 🔐 BYPASS DEVICE VERIFICATION FOR LOCALHOST, PUBLIC ENDPOINTS AND CORS PREFLIGHT
+        try {
+            logger.info("🔍 [SENTINEL] DeviceFilter starting for: {}", endpoint);
+            // 🔐 BYPASS DEVICE VERIFICATION FOR LOCALHOST, PUBLIC ENDPOINTS AND CORS PREFLIGHT
         if (isLocalhost(clientIP) || !requiresDeviceVerification(endpoint) || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
@@ -43,6 +45,8 @@ public class DeviceVerificationFilter extends OncePerRequestFilter {
                 response.getWriter().write("{\"error\":\"Device verification failed\"}");
                 return;
             }
+        } catch (Throwable t) {
+            logger.error("🚨 [SENTINEL] DeviceFilter CRASHED but failing-open: {}", t.getMessage(), t);
         }
         
         filterChain.doFilter(request, response);

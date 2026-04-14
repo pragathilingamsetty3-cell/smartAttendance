@@ -51,6 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 🔐 COMPREHENSIVE TOKEN VALIDATION
         try {
+            logger.info("🔍 [SENTINEL] JwtAuthenticationFilter starting for: {}", request.getRequestURI());
             final String authHeader = request.getHeader("Authorization");
 
             // 1. Validate Authorization Header

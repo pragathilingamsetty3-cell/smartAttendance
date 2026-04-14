@@ -39,9 +39,12 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) 
             throws ServletException, IOException {
         
-        String clientIP = getClientIP(request);
-        String userAgent = request.getHeader("User-Agent");
         String endpoint = request.getRequestURI();
+        
+        try {
+            logger.info("🔍 [SENTINEL] ThreatDetectionFilter starting for: {}", endpoint);
+            String clientIP = getClientIP(request);
+            String userAgent = request.getHeader("User-Agent");
         
         // 🔐 SECURITY: Bypass threat detection for health checks and CORS preflight
         if (endpoint.startsWith("/actuator/") || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
@@ -54,18 +57,30 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
         
         if (threatLevel == ThreatLevel.CRITICAL) {
             response.setStatus(403);
+            response.setContentType("application/json");
             response.getWriter().write("{\"error\":\"Critical threat detected - access denied\"}");
-            ((SecurityAuditLogger) securityAuditLogger).logSecurityEvent("CRITICAL_THREAT", clientIP, 
-                String.format("Critical threat detected: endpoint=%s, ua=%s", endpoint, userAgent));
+            
+            // 🛡️ SAFE LOGGING - Protect against ClassCastException
+            if (securityAuditLogger instanceof SecurityAuditLogger) {
+                ((SecurityAuditLogger) securityAuditLogger).logSecurityEvent("CRITICAL_THREAT", clientIP, 
+                    String.format("Critical threat detected: endpoint=%s, ua=%s", endpoint, userAgent));
+            }
             return;
         }
         
         if (threatLevel == ThreatLevel.HIGH) {
             response.setStatus(429);
+            response.setContentType("application/json");
             response.getWriter().write("{\"error\":\"High threat detected - rate limited\"}");
-            ((SecurityAuditLogger) securityAuditLogger).logSecurityEvent("HIGH_THREAT", clientIP, 
-                String.format("High threat detected: endpoint=%s, ua=%s", endpoint, userAgent));
+            
+            // 🛡️ SAFE LOGGING - Protect against ClassCastException
+            if (securityAuditLogger instanceof SecurityAuditLogger) {
+                ((SecurityAuditLogger) securityAuditLogger).logSecurityEvent("HIGH_THREAT", clientIP, 
+                    String.format("High threat detected: endpoint=%s, ua=%s", endpoint, userAgent));
+            }
             return;
+        } catch (Throwable t) {
+            logger.error("🚨 [SENTINEL] ThreatDetectionFilter CRASHED but failing-open: {}", t.getMessage(), t);
         }
         
         filterChain.doFilter(request, response);

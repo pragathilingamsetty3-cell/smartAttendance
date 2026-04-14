@@ -72,7 +72,9 @@ public class HighPerformanceRateLimitingFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         
         String endpoint = request.getRequestURI();
-        String clientIP = getClientIP(request);
+        try {
+            logger.info("🔍 [SENTINEL] RateLimitFilter starting for: {}", endpoint);
+            String clientIP = getClientIP(request);
         
         // 🚀 PERFORMANCE OPTIMIZATION - Bypass rate limiting for localhost
         if ("127.0.0.1".equals(clientIP) || "0:0:0:0:0:0:0:1".equals(clientIP) || "::1".equals(clientIP)) {
@@ -101,6 +103,8 @@ public class HighPerformanceRateLimitingFilter extends OncePerRequestFilter {
             response.setStatus(429);
             response.getWriter().write("{\"error\":\"Rate limit exceeded\",\"retryAfter\":60}");
             return;
+        } catch (Throwable t) {
+            logger.error("🚨 [SENTINEL] RateLimitFilter CRASHED but failing-open: {}", t.getMessage(), t);
         }
         
         filterChain.doFilter(request, response);
