@@ -352,10 +352,6 @@
                 <version>${maven.compiler.plugin.version}</version>
                 <configuration>
                     <release>${java.version}</release>
-                    <fork>true</fork>
-                    <meminitial>256m</meminitial>
-                    <maxmem>1024m</maxmem>
-                    <forceJavacCompilerUse>true</forceJavacCompilerUse>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>

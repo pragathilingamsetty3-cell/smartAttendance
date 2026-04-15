@@ -1,25 +1,26 @@
-# 🏗️ Build Stage
+# 🏗️ Build Stage - Minimal and Fast for 512MB Render Free Tier
 FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 
-# Copy pom.xml and download dependencies (layer caching)
+# Copy pom.xml only and download dependencies
 COPY pom.xml .
-# Download dependencies without transitives in offline mode
-RUN mvn dependency:go-offline -B --quiet || true
+# Aggressive dependency resolution with parallel downloads
+RUN mvn dependency:resolve -B -q --fail-never && \
+    mvn dependency:resolve-plugins -B -q --fail-never || true
 
 # Copy source code and build
 COPY src ./src
 
-# Production build with optimized compiler settings
-# Xmx1024m: Heap for compilation
-# XX:+TieredCompilation: Faster compilation with tiering
-# XX:-TieredCompilation speeds up but uses more mem, so use tiered
-# XX:TieredStopAtLevel=2: Reduce compilation overhead
-RUN MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=256m -XX:+UseG1GC -XX:+UseStringDeduplication -XX:+TieredCompilation -XX:TieredStopAtLevel=1" \
-    mvn clean package -B -DskipTests \
-    -Dspring.profiles.active=prod \
+# Aggressive build: reduced memory, skip optional processing, single-threaded
+RUN MAVEN_OPTS="-Xmx512m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC -XX:+DisableExplicitGC" \
+    mvn package -B \
+    -DskipTests \
+    -DskipITs \
+    -Dmaven.javadoc.skip=true \
+    -Denforcer.skip=true \
     -Dspringdoc.skip=true \
-    -q
+    -q \
+    -T 1C
 
 # 🚀 Run Stage
 FROM eclipse-temurin:21-jre-alpine
