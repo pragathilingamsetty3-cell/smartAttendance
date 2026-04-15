@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.Status;
+import org.springframework.lang.Nullable;
 import com.google.cloud.firestore.Firestore;
 import org.springframework.stereotype.Component;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -40,7 +41,7 @@ public class AdvancedPerformanceMonitor implements HealthIndicator {
     @Autowired
     public AdvancedPerformanceMonitor(MeterRegistry meterRegistry, 
                                    DataSource dataSource,
-                                   @Autowired(required = false) Firestore firestore) {
+                                   @Nullable Firestore firestore) {
         this.meterRegistry = meterRegistry;
         this.dataSource = dataSource;
         this.firestore = firestore;

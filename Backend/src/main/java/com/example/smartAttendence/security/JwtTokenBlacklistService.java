@@ -5,6 +5,7 @@ import com.google.cloud.firestore.Firestore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.security.MessageDigest;
@@ -33,7 +34,7 @@ public class JwtTokenBlacklistService {
     // 🚀 PERFORMANCE OPTIMIZATION - Standard blacklist duration
     private static final Duration DEFAULT_DURATION = Duration.ofDays(14);
 
-    public JwtTokenBlacklistService(@Autowired(required = false) Firestore firestore) {
+    public JwtTokenBlacklistService(@Nullable Firestore firestore) {
         this.firestore = firestore;
     }
 

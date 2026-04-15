@@ -5,6 +5,7 @@ import com.google.cloud.firestore.SetOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -33,7 +34,7 @@ public class SecurityAuditLogger implements HandlerInterceptor {
     private final Firestore firestore;
 
     @Autowired
-    public SecurityAuditLogger(Firestore firestore) {
+    public SecurityAuditLogger(@Nullable Firestore firestore) {
         this.firestore = firestore;
     }
 

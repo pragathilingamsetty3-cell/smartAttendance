@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -34,7 +35,7 @@ public class DeviceVerificationFilter extends OncePerRequestFilter {
             .build();
 
     @Autowired
-    public DeviceVerificationFilter(Firestore firestore, JwtUtil jwtUtil) {
+    public DeviceVerificationFilter(@Nullable Firestore firestore, JwtUtil jwtUtil) {
         this.firestore = firestore;
         this.jwtUtil = jwtUtil;
     }

@@ -15,6 +15,7 @@ import com.example.smartAttendence.service.v1.NotificationService;
 import com.google.cloud.firestore.Firestore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.Nullable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,7 @@ public class AIAttendanceMonitorService {
     private final AcademicCalendarV1Repository calendarRepository;
     private final AISpatialMonitoringEngine spatialEngine;
     private final AILearningOptimizer learningOptimizer;
+    @Nullable
     private final Firestore firestore;
 
     /**

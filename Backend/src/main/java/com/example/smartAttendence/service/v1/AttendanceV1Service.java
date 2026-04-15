@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,7 +63,7 @@ public class AttendanceV1Service {
             ClassroomSessionV1Repository classroomSessionRepository,
             AttendanceRecordV1Repository attendanceRecordRepository,
             UserV1Repository userRepository,
-            Firestore firestore,
+            @Nullable Firestore firestore,
             ApplicationEventPublisher eventPublisher,
             AILearningOptimizer aiLearningOptimizer,
             SecurityAlertV1Repository securityAlertRepository

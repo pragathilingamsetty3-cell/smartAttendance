@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -32,6 +33,18 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
     private final Firestore firestore;
     private final SecurityAuditLogger auditLogger;
     
+    @Autowired
+    public AdvancedThreatDetectionFilter(AdvancedInputValidator advancedInputValidator, 
+                                        @Nullable Firestore firestore,
+                                        SecurityAuditLogger auditLogger) {
+        this.advancedInputValidator = advancedInputValidator;
+        this.firestore = firestore;
+        this.auditLogger = auditLogger;
+        if (firestore == null) {
+            logger.warn("⚠️ Firestore is not initialized. Threat detection will use local caching only.");
+        }
+    }
+    
     // 🚀 SPEED-SHIELD Caches
     private final Cache<String, Integer> threatAnalysisCache = Caffeine.newBuilder()
             .expireAfterWrite(5, TimeUnit.MINUTES)
@@ -48,13 +61,6 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
 
     private final Map<String, Instant> lastRequestTime = new ConcurrentHashMap<>();
     private final Map<String, Integer> requestCounts = new ConcurrentHashMap<>();
-
-    @Autowired
-    public AdvancedThreatDetectionFilter(AdvancedInputValidator validator, Firestore firestore, SecurityAuditLogger auditLogger) {
-        this.advancedInputValidator = validator;
-        this.firestore = firestore;
-        this.auditLogger = auditLogger;
-    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) 

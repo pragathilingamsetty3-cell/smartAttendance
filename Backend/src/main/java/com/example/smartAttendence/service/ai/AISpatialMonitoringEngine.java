@@ -7,6 +7,7 @@ import com.google.cloud.firestore.Firestore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -23,7 +24,7 @@ public class AISpatialMonitoringEngine {
     private final UserV1Repository userRepository;
     private final Firestore firestore;
 
-    public AISpatialMonitoringEngine(UserV1Repository userRepository, @Autowired(required = false) Firestore firestore) {
+    public AISpatialMonitoringEngine(UserV1Repository userRepository, @Nullable Firestore firestore) {
         this.userRepository = userRepository;
         this.firestore = firestore;
     }
