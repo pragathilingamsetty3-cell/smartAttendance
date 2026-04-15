@@ -7,9 +7,28 @@ import com.example.smartAttendence.security.SecurityAuditLogger;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.servlet.http.HttpServletRequest;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import java.util.concurrent.TimeUnit;
+import java.util.Optional;
+import java.util.Map;
 
 @Component
 public class SecurityEvaluator {
+
+    // 🚀 PERFORMANCE OPTIMAL: Specialized local caches to replace Redis
+    private final Cache<String, String> ipBindingCache = Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).maximumSize(5000).build();
+    private final Cache<String, String> uaBindingCache = Caffeine.newBuilder().expireAfterWrite(7, TimeUnit.DAYS).maximumSize(5000).build();
+    private final Cache<String, String> geoBindingCache = Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).maximumSize(5000).build();
+    private final Cache<String, String> deviceFingerprintCache = Caffeine.newBuilder().expireAfterWrite(30, TimeUnit.DAYS).maximumSize(5000).build();
+    private final Cache<String, String> sessionIntegrityCache = Caffeine.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).maximumSize(10000).build();
+    private final Cache<String, String> deviceSessionCache = Caffeine.newBuilder().expireAfterWrite(2, TimeUnit.HOURS).maximumSize(10000).build();
+    private final Cache<String, String> sessionActivityCache = Caffeine.newBuilder().expireAfterWrite(15, TimeUnit.MINUTES).maximumSize(10000).build();
+    private final Cache<String, Integer> suspiciousActivityCache = Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).maximumSize(5000).build();
+    private final Cache<String, String> deviceTrustCache = Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).maximumSize(10000).build();
+    private final Cache<String, Boolean> knownDeviceCache = Caffeine.newBuilder().expireAfterWrite(365, TimeUnit.DAYS).maximumSize(5000).build();
+    private final Cache<String, Boolean> proxyVpnCache = Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).maximumSize(10000).build();
+    private final Cache<String, String> sessionBindingCache = Caffeine.newBuilder().expireAfterWrite(2, TimeUnit.HOURS).maximumSize(10000).build();
 
     public boolean hasValidLocation(Authentication authentication, HttpServletRequest request) {
         // 🔐 ZERO-TRUST LOCATION VERIFICATION
@@ -56,10 +75,10 @@ public class SecurityEvaluator {
         String key = "ip_binding:" + username;
         
         try {
-            String storedIP = redisTemplate.opsForValue().get(key);
+            String storedIP = ipBindingCache.getIfPresent(key);
             if (storedIP == null) {
                 // 🔐 FIRST TIME - REGISTER IP
-                redisTemplate.opsForValue().set(key, hashIP(clientIP), java.time.Duration.ofHours(1));
+                ipBindingCache.put(key, hashIP(clientIP));
                 return true;
             }
             
@@ -76,10 +95,10 @@ public class SecurityEvaluator {
         String key = "ua_binding:" + username;
         
         try {
-            String storedUA = redisTemplate.opsForValue().get(key);
+            String storedUA = uaBindingCache.getIfPresent(key);
             if (storedUA == null) {
                 // 🔐 FIRST TIME - REGISTER USER-AGENT
-                redisTemplate.opsForValue().set(key, hashUserAgent(userAgent), java.time.Duration.ofDays(7));
+                uaBindingCache.put(key, hashUserAgent(userAgent));
                 return true;
             }
             
@@ -99,7 +118,7 @@ public class SecurityEvaluator {
         String username = authentication.getName();
         String key = "session_binding:" + username + ":" + sessionId;
         
-        return redisTemplate.hasKey(key);
+        return sessionBindingCache.getIfPresent(key) != null;
     }
     
     private boolean verifyGeoLocation(Authentication authentication, String clientIP) {
@@ -109,10 +128,10 @@ public class SecurityEvaluator {
         String key = "geo_binding:" + username;
         
         try {
-            String storedGeo = redisTemplate.opsForValue().get(key);
+            String storedGeo = geoBindingCache.getIfPresent(key);
             if (storedGeo == null) {
                 // 🔐 FIRST TIME - REGISTER GEOLOCATION
-                redisTemplate.opsForValue().set(key, currentGeo, java.time.Duration.ofHours(24));
+                geoBindingCache.put(key, currentGeo);
                 return true;
             }
             
@@ -126,7 +145,7 @@ public class SecurityEvaluator {
     private String getStoredDeviceFingerprint(Authentication authentication) {
         String username = authentication.getName();
         String key = "device_fingerprint:" + username;
-        return redisTemplate.opsForValue().get(key);
+        return deviceFingerprintCache.getIfPresent(key);
     }
     
     private boolean registerAdminDevice(Authentication authentication, String deviceFingerprint, HttpServletRequest request) {
@@ -139,11 +158,16 @@ public class SecurityEvaluator {
             return false;
         }
         
-        redisTemplate.opsForValue().set(key, deviceFingerprint, java.time.Duration.ofDays(30));
+        deviceFingerprintCache.put(key, deviceFingerprint);
         
         // 🔐 LOG ADMIN DEVICE REGISTRATION
-        ((SecurityAuditLogger) securityEventLogger).logSecurityEvent("ADMIN_DEVICE_REGISTERED", username, 
-            String.format("Device registered: fingerprint=%s, ip=%s", deviceFingerprint, getClientIP(request)));
+        ((SecurityAuditLogger) securityEventLogger).logSecurityEvent(
+            "ADMIN_DEVICE_REGISTERED", 
+            username, 
+            request.getRequestURI(), 
+            "REGISTER", 
+            Map.of("fingerprint", deviceFingerprint, "ip", getClientIP(request))
+        );
         
         return true;
     }
@@ -154,11 +178,11 @@ public class SecurityEvaluator {
         String key = "device_trust:" + username + ":" + deviceFingerprint;
         
         try {
-            String trustLevel = redisTemplate.opsForValue().get(key);
+            String trustLevel = deviceTrustCache.getIfPresent(key);
             if (trustLevel == null) {
                 // 🔐 CALCULATE TRUST LEVEL
                 trustLevel = calculateDeviceTrust(deviceFingerprint, request);
-                redisTemplate.opsForValue().set(key, trustLevel, java.time.Duration.ofHours(1));
+                deviceTrustCache.put(key, trustLevel);
             }
             
             return "HIGH".equals(trustLevel) || "MEDIUM".equals(trustLevel);
@@ -173,11 +197,11 @@ public class SecurityEvaluator {
         String key = "session_integrity:" + username + ":" + sessionId;
         
         try {
-            String integrity = redisTemplate.opsForValue().get(key);
+            String integrity = sessionIntegrityCache.getIfPresent(key);
             if (integrity == null) {
                 // 🔐 ESTABLISH SESSION INTEGRITY
                 integrity = "VALID";
-                redisTemplate.opsForValue().set(key, integrity, java.time.Duration.ofMinutes(30));
+                sessionIntegrityCache.put(key, integrity);
             }
             
             return "VALID".equals(integrity);
@@ -192,10 +216,10 @@ public class SecurityEvaluator {
         String key = "device_session:" + username + ":" + deviceFingerprint;
         
         try {
-            String storedSessionId = redisTemplate.opsForValue().get(key);
+            String storedSessionId = deviceSessionCache.getIfPresent(key);
             if (storedSessionId == null) {
                 // 🔐 BIND DEVICE TO SESSION
-                redisTemplate.opsForValue().set(key, sessionId, java.time.Duration.ofHours(2));
+                deviceSessionCache.put(key, sessionId);
                 return true;
             }
             
@@ -212,13 +236,13 @@ public class SecurityEvaluator {
         
         try {
             // 🔐 UPDATE LAST ACTIVITY
-            redisTemplate.opsForValue().set(key, java.time.Instant.now().toString(), java.time.Duration.ofMinutes(15));
+            sessionActivityCache.put(key, java.time.Instant.now().toString());
             
             // 🔐 CHECK FOR SUSPICIOUS ACTIVITY
             String activityKey = "suspicious_activity:" + username;
-            String suspiciousCount = redisTemplate.opsForValue().get(activityKey);
+            Integer suspiciousCount = suspiciousActivityCache.getIfPresent(activityKey);
             
-            if (suspiciousCount != null && Integer.parseInt(suspiciousCount) > 3) {
+            if (suspiciousCount != null && suspiciousCount > 3) {
                 return false;
             }
             
@@ -278,13 +302,13 @@ public class SecurityEvaluator {
     
     private boolean isKnownDevice(String deviceFingerprint) {
         String key = "known_device:" + deviceFingerprint;
-        return redisTemplate.hasKey(key);
+        return knownDeviceCache.getIfPresent(key) != null;
     }
     
     private boolean isProxyOrVPN(String clientIP) {
         // 🔐 SIMPLIFIED PROXY/VPN DETECTION
         String key = "proxy_vpn:" + clientIP;
-        return redisTemplate.hasKey(key);
+        return proxyVpnCache.getIfPresent(key) != null;
     }
     
     private String generateDeviceFingerprint(HttpServletRequest request) {
@@ -358,19 +382,10 @@ public class SecurityEvaluator {
         return request.getRemoteAddr();
     }
     
-    // 🔐 DEPENDENCIES (AUTOMATICALLY INJECTED BY SPRING)
-    private org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
     private HandlerInterceptor securityEventLogger;
     
     // 🔐 CONSTRUCTOR - SPRING WILL INJECT DEPENDENCIES AUTOMATICALLY
     public SecurityEvaluator() {
-        // Spring will inject dependencies via @Autowired
-    }
-    
-    // 🔐 SETTER FOR DEPENDENCY INJECTION
-    @Autowired
-    public void setRedisTemplate(org.springframework.data.redis.core.StringRedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
     }
     
     @Autowired

@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.Status;
-import org.springframework.data.redis.core.RedisTemplate;
+import com.google.cloud.firestore.Firestore;
 import org.springframework.stereotype.Component;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -27,7 +27,7 @@ public class AdvancedPerformanceMonitor implements HealthIndicator {
 
     private final MeterRegistry meterRegistry;
     private final DataSource dataSource;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final Firestore firestore;
     
     // HTTPS Monitoring Properties
     private boolean httpsEnabled = true;
@@ -40,10 +40,10 @@ public class AdvancedPerformanceMonitor implements HealthIndicator {
     @Autowired
     public AdvancedPerformanceMonitor(MeterRegistry meterRegistry, 
                                    DataSource dataSource,
-                                   RedisTemplate<String, Object> redisTemplate) {
+                                   @Autowired(required = false) Firestore firestore) {
         this.meterRegistry = meterRegistry;
         this.dataSource = dataSource;
-        this.redisTemplate = redisTemplate;
+        this.firestore = firestore;
         initializeMetrics();
     }
 
@@ -102,9 +102,9 @@ public class AdvancedPerformanceMonitor implements HealthIndicator {
         Health dbHealth = checkDatabaseHealth();
         details.put("database", dbHealth.getDetails());
         
-        // Redis Health Check
-        Health redisHealth = checkRedisHealth();
-        details.put("redis", redisHealth.getDetails());
+        // Firebase / Firestore Health Check
+        Health firebaseHealth = checkFirebaseHealth();
+        details.put("firebase", firebaseHealth.getDetails());
         
         // Performance Metrics
         Map<String, Object> performance = getPerformanceMetrics();
@@ -119,7 +119,7 @@ public class AdvancedPerformanceMonitor implements HealthIndicator {
         details.put("https", httpsHealth.getDetails());
         
         // Overall Health Assessment
-        Status overallStatus = determineOverallStatus(dbHealth.getStatus(), redisHealth.getStatus(), httpsHealth.getStatus(), performance);
+        Status overallStatus = determineOverallStatus(dbHealth.getStatus(), firebaseHealth.getStatus(), httpsHealth.getStatus(), performance);
         
         return Health.status(overallStatus)
                 .withDetails(details)
@@ -150,27 +150,26 @@ public class AdvancedPerformanceMonitor implements HealthIndicator {
         }
     }
 
-    private Health checkRedisHealth() {
+    private Health checkFirebaseHealth() {
+        if (firestore == null) {
+            return Health.down().withDetail("status", "DISABLED").withDetail("reason", "Firebase Config is not enabled or missing credentials").build();
+        }
         try {
             long startTime = System.currentTimeMillis();
-            String testKey = "health_check_test_" + System.currentTimeMillis();
-            redisTemplate.opsForValue().set(testKey, "test", 5, TimeUnit.SECONDS);
-            String result = (String) redisTemplate.opsForValue().get(testKey);
+            // Perform a simple Firestore operation or connectivity check
+            firestore.listCollections(); 
             long responseTime = System.currentTimeMillis() - startTime;
             
             Map<String, Object> details = new HashMap<>();
-            details.put("status", "test".equals(result) ? "UP" : "DOWN");
+            details.put("status", "UP");
+            details.put("provider", "Google Cloud Firestore");
             details.put("response_time_ms", responseTime);
-            details.put("validation", "test".equals(result) ? "PASSED" : "FAILED");
+            details.put("validation", "PASSED");
             
-            // Cleanup
-            redisTemplate.delete(testKey);
-            
-            return "test".equals(result) ? Health.up().withDetails(details).build() 
-                                        : Health.down().withDetails(details).build();
+            return Health.up().withDetails(details).build();
         } catch (Exception e) {
             Map<String, Object> details = new HashMap<>();
-            details.put("status", "ERROR");
+            details.put("status", "DOWN");
             details.put("error", e.getMessage());
             details.put("validation", "FAILED");
             
@@ -228,8 +227,8 @@ public class AdvancedPerformanceMonitor implements HealthIndicator {
         return resources;
     }
 
-    private Status determineOverallStatus(Status dbStatus, Status redisStatus, Status httpsStatus, Map<String, Object> performance) {
-        if (dbStatus == Status.DOWN || redisStatus == Status.DOWN || httpsStatus == Status.DOWN) {
+    private Status determineOverallStatus(Status dbStatus, Status firebaseStatus, Status httpsStatus, Map<String, Object> performance) {
+        if (dbStatus == Status.DOWN || firebaseStatus == Status.DOWN || httpsStatus == Status.DOWN) {
             return Status.DOWN;
         }
         

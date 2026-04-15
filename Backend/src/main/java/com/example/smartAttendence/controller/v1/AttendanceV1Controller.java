@@ -8,7 +8,8 @@ import com.example.smartAttendence.service.ai.AILearningOptimizer;
 import com.example.smartAttendence.util.SecurityUtils;
 import com.example.smartAttendence.exception.SpoofingException;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.concurrent.TimeUnit;
 import com.example.smartAttendence.domain.User;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
@@ -31,7 +32,9 @@ public class AttendanceV1Controller {
     private final SensorFusionService sensorFusionService;
     private final AILearningOptimizer aiLearningOptimizer;
     private final SecurityUtils securityUtils;
-    private final StringRedisTemplate redisTemplate;
+    private final Cache<String, Long> pulseThrottleCache = Caffeine.newBuilder()
+            .expireAfterWrite(5, TimeUnit.SECONDS)
+            .build();
     private final UserV1Repository userRepository;
     private final com.example.smartAttendence.repository.v1.SecurityAlertV1Repository securityAlertRepository;
 
@@ -40,14 +43,12 @@ public class AttendanceV1Controller {
             SensorFusionService sensorFusionService,
             AILearningOptimizer aiLearningOptimizer,
             SecurityUtils securityUtils,
-            StringRedisTemplate redisTemplate,
             UserV1Repository userRepository,
             com.example.smartAttendence.repository.v1.SecurityAlertV1Repository securityAlertRepository) {
         this.attendanceService = attendanceService;
         this.sensorFusionService = sensorFusionService;
         this.aiLearningOptimizer = aiLearningOptimizer;
         this.securityUtils = securityUtils;
-        this.redisTemplate = redisTemplate;
         this.userRepository = userRepository;
         this.securityAlertRepository = securityAlertRepository;
     }
@@ -61,7 +62,7 @@ public class AttendanceV1Controller {
         Object isCellularAttr = httpServletRequest.getAttribute("isCellularData");
         boolean isCellular = isCellularAttr instanceof Boolean && (Boolean) isCellularAttr;
 
-        attendanceService.processHeartbeat(ping, isCellular);
+        attendanceService.processEnhancedHeartbeat(ping, isCellular);
 
         return ResponseEntity.ok(Map.of(
                 "message", "Heartbeat recorded successfully"
@@ -131,15 +132,15 @@ public class AttendanceV1Controller {
         boolean isCellular = isCellularAttr instanceof Boolean && (Boolean) isCellularAttr;
 
         // 🛡️ SMART SECURITY: Individual Student Throttling (Prevents spam from single user)
-        String userRateKey = "rate_limit:pulse:" + ping.studentId();
-        if (Boolean.TRUE.equals(redisTemplate.hasKey(userRateKey))) {
+        String userRateKey = "pulse:" + ping.studentId();
+        if (pulseThrottleCache.getIfPresent(userRateKey) != null) {
             return ResponseEntity.status(429).body(Map.of(
                 "error", "Too many requests from your device",
                 "message", "Please wait for the current heartbeat window to complete."
             ));
         }
-        // Set a 5-second mandatory cooldown for this specific student
-        redisTemplate.opsForValue().set(userRateKey, "LOCKED", 5, TimeUnit.SECONDS);
+        // Set a 5-second mandatory cooldown for this specific student locally
+        pulseThrottleCache.put(userRateKey, System.currentTimeMillis());
 
         try {
             // Process sensor fusion and spoofing detection
@@ -177,7 +178,7 @@ public class AttendanceV1Controller {
             }
 
             // 🔋 BATTERY OPTIMIZATION LOGIC
-            Long recommendedInterval = attendanceService.calculateOptimalInterval(ping);
+            Long recommendedInterval = calculateOptimalHeartbeatInterval(ping);
             
             // 🛰️ PHASE 2: ADAPTIVE GPS OPTIMIZATION
             var gpsOptimization = sensorFusionService.determineOptimalGPSMode(ping);

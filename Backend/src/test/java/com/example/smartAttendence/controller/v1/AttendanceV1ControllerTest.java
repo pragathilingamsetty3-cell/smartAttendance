@@ -10,8 +10,6 @@ import com.example.smartAttendence.util.SecurityUtils;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
 import com.example.smartAttendence.repository.v1.SecurityAlertV1Repository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +36,6 @@ class AttendanceV1ControllerTest {
     private SensorFusionService sensorFusionService;
     private AILearningOptimizer aiLearningOptimizer;
     private SecurityUtils securityUtils;
-    private StringRedisTemplate redisTemplate;
     private UserV1Repository userRepository;
     private SecurityAlertV1Repository securityAlertRepository;
     private ObjectMapper objectMapper;
@@ -55,18 +52,15 @@ class AttendanceV1ControllerTest {
         sensorFusionService = mock(SensorFusionService.class);
         aiLearningOptimizer = mock(AILearningOptimizer.class);
         securityUtils = mock(SecurityUtils.class);
-        redisTemplate = mock(StringRedisTemplate.class);
         userRepository = mock(UserV1Repository.class);
         securityAlertRepository = mock(SecurityAlertV1Repository.class);
-        ValueOperations<String, String> valueOps = mock(ValueOperations.class);
-        when(redisTemplate.opsForValue()).thenReturn(valueOps);
         
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
 
         // Create controller with mocked dependencies
         controller = new AttendanceV1Controller(
-                attendanceService, sensorFusionService, aiLearningOptimizer, securityUtils, redisTemplate, userRepository, securityAlertRepository);
+                attendanceService, sensorFusionService, aiLearningOptimizer, securityUtils, userRepository, securityAlertRepository);
 
         // Setup MockMvc with standalone controller (no Spring context)
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();

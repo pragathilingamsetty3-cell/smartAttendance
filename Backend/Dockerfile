@@ -15,6 +15,7 @@ COPY src ./src
 RUN MAVEN_OPTS="-Xmx512m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC -XX:+DisableExplicitGC" \
     mvn package -B \
     -DskipTests \
+    -Dmaven.test.skip=true \
     -DskipITs \
     -Dmaven.javadoc.skip=true \
     -Denforcer.skip=true \
@@ -29,20 +30,20 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 ENV FIREBASE_SERVICE_ACCOUNT_PATH=/etc/secrets/serviceAccountKey.json
 ENV SPRING_PROFILES_ACTIVE=prod
 
-# Expose default port
-EXPOSE 10000
+# Expose default port (Cloud Run uses $PORT, but 8080 is standard)
+EXPOSE 8080
 
 USER appuser
 
-# 🧠 MEMORY OPTIMIZATION FOR 512MB RAM
-# -XX:MaxRAMPercentage: Ensures JVM doesn't exceed 75% of container RAM (around 380MB)
+# 🧠 MEMORY OPTIMIZATION FOR CLOUD RUN
+# -XX:MaxRAMPercentage: Ensures JVM doesn't exceed 75% of container RAM
 # -Xss: Smaller thread stack size (256k) to save memory
 ENTRYPOINT ["java", \
     "-XX:InitialRAMPercentage=40.0", \
-    "-XX:MaxRAMPercentage=70.0", \
+    "-XX:MaxRAMPercentage=75.0", \
     "-XX:MinRAMPercentage=50.0", \
     "-Xss256k", \
     "-Dspring.profiles.active=prod", \
     "-Djava.security.egd=file:/dev/./urandom", \
-    "-Dserver.port=${PORT:-10000}", \
+    "-Dserver.port=${PORT:-8080}", \
     "-jar", "app.jar"]
