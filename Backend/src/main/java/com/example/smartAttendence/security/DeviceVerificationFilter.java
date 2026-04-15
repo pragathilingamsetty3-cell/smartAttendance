@@ -27,9 +27,6 @@ public class DeviceVerificationFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Autowired
-    private Cache<String, Boolean> deviceVerificationCache;
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) 
             throws ServletException, IOException {
@@ -48,10 +45,11 @@ public class DeviceVerificationFilter extends OncePerRequestFilter {
         String deviceFingerprint = generateDeviceFingerprint(request);
         String sessionId = request.getHeader("X-Session-ID");
 
-        // 🚀 SPEED-SHIELD: Check local memory cache first
+        // 🚀 SPEED-SHIELD: Check Redis cache first
         String cacheKey = deviceFingerprint + ":" + sessionId;
-        if (Boolean.TRUE.equals(deviceVerificationCache.getIfPresent(cacheKey))) {
-            logger.debug("⚡ [SPEED-SHIELD] Device verification SKIPPED (Local Memory hit) for Session: {}", sessionId);
+        String cachedValue = redisTemplate.opsForValue().get(cacheKey);
+        if ("true".equals(cachedValue)) {
+            logger.debug("⚡ [SPEED-SHIELD] Device verification SKIPPED (Redis hit) for Session: {}", sessionId);
             filterChain.doFilter(request, response);
             return;
         }
@@ -77,8 +75,8 @@ public class DeviceVerificationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // ✅ [SPEED-SHIELD] Passed. Cache the verification for 5 minutes.
-            deviceVerificationCache.put(cacheKey, true);
+            // ✅ [SPEED-SHIELD] Passed. Cache the verification in Redis for 5 minutes.
+            redisTemplate.opsForValue().set(cacheKey, "true", Duration.ofMinutes(5));
         } catch (Throwable t) {
             logger.error("🚨 [SENTINEL] DeviceFilter CRASHED but failing-open: {}", t.getMessage(), t);
         }

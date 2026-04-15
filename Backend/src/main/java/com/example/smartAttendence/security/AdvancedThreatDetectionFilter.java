@@ -102,7 +102,6 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
         }
 
         // ✅ [SPEED-SHIELD] Passed. Cache the analysis result for 5 minutes.
-        String cacheKey = clientIP + ":" + userAgent.hashCode();
         threatAnalysisCache.put(cacheKey, threatLevel.ordinal());
         
         } catch (Throwable t) {
