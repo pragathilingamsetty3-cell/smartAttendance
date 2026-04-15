@@ -14,3 +14,5 @@ node_modules/
 dist/
 build/
 **/node_modules
+Backend/src/main/resources/firebase/serviceAccountKey.json
+secrets/

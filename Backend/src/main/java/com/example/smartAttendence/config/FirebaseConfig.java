@@ -1,8 +1,10 @@
 package com.example.smartAttendence.config;
 
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.firestore.Firestore;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.cloud.FirestoreClient;
 import com.google.firebase.messaging.FirebaseMessaging;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,5 +92,15 @@ public class FirebaseConfig {
             logger.error("⚠️ Firebase initialization failed: {}. Continuing without Firebase features.", e.getMessage());
             return null;
         }
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "firebase.enabled", havingValue = "true")
+    public Firestore firestore() {
+        if (FirebaseApp.getApps().isEmpty()) {
+            logger.error("❌ Cannot initialize Firestore: FirebaseApp is not initialized!");
+            return null;
+        }
+        return FirestoreClient.getFirestore();
     }
 }

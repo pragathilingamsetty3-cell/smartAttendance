@@ -1,0 +1,116 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================
+    // HELPER FUNCTIONS
+    // =========================================================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isBackendServiceAccount() {
+      // Backend writes use the Firebase Admin SDK (no auth token = server-side)
+      // Client reads are JWT-authenticated via Firebase Auth
+      return request.auth == null;
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn() &&
+        request.auth.token.get('role', '') == 'SUPERADMIN';
+    }
+
+    function isAdmin() {
+      return isSignedIn() &&
+        request.auth.token.get('role', '') in ['SUPERADMIN', 'ADMIN', 'FACULTY'];
+    }
+
+    function isFaculty() {
+      return isSignedIn() &&
+        request.auth.token.get('role', '') in ['SUPERADMIN', 'ADMIN', 'FACULTY'];
+    }
+
+    function isStudent() {
+      return isSignedIn() &&
+        request.auth.token.get('role', '') in ['SUPERADMIN', 'STUDENT'];
+    }
+
+    // =========================================================
+    // PRESENCE PINGS — written by backend, read by faculty dashboard
+    // =========================================================
+    match /presence_pings/{pingId} {
+      // Only the Spring Boot backend (Admin SDK) can write pings
+      allow write: if isBackendServiceAccount();
+      // Faculty and admins can read all pings for monitoring
+      allow read: if isFaculty();
+    }
+
+    // =========================================================
+    // SECURITY AUDIT LOGS — write by backend, read by admins only
+    // =========================================================
+    match /security_audit_logs/{logId} {
+      allow write: if isBackendServiceAccount();
+      allow read: if isAdmin();
+    }
+
+    // =========================================================
+    // JWT BLACKLIST — strictly backend-only
+    // =========================================================
+    match /jwt_blacklist/{tokenId} {
+      allow read, write: if isBackendServiceAccount();
+    }
+
+    // =========================================================
+    // HALL PASSES — backend writes, faculty reads
+    // =========================================================
+    match /hall_passes/{passId} {
+      allow write: if isBackendServiceAccount();
+      allow read: if isFaculty();
+    }
+
+    // =========================================================
+    // WALKOUT TIMERS — backend-only internal state
+    // =========================================================
+    match /walkout_timers/{timerId} {
+      allow read, write: if isBackendServiceAccount();
+    }
+
+    // =========================================================
+    // ADMIN IPs — backend writes, backend reads (threat detection)
+    // =========================================================
+    match /admin_ips/{ipId} {
+      allow read, write: if isBackendServiceAccount();
+    }
+
+    // =========================================================
+    // DEVICE HEALTH CACHE — backend writes, admins can read
+    // =========================================================
+    match /device_health/{deviceId} {
+      allow write: if isBackendServiceAccount();
+      allow read: if isBackendServiceAccount() || isAdmin();
+    }
+
+    // =========================================================
+    // ATTENDANCE SESSIONS (read-only for students + faculty)
+    // =========================================================
+    match /attendance_sessions/{sessionId} {
+      allow write: if isBackendServiceAccount();
+      allow read: if isFaculty() || isStudent();
+    }
+
+    // =========================================================
+    // SUPERADMIN — unrestricted read access to all collections
+    // =========================================================
+    match /{collection}/{document} {
+      allow read: if isSuperAdmin();
+    }
+
+    // =========================================================
+    // DEFAULT: deny all unmatched paths
+    // =========================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

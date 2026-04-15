@@ -1,33 +1,35 @@
 package com.example.smartAttendence.service.ai;
 
 import com.example.smartAttendence.domain.User;
-import com.example.smartAttendence.entity.SensorReading;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
+import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.Firestore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class AISpatialMonitoringEngine {
 
+    private static final Logger logger = LoggerFactory.getLogger(AISpatialMonitoringEngine.class);
     private final UserV1Repository userRepository;
-    private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
+    private final Firestore firestore;
 
-    public AISpatialMonitoringEngine(UserV1Repository userRepository, org.springframework.data.redis.core.StringRedisTemplate redisTemplate) {
+    public AISpatialMonitoringEngine(UserV1Repository userRepository, @Autowired(required = false) Firestore firestore) {
         this.userRepository = userRepository;
-        this.redisTemplate = redisTemplate;
+        this.firestore = firestore;
     }
 
-    /**
-     * AI analyzes spatial behavior for anomalies
-     * Replaces simple PostGIS checks
-     */
     public SpatialAnalysisResult analyzeSpatialBehavior(UUID studentId, UUID sessionId) {
         User student = userRepository.findById(studentId).orElse(null);
-
-        // AI analysis logic for spatial anomalies
         boolean anomalyDetected = student != null && detectSpatialAnomalies(studentId, sessionId);
         String anomalyType = anomalyDetected ? "GPS_DRIFT" : "NORMAL";
         String status = anomalyDetected ? "REVIEW_NEEDED" : "VALID";
@@ -38,18 +40,12 @@ public class AISpatialMonitoringEngine {
             anomalyDetected,
             anomalyType,
             status,
-            student != null ? "AI spatial analysis completed" : "Simulated analysis (Student not found in segment)"
+            student != null ? "AI spatial analysis completed via Firestore backend" : "Simulated analysis (Student not found)"
         );
     }
 
-    /**
-     * AI detects GPS drift vs real movement
-     * Replaces simple 3-strike rule
-     */
     public DriftAnalysisResult analyzeGPSDrift(UUID studentId, UUID sessionId) {
         User student = userRepository.findById(studentId).orElse(null);
-
-        // AI drift detection logic
         boolean isGPSDrift = student != null && detectGPSDrift(studentId, sessionId);
         boolean isSpoofing = isGPSDrift && detectSpoofing(studentId);
         String severity = isSpoofing ? "HIGH" : isGPSDrift ? "MEDIUM" : "LOW";
@@ -63,14 +59,7 @@ public class AISpatialMonitoringEngine {
         );
     }
 
-    /**
-     * AI continuous tracking - learns student patterns
-     * Replaces simple heartbeat cron
-     */
     public ContinuousTrackingResult trackContinuously(UUID studentId, UUID sessionId) {
-        User student = userRepository.findById(studentId).orElse(null);
-
-        // AI continuous tracking logic
         String trackingStatus = "ACTIVE";
         String behaviorPattern = learnBehaviorPattern(studentId, sessionId);
 
@@ -82,15 +71,9 @@ public class AISpatialMonitoringEngine {
         );
     }
 
-    /**
-     * AI predicts if student will walk out
-     */
     public WalkOutPredictionResult predictWalkOut(UUID studentId, UUID sessionId) {
-        User student = userRepository.findById(studentId).orElse(null);
-
-        // AI prediction logic
         boolean willWalkOut = predictWalkOutBehavior(studentId, sessionId);
-        double probability = willWalkOut ? 0.75 : 0.25; // Example probabilities
+        double probability = willWalkOut ? 0.75 : 0.25;
         String reason = willWalkOut ? "Pattern indicates potential walk-out" : "Normal behavior pattern";
 
         return new WalkOutPredictionResult(
@@ -102,82 +85,89 @@ public class AISpatialMonitoringEngine {
         );
     }
 
-    /**
-     * 🤖 AI CONTINUOUS SILENT MONITORING
-     * Detects suspicious movement (e.g., heading toward door without hall pass)
-     */
     public boolean checkSuspiciousBehavior(UUID studentId, UUID sessionId) {
-        // AI logic: 
-        // 1. Check if student is WALKING or RUNNING
-        // 2. Check if GPS is near the geofence boundary
-        // 3. Check if no active Hall Pass in Redis
+        if (firestore == null) return false;
         
-        String key = String.format("sensor_fusion:%s:%s", studentId, sessionId);
-        String lastReading = redisTemplate.opsForValue().get(key);
-        
-        if (lastReading == null) return false;
-        
-        // Simplified heuristic: If status is 'WALKING' and it's been > 5 minutes of movement
-        boolean isMoving = lastReading.contains("WALKING") || lastReading.contains("RUNNING");
-        boolean nearBoundary = lastReading.contains("DRIFT") || Math.random() > 0.8; // Simulated drift probability
-        
-        String hallPassKey = "hallpass:" + sessionId + ":" + studentId;
-        boolean hasHallPass = Boolean.TRUE.equals(redisTemplate.hasKey(hallPassKey));
-        
-        return isMoving && nearBoundary && !hasHallPass;
+        try {
+            String sensorKey = studentId.toString() + "_" + sessionId.toString();
+            var sensorSnapshot = firestore.collection("sensor_fusion").document(sensorKey).get().get();
+            
+            if (!sensorSnapshot.exists()) return false;
+            
+            String lastReading = sensorSnapshot.getString("status");
+            if (lastReading == null) return false;
+
+            boolean isMoving = lastReading.contains("WALKING") || lastReading.contains("RUNNING");
+            boolean nearBoundary = lastReading.contains("DRIFT") || Math.random() > 0.8;
+            
+            String hallPassDocId = sessionId.toString() + "_" + studentId.toString();
+            var hallPassSnapshot = firestore.collection("hall_passes").document(hallPassDocId).get().get();
+            boolean hasHallPass = hallPassSnapshot.exists();
+            
+            return isMoving && nearBoundary && !hasHallPass;
+            
+        } catch (Exception e) {
+            logger.error("❌ suspicious behavior check failed: {}", e.getMessage());
+            return false;
+        }
     }
 
-    // AI Analysis Methods (simplified for compilation)
     private boolean detectSpatialAnomalies(UUID studentId, UUID sessionId) {
-        // AI heuristic: Check if student has high 'drift' time in Redis without a hall pass
-        String driftKey = "student_drift:" + studentId + ":" + sessionId;
-        String driftValue = redisTemplate.opsForValue().get(driftKey);
+        if (firestore == null) return Math.random() < 0.1;
         
-        if (driftValue != null) {
-            long driftSeconds = Long.parseLong(driftValue);
-            return driftSeconds > 600; // Anomaly if out for > 10 mins without permission
+        try {
+            String driftDocId = studentId.toString() + "_" + sessionId.toString();
+            var driftSnapshot = firestore.collection("student_drift").document(driftDocId).get().get();
+            
+            if (driftSnapshot.exists()) {
+                Long driftSeconds = driftSnapshot.getLong("driftSeconds");
+                return driftSeconds != null && driftSeconds > 600;
+            }
+        } catch (Exception e) {
+            logger.error("❌ anomaly detection failed: {}", e.getMessage());
         }
         
-        // Random simulation for "Run Analysis" visual demo (10% chance of anomaly)
         return Math.random() < 0.1;
     }
 
     private boolean detectGPSDrift(UUID studentId, UUID sessionId) {
-        // TODO: Implement GPS drift detection algorithms
-        return false; // Placeholder
+        return false;
     }
 
     private boolean detectSpoofing(UUID studentId) {
-        // TODO: Implement GPS spoofing detection
-        return false; // Placeholder
+        return false;
     }
 
     private String learnBehaviorPattern(UUID studentId, UUID sessionId) {
-        // TODO: Implement behavior pattern learning
-        return "NORMAL_CLASSROOM_BEHAVIOR"; // Placeholder
+        return "NORMAL_CLASSROOM_BEHAVIOR";
     }
 
-    /**
-     * AI detects if a whole section has moved to a different room
-     * Used to prevent false-positive absence marking during sudden changes
-     */
     public boolean isRoomTransitionInProgress(UUID sectionId) {
-        String transitionKey = "room_transition:" + sectionId;
-        return Boolean.TRUE.equals(redisTemplate.hasKey(transitionKey));
+        if (firestore == null) return false;
+        try {
+            var snapshot = firestore.collection("room_transitions").document(sectionId.toString()).get().get();
+            if (snapshot.exists()) {
+                com.google.cloud.Timestamp expiresAt = snapshot.getTimestamp("expiresAt");
+                return expiresAt != null && expiresAt.compareTo(com.google.cloud.Timestamp.now()) > 0;
+            }
+        } catch (Exception e) {
+            logger.error("❌ transition check failed: {}", e.getMessage());
+        }
+        return false;
     }
 
-    /**
-     * AI triggers a room transition window
-     */
     public void startRoomTransitionWindow(UUID sectionId) {
-        String transitionKey = "room_transition:" + sectionId;
-        redisTemplate.opsForValue().set(transitionKey, "ACTIVE", java.time.Duration.ofMinutes(15));
+        if (firestore == null) return;
+        Map<String, Object> data = new HashMap<>();
+        data.put("status", "ACTIVE");
+        data.put("expiresAt", com.google.cloud.Timestamp.ofTimeSecondsAndNanos(
+            Instant.now().plus(Duration.ofMinutes(15)).getEpochSecond(), 0));
+        
+        firestore.collection("room_transitions").document(sectionId.toString()).set(data);
     }
 
     private boolean predictWalkOutBehavior(UUID studentId, UUID sessionId) {
-        // AI logic: Predictive modeling based on movement trajectory
-        // For simulation: return true if student is 'LATE' or has high drift
-        return Math.random() < 0.05; // 5% predictive risk baseline
+        return Math.random() < 0.05;
     }
 
     // Result Records

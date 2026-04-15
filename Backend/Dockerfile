@@ -22,15 +22,17 @@ RUN MAVEN_OPTS="-Xmx512m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC -XX:+DisableExpl
     -q \
     -T 1C
 
-# 🚀 Run Stage
-FROM eclipse-temurin:21-jre-alpine
-WORKDIR /app
+# Security: run as non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Copy the build artifact from build stage
-COPY --from=build /app/target/smartAttendence-0.0.1-SNAPSHOT.jar app.jar
+# Firebase service account is mounted via Render/Cloud Run secrets at runtime
+ENV FIREBASE_SERVICE_ACCOUNT_PATH=/etc/secrets/serviceAccountKey.json
+ENV SPRING_PROFILES_ACTIVE=prod
 
-# 🛡️ Dynamic port exposure (Render will provide the PORT env var)
-# No hardcoded EXPOSE needed, or use a comment
+# Expose default port
+EXPOSE 10000
+
+USER appuser
 
 # 🧠 MEMORY OPTIMIZATION FOR 512MB RAM
 # -XX:MaxRAMPercentage: Ensures JVM doesn't exceed 75% of container RAM (around 380MB)
@@ -42,4 +44,5 @@ ENTRYPOINT ["java", \
     "-Xss256k", \
     "-Dspring.profiles.active=prod", \
     "-Djava.security.egd=file:/dev/./urandom", \
+    "-Dserver.port=${PORT:-10000}", \
     "-jar", "app.jar"]

@@ -1,5 +1,8 @@
 package com.example.smartAttendence.security;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.cloud.firestore.Firestore;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,25 +10,34 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.time.Duration;
 import java.security.MessageDigest;
-import java.util.Arrays;
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class DeviceVerificationFilter extends OncePerRequestFilter {
     
     private static final Logger logger = LoggerFactory.getLogger(DeviceVerificationFilter.class);
 
-    @Autowired
-    private StringRedisTemplate redisTemplate;
+    private final Firestore firestore;
+    private final JwtUtil jwtUtil;
+    
+    // ⚡ SPEED-SHIELD: Local in-memory cache to avoid Firestore hits on every request
+    private final Cache<String, Boolean> speedShieldCache = Caffeine.newBuilder()
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .maximumSize(10000)
+            .build();
 
     @Autowired
-    private JwtUtil jwtUtil;
+    public DeviceVerificationFilter(Firestore firestore, JwtUtil jwtUtil) {
+        this.firestore = firestore;
+        this.jwtUtil = jwtUtil;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) 
@@ -35,131 +47,100 @@ public class DeviceVerificationFilter extends OncePerRequestFilter {
         String clientIP = getClientIP(request);
         
         try {
-            logger.info("🔍 [SENTINEL] DeviceFilter starting for: {}", endpoint);
-            // 🔐 BYPASS DEVICE VERIFICATION FOR LOCALHOST, PUBLIC ENDPOINTS AND CORS PREFLIGHT
-        if (isLocalhost(clientIP) || !requiresDeviceVerification(endpoint) || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-        
-        String deviceFingerprint = generateDeviceFingerprint(request);
-        String sessionId = request.getHeader("X-Session-ID");
-
-        // 🚀 SPEED-SHIELD: Check Redis cache first
-        String cacheKey = deviceFingerprint + ":" + sessionId;
-        String cachedValue = redisTemplate.opsForValue().get(cacheKey);
-        if ("true".equals(cachedValue)) {
-            logger.debug("⚡ [SPEED-SHIELD] Device verification SKIPPED (Redis hit) for Session: {}", sessionId);
-            filterChain.doFilter(request, response);
-            return;
-        }
-            
-            if (sessionId == null || sessionId.isEmpty()) {
-                // 🔐 SMART FALLBACK: Extract from JWT if header is missing
-                String authHeader = request.getHeader("Authorization");
-                if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                    try {
-                        String token = authHeader.substring(7);
-                        sessionId = jwtUtil.extractSessionId(token);
-                        logger.info("🔍 [SENTINEL] DeviceFilter found SessionID in JWT: {}", sessionId);
-                    } catch (Exception e) {
-                        logger.warn("⚠️ [SENTINEL] DeviceFilter could not extract SessionID from JWT");
-                    }
-                }
+            if (isLocalhost(clientIP) || !requiresDeviceVerification(endpoint) || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
+                filterChain.doFilter(request, response);
+                return;
             }
             
-            if (!isDeviceVerified(deviceFingerprint, sessionId)) {
-                logger.warn("🚨 [SENTINEL] Device verification FAILED for IP: {} (SessionID: {})", clientIP, sessionId);
+            String deviceFingerprint = generateDeviceFingerprint(request);
+            String sessionId = extractSessionId(request);
+
+            if (sessionId == null) {
+                logger.warn("🚨 [SENTINEL] Device verification FAILED: No SessionID found for IP: {}", clientIP);
                 response.setStatus(401);
-                response.getWriter().write("{\"error\":\"Device verification failed\"}");
+                response.getWriter().write("{\"error\":\"Session mapping required\"}");
                 return;
             }
 
-            // ✅ [SPEED-SHIELD] Passed. Cache the verification in Redis for 5 minutes.
-            redisTemplate.opsForValue().set(cacheKey, "true", Duration.ofMinutes(5));
-        } catch (Throwable t) {
-            logger.error("🚨 [SENTINEL] DeviceFilter CRASHED but failing-open: {}", t.getMessage(), t);
+            // 🚀 SPEED-SHIELD check (Local)
+            String cacheKey = deviceFingerprint + ":" + sessionId;
+            if (Boolean.TRUE.equals(speedShieldCache.getIfPresent(cacheKey))) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+            
+            if (!isDeviceVerified(deviceFingerprint, sessionId)) {
+                logger.warn("🚨 [SENTINEL] Device verification FAILED for IP: {} (Session: {})", clientIP, sessionId);
+                response.setStatus(401);
+                response.getWriter().write("{\"error\":\"Device mismatch detected\"}");
+                return;
+            }
+
+            // ✅ Passed. Cache locally for 5 minutes.
+            speedShieldCache.put(cacheKey, true);
+            
+        } catch (Exception e) {
+            logger.error("🚨 [SENTINEL] DeviceFilter crash: {}", e.getMessage());
         }
         
         filterChain.doFilter(request, response);
     }
+
+    private String extractSessionId(HttpServletRequest request) {
+        String sessionId = request.getHeader("X-Session-ID");
+        if (sessionId != null && !sessionId.isEmpty()) return sessionId;
+
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            try {
+                return jwtUtil.extractSessionId(authHeader.substring(7));
+            } catch (Exception ignored) {}
+        }
+        return null;
+    }
     
+    private boolean isDeviceVerified(String fingerprint, String sessionId) {
+        try {
+            var docRef = firestore.collection("device_sessions").document(sessionId);
+            var snapshot = docRef.get().get();
+
+            if (!snapshot.exists()) {
+                // 🔐 NEW DEVICE - REGISTER
+                docRef.set(Map.of("fingerprint", fingerprint, "registeredAt", com.google.cloud.Timestamp.now()));
+                return true;
+            }
+            
+            return fingerprint.equals(snapshot.getString("fingerprint"));
+        } catch (Exception e) {
+            return true; // Fail open
+        }
+    }
+
     private boolean requiresDeviceVerification(String endpoint) {
-        return endpoint.contains("/attendance/check-in") || 
-               endpoint.contains("/admin/") ||
-               endpoint.contains("/faculty/");
+        return endpoint.contains("/attendance/check-in") || endpoint.contains("/admin/") || endpoint.contains("/faculty/");
     }
     
     private String generateDeviceFingerprint(HttpServletRequest request) {
         try {
-            String userAgent = request.getHeader("User-Agent");
-            String acceptLanguage = request.getHeader("Accept-Language");
-            String acceptEncoding = request.getHeader("Accept-Encoding");
-            String accept = request.getHeader("Accept");
-            
-            String fingerprintData = userAgent + "|" + acceptLanguage + "|" + acceptEncoding + "|" + accept;
-            
+            String data = request.getHeader("User-Agent") + "|" + request.getHeader("Accept");
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(fingerprintData.getBytes());
-            
-            StringBuilder hexString = new StringBuilder();
+            byte[] hash = digest.digest(data.getBytes());
+            StringBuilder hex = new StringBuilder();
             for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) hexString.append('0');
-                hexString.append(hex);
+                hex.append(String.format("%02x", b));
             }
-            
-            return hexString.toString();
+            return hex.toString();
         } catch (Exception e) {
-            return "unknown-device";
+            return "unknown";
         }
     }
     
-    private boolean isDeviceVerified(String deviceFingerprint, String sessionId) {
-        if (sessionId == null || sessionId.isEmpty()) {
-            return false;
-        }
-        
-        String key = "device_session:" + sessionId;
-        
-        try {
-            String storedFingerprint = redisTemplate.opsForValue().get(key);
-            
-            if (storedFingerprint == null) {
-                // 🔐 NEW DEVICE - REGISTER WITH SESSION
-                redisTemplate.opsForValue().set(key, deviceFingerprint, Duration.ofHours(24));
-                return true;
-            }
-            
-            // 🔐 VERIFY FINGERPRINT MATCHES
-            return storedFingerprint.equals(deviceFingerprint);
-            
-        } catch (Exception e) {
-            // 🔐 FAIL SECURE - IF REDIS FAILS, ALLOW
-            return true;
-        }
-    }
-    
-    private boolean isLocalhost(String clientIP) {
-        return "127.0.0.1".equals(clientIP) || 
-               "0:0:0:0:0:0:0:1".equals(clientIP) || 
-               "::1".equals(clientIP) ||
-               clientIP.startsWith("192.168.") ||
-               clientIP.startsWith("10.") ||
-               clientIP.startsWith("172.");
+    private boolean isLocalhost(String ip) {
+        return "127.0.0.1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip) || ip.startsWith("192.168.");
     }
     
     private String getClientIP(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
-        
-        String xRealIP = request.getHeader("X-Real-IP");
-        if (xRealIP != null && !xRealIP.isEmpty()) {
-            return xRealIP;
-        }
-        
-        return request.getRemoteAddr();
+        String xff = request.getHeader("X-Forwarded-For");
+        return (xff != null && !xff.isEmpty()) ? xff.split(",")[0].trim() : request.getRemoteAddr();
     }
 }
