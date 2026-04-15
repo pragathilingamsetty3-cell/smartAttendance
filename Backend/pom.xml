@@ -352,6 +352,8 @@
                 <version>${maven.compiler.plugin.version}</version>
                 <configuration>
                     <release>${java.version}</release>
+                    <fork>true</fork>
+                    <forceJavacCompilerUse>true</forceJavacCompilerUse>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
@@ -361,6 +363,7 @@
                     </annotationProcessorPaths>
                     <compilerArgs>
                         <arg>-parameters</arg>
+                        <arg>-Xss256k</arg>
                     </compilerArgs>
                     <encoding>UTF-8</encoding>
                 </configuration>
