@@ -353,6 +353,8 @@
                 <configuration>
                     <release>${java.version}</release>
                     <fork>true</fork>
+                    <meminitial>256m</meminitial>
+                    <maxmem>1024m</maxmem>
                     <forceJavacCompilerUse>true</forceJavacCompilerUse>
                     <annotationProcessorPaths>
                         <path>
@@ -363,7 +365,6 @@
                     </annotationProcessorPaths>
                     <compilerArgs>
                         <arg>-parameters</arg>
-                        <arg>-Xss256k</arg>
                     </compilerArgs>
                     <encoding>UTF-8</encoding>
                 </configuration>
