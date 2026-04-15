@@ -78,7 +78,7 @@ class AttendanceV1ControllerTest {
     @DisplayName("POST /api/v1/attendance/heartbeat - Happy Path")
     void heartbeat_Success() throws Exception {
         // Arrange
-        doNothing().when(attendanceService).processHeartbeat(any(EnhancedHeartbeatPing.class), eq(false));
+        doNothing().when(attendanceService).processEnhancedHeartbeat(any(EnhancedHeartbeatPing.class), eq(false));
 
         // Act & Assert
         mockMvc.perform(post("/api/v1/attendance/heartbeat")
@@ -88,7 +88,7 @@ class AttendanceV1ControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value("Heartbeat recorded successfully"));
 
-        verify(attendanceService).processHeartbeat(eq(testHeartbeatPing), eq(false));
+        verify(attendanceService).processEnhancedHeartbeat(eq(testHeartbeatPing), eq(false));
     }
 
     // ========== HALL PASS ENDPOINT TESTS ==========
@@ -131,8 +131,6 @@ class AttendanceV1ControllerTest {
         when(aiLearningOptimizer.optimizeForStudent(any(EnhancedHeartbeatPing.class)))
             .thenReturn(new com.example.smartAttendence.service.ai.AILearningOptimizer.AIOptimizationResult(
                 60L, "BALANCED", 0.85, "Medium confidence based on historical data", 100, 0.85));
-
-        when(attendanceService.calculateOptimalInterval(any(EnhancedHeartbeatPing.class))).thenReturn(60L);
 
         doNothing().when(attendanceService).processEnhancedHeartbeat(any(EnhancedHeartbeatPing.class), eq(false));
 
