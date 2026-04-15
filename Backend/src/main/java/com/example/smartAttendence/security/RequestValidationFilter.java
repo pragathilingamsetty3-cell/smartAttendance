@@ -166,6 +166,3 @@ public class RequestValidationFilter {
         validationCache.put(cacheKey, value);
     }
 }
-        }
-    }
-}
