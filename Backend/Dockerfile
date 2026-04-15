@@ -23,8 +23,17 @@ RUN MAVEN_OPTS="-Xmx512m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC -XX:+DisableExpl
     -q \
     -T 1C
 
+# 🚀 Runtime Stage - Lightweight Java Runtime
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /app
+
+# Copy JAR from build stage and rename to app.jar
+COPY --from=build /app/target/smartAttendence-*.jar ./app.jar
+
 # Security: run as non-root user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup && \
+    chown -R appuser:appgroup /app
 
 # Firebase service account is mounted via Render/Cloud Run secrets at runtime
 ENV FIREBASE_SERVICE_ACCOUNT_PATH=/etc/secrets/serviceAccountKey.json
