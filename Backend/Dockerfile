@@ -8,9 +8,11 @@ RUN mvn dependency:go-offline -B
 
 # Copy source code and build
 COPY src ./src
-# Skip tests for faster deployment and reduced memory footprint during build
-# Skip tests for faster deployment and reduced memory footprint during build
-RUN MAVEN_OPTS="-Xmx224m -XX:MaxMetaspaceSize=128m" mvn clean package -B -DskipTests
+# Production build: Skip tests, disable documentation generation
+# Optimized memory: Xmx1024m for compilation + G1GC for efficiency
+RUN MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=256m -XX:+UseG1GC -XX:+UseStringDeduplication" \
+    mvn clean package -B -DskipTests \
+    -Dspringdoc.skip=true
 
 # 🚀 Run Stage
 FROM eclipse-temurin:21-jre-alpine
