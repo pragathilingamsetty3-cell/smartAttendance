@@ -143,21 +143,26 @@ public class FirebaseConfig {
     }
 
     /**
-     * Firestore bean - gracefully handles missing Firebase initialization
+     * Firestore bean - depends on Firebase initialization
+     * IMPORTANT: firebaseMessaging parameter forces this bean to initialize AFTER Firebase setup
      */
     @Bean
     @ConditionalOnProperty(name = "firebase.enabled", havingValue = "true")
-    public Firestore firestore() {
+    public Firestore firestore(FirebaseMessaging firebaseMessaging) {
         try {
-            if (FirebaseApp.getApps().isEmpty()) {
+            // Ensure Firebase is initialized (firebaseMessaging bean forces initialization)
+            int appCount = FirebaseApp.getApps().size();
+            if (appCount == 0) {
                 logger.warn("⚠️ Firestore not initialized: FirebaseApp not available. Threat detection will use local caching only.");
                 return null;
             }
+            
+            logger.info("📡 Creating Firestore client from {} initialized Firebase apps", appCount);
             Firestore fs = FirestoreClient.getFirestore();
-            logger.info("✅ Firestore bean created successfully");
+            logger.info("✅ Firestore bean created successfully and ready");
             return fs;
         } catch (Exception e) {
-            logger.error("❌ Failed to create Firestore bean: {}", e.getMessage());
+            logger.error("❌ Failed to create Firestore bean: {} [{}]", e.getMessage(), e.getClass().getSimpleName());
             return null;
         }
     }
