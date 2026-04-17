@@ -37,9 +37,9 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
     {
       title: 'Biometric Setup',
       desc: 'Register fingerprint & device',
-      icon: <Shield className="text-primary" size={20} />,
+      icon: <Shield className="text-violet-400" size={20} />,
       href: '/setup',
-      color: 'primary'
+      color: 'violet'
     },
     {
       title: 'Exit Request',
