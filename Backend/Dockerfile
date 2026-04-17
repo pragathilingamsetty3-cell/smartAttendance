@@ -32,7 +32,7 @@ WORKDIR /app
 COPY --from=build /app/target/smartAttendence-*.jar ./app.jar
 
 # Security: run as non-root user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup && \
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser && \
     chown -R appuser:appgroup /app
 
 # Firebase service account is mounted via Render/Cloud Run secrets at runtime
