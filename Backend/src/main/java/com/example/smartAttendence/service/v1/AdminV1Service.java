@@ -401,9 +401,12 @@ public class AdminV1Service {
 
         User student = studentOpt.get();
         
-        // Check if user is a student
-        if (!"STUDENT".equals(student.getRole())) {
-            throw new IllegalArgumentException("User is not a student: " + registrationNumber);
+        // Check if user has a student-related role (STUDENT, CR, or LR)
+        com.example.smartAttendence.enums.Role role = student.getRole();
+        if (role != com.example.smartAttendence.enums.Role.STUDENT && 
+            role != com.example.smartAttendence.enums.Role.CR && 
+            role != com.example.smartAttendence.enums.Role.LR) {
+            throw new IllegalArgumentException("User is not in a student-related role (Role: " + role + ")");
         }
 
         // Reset device and biometric credentials

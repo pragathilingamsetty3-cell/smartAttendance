@@ -67,9 +67,10 @@ export default function UserDetailsPage({ params }: { params: Promise<{ id: stri
       
       setTimeout(() => fetchUserDetails(), 1000);
     } catch (err: any) {
+      const serverError = err.response?.data?.error || err.message;
       setResetDeviceMessage({ 
         type: 'error', 
-        text: `❌ ${err.message || 'Failed to reset device lock'}` 
+        text: `❌ ${serverError || 'Failed to reset device lock'}` 
       });
     } finally {
       setResetDeviceLoading(false);
@@ -327,10 +328,10 @@ export default function UserDetailsPage({ params }: { params: Promise<{ id: stri
                     <p className="text-xs text-slate-500 mb-4 font-mono">{userDetails.deviceId || "UNBOUND_DEVICE"}</p>
                     <button 
                       className={`text-[11px] font-bold transition-colors flex items-center gap-2 uppercase tracking-widest ${
-                        resetDeviceLoading ? 'opacity-50 cursor-not-allowed text-slate-400' : 'text-primary hover:text-white'
+                        resetDeviceLoading || !userDetails.deviceId ? 'opacity-50 cursor-not-allowed text-slate-400' : 'text-primary hover:text-white'
                       }`}
                       onClick={handleResetDevice}
-                      disabled={resetDeviceLoading}
+                      disabled={resetDeviceLoading || !userDetails.deviceId}
                     >
                        {resetDeviceLoading ? '⏳ Resetting...' : 'Reset Hardware Binding'}
                     </button>
