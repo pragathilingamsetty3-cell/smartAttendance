@@ -240,8 +240,19 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
     if (!drawingMode || !canvasRef.current) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const canvas = canvasRef.current;
+    
+    // Calculate the scale between rendered element and canvas context
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    // Get coordinates relative to canvas element
+    const relativeX = e.clientX - rect.left;
+    const relativeY = e.clientY - rect.top;
+    
+    // Scale to actual canvas coordinates
+    const x = relativeX * scaleX;
+    const y = relativeY * scaleY;
 
     if (drawingMode === 'rectangle') {
       if (boundaryPoints.length === 0) {
