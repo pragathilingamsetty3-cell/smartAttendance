@@ -34,6 +34,8 @@ export default function UserDetailsPage({ params }: { params: Promise<{ id: stri
   const [error, setError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isActivityLogOpen, setIsActivityLogOpen] = useState(false);
+  const [resetDeviceLoading, setResetDeviceLoading] = useState(false);
+  const [resetDeviceMessage, setResetDeviceMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   const fetchUserDetails = async () => {
     try {
@@ -44,6 +46,33 @@ export default function UserDetailsPage({ params }: { params: Promise<{ id: stri
       setError(err.message || "Failed to load identity profile");
     } finally {
       setTimeout(() => setLoading(false), 600);
+    }
+  };
+
+  const handleResetDevice = async () => {
+    if (!window.confirm(`Reset device lock for ${userDetails.registrationNumber}? This will unbind current device security.`)) {
+      return;
+    }
+    
+    try {
+      setResetDeviceLoading(true);
+      setResetDeviceMessage(null);
+      
+      await userManagementService.resetUserDevice(userDetails.registrationNumber);
+      
+      setResetDeviceMessage({ 
+        type: 'success', 
+        text: '✅ Device lock reset successfully. Student can re-register device.' 
+      });
+      
+      setTimeout(() => fetchUserDetails(), 1000);
+    } catch (err: any) {
+      setResetDeviceMessage({ 
+        type: 'error', 
+        text: `❌ ${err.message || 'Failed to reset device lock'}` 
+      });
+    } finally {
+      setResetDeviceLoading(false);
     }
   };
 
@@ -297,13 +326,21 @@ export default function UserDetailsPage({ params }: { params: Promise<{ id: stri
                     <h4 className="font-bold text-white mb-1">Hardware Bound ID</h4>
                     <p className="text-xs text-slate-500 mb-4 font-mono">{userDetails.deviceId || "UNBOUND_DEVICE"}</p>
                     <button 
-                      className="text-[11px] font-bold text-primary hover:text-white transition-colors flex items-center gap-2 uppercase tracking-widest"
-                      onClick={() => {
-                        window.confirm(`Initiating hardware reset for ${userDetails.registrationNumber}. This will unbind current device security keys. Proceed?`);
-                      }}
+                      className={`text-[11px] font-bold transition-colors flex items-center gap-2 uppercase tracking-widest ${
+                        resetDeviceLoading ? 'opacity-50 cursor-not-allowed text-slate-400' : 'text-primary hover:text-white'
+                      }`}
+                      onClick={handleResetDevice}
+                      disabled={resetDeviceLoading}
                     >
-                       Reset Hardware Binding
+                       {resetDeviceLoading ? '⏳ Resetting...' : 'Reset Hardware Binding'}
                     </button>
+                    {resetDeviceMessage && (
+                      <p className={`text-xs mt-3 font-medium ${
+                        resetDeviceMessage.type === 'success' ? 'text-emerald-400' : 'text-red-400'
+                      }`}>
+                        {resetDeviceMessage.text}
+                      </p>
+                    )}
                  </div>
               </div>
            </motion.div>
