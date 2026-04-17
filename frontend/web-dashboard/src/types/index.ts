@@ -40,6 +40,7 @@ export interface EnhancedUserDTO {
   academicProfile?: StudentProfileDTO;
   studentMobile?: string;
   parentMobile?: string;
+  phoneNumber?: string;
   studentEmail?: string;
   parentEmail?: string;
 }

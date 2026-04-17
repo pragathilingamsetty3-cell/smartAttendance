@@ -55,6 +55,20 @@ interface DropdownDTO {
   value: string;
 }
 
+interface Faculty {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface Student {
+  id: string;
+  name: string;
+  email: string;
+  registrationNumber: string;
+}
+
 // --- Modals ---
 
 interface DeptModalProps {
@@ -313,7 +327,7 @@ interface FacultyListModalProps {
   isOpen: boolean;
   onClose: () => void;
   deptName: string;
-  faculty: any[];
+  faculty: Faculty[];
   loading: boolean;
 }
 
@@ -387,7 +401,7 @@ interface StudentListModalProps {
   isOpen: boolean;
   onClose: () => void;
   sectionName: string;
-  students: any[];
+  students: Student[];
   loading: boolean;
 }
 
@@ -467,12 +481,12 @@ export const DepartmentSectionManagement: React.FC = () => {
   const [sectionModal, setSectionModal] = useState<{ open: boolean, data?: Section }>({ open: false });
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
-  const [facultyModal, setFacultyModal] = useState<{ open: boolean, dept?: Department | null, list: any[] }>({ 
+  const [facultyModal, setFacultyModal] = useState<{ open: boolean, dept?: Department | null, list: Faculty[] }>({ 
     open: false, 
     dept: null, 
     list: [] 
   });
-  const [studentModal, setStudentModal] = useState<{ open: boolean, section?: Section | null, list: any[] }>({ 
+  const [studentModal, setStudentModal] = useState<{ open: boolean, section?: Section | null, list: Student[] }>({ 
     open: false, 
     section: null, 
     list: [] 
@@ -493,13 +507,24 @@ export const DepartmentSectionManagement: React.FC = () => {
   const fetchDepartments = async () => {
     setLoading(true);
     try {
-      const { data } = await apiClient.get<any[]>('/api/v1/admin/departments');
+      const { data } = await apiClient.get<Array<{
+        id?: string;
+        departmentId?: string;
+        name?: string;
+        label?: string;
+        code?: string;
+        value?: string;
+        description?: string;
+        isActive?: boolean;
+        studentCount?: number;
+        facultyCount?: number;
+      }>>('/api/v1/admin/departments');
       // For some reason this endpoint returns different structures based on logic
       // We will handle it by checking the properties
       const mapped = data.map(d => ({
-        id: d.id || d.departmentId,
-        name: d.name || d.label,
-        code: d.code || d.value,
+        id: d.id || d.departmentId || '',
+        name: d.name || d.label || '',
+        code: d.code || d.value || '',
         description: d.description || '',
         isActive: d.isActive !== false,
         studentCount: d.studentCount || 0,
@@ -515,7 +540,7 @@ export const DepartmentSectionManagement: React.FC = () => {
 
   const fetchSections = async (deptId: string) => {
     try {
-      const { data } = await apiClient.get<any[]>(`/api/v1/admin/departments/${deptId}/sections/details`);
+      const { data } = await apiClient.get<Section[]>(`/api/v1/admin/departments/${deptId}/sections/details`);
       const processed = Array.isArray(data) ? data : [];
       const mapped = processed.map(s => ({
         id: s.id,
@@ -556,8 +581,9 @@ export const DepartmentSectionManagement: React.FC = () => {
       await apiClient.post('/api/v1/admin/departments', data);
       await fetchDepartments();
       setDeptModal({ open: false });
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to create department';
+    } catch (error: unknown) {
+      const axiosError = error as any;
+      const errorMessage = axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to create department';
       setModalError(errorMessage);
       console.error('Failed to create department:', error);
     } finally {
@@ -573,8 +599,9 @@ export const DepartmentSectionManagement: React.FC = () => {
       await apiClient.put(`/api/v1/admin/departments/${deptModal.data.id}`, data);
       await fetchDepartments();
       setDeptModal({ open: false });
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to update department';
+    } catch (error: unknown) {
+      const axiosError = error as any;
+      const errorMessage = axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to update department';
       setModalError(errorMessage);
       console.error('Failed to update department:', error);
     } finally {
@@ -593,7 +620,7 @@ export const DepartmentSectionManagement: React.FC = () => {
     }
   };
 
-  const handleCreateSection = async (data: any) => {
+  const handleCreateSection = async (data: Omit<Section, 'id' | 'studentCount' | 'isActive'> & { isActive: boolean }) => {
     if (!selectedDeptId) return;
     setModalLoading(true);
     setModalError(null);
@@ -601,8 +628,9 @@ export const DepartmentSectionManagement: React.FC = () => {
       await apiClient.post('/api/v1/admin/sections', { ...data, departmentId: selectedDeptId });
       await fetchSections(selectedDeptId);
       setSectionModal({ open: false });
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to create section';
+    } catch (error: unknown) {
+      const axiosError = error as any;
+      const errorMessage = axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to create section';
       setModalError(errorMessage);
       console.error('Failed to create section:', error);
     } finally {
@@ -610,7 +638,7 @@ export const DepartmentSectionManagement: React.FC = () => {
     }
   };
 
-  const handleUpdateSection = async (data: any) => {
+  const handleUpdateSection = async (data: Omit<Section, 'id' | 'studentCount' | 'isActive'> & { isActive: boolean }) => {
     const sectionId = sectionModal.data?.id;
     if (!sectionId || !selectedDeptId) {
       setModalError("Missing required identifiers for update");
@@ -629,8 +657,9 @@ export const DepartmentSectionManagement: React.FC = () => {
       await apiClient.put(`/api/v1/admin/sections/${sectionId}`, payload);
       await fetchSections(selectedDeptId);
       setSectionModal({ open: false, data: undefined });
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.error || error.response?.data?.message || 'Failed to update section';
+    } catch (error: unknown) {
+      const axiosError = error as any;
+      const errorMessage = axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to update section';
       setModalError(errorMessage);
       console.error('Failed to update section:', error);
     } finally {
