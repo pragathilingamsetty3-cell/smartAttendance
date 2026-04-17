@@ -22,6 +22,7 @@ import java.util.Base64;
 public class FirebaseConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(FirebaseConfig.class);
+    private static volatile boolean firebaseInitialized = false;
 
     @Value("${firebase.service-account-path}")
     private String serviceAccountPath;
@@ -29,52 +30,99 @@ public class FirebaseConfig {
     @Value("${FIREBASE_KEY_BASE64:}")
     private String firebaseKeyBase64;
 
+    /**
+     * Initialize Firebase with multiple fallback strategies
+     */
     @Bean
     public FirebaseMessaging firebaseMessaging() throws IOException {
-        // 📡 HIGHEST PRIORITY: Base64 String (Cloud Production)
-        if (firebaseKeyBase64 != null && !firebaseKeyBase64.trim().isEmpty()) {
-            try {
-                // 🛡️ HARDENING: Aggressively remove anything that is NOT a valid Base64 character (including '\', quotes, spaces, etc.)
-                String sanitizedKey = firebaseKeyBase64.replaceAll("[^a-zA-Z0-9+/=]", "");
-                byte[] decodedKey = Base64.getDecoder().decode(sanitizedKey);
-                FirebaseOptions options = FirebaseOptions.builder()
-                        .setCredentials(GoogleCredentials.fromStream(new ByteArrayInputStream(decodedKey)))
-                        .build();
-                
-                if (FirebaseApp.getApps().isEmpty()) {
-                    FirebaseApp.initializeApp(options);
-                    logger.info("🚀 Firebase initialized via FIREBASE_KEY_BASE64 string!");
+        synchronized (FirebaseConfig.class) {
+            if (firebaseInitialized) {
+                logger.info("📡 Firebase already initialized, returning existing instance");
+                try {
+                    return FirebaseMessaging.getInstance();
+                } catch (Exception e) {
+                    logger.warn("⚠️ Firebase initialization was attempted but unavailable: {}", e.getMessage());
+                    return null;
                 }
-                return FirebaseMessaging.getInstance();
-            } catch (Exception e) {
-                logger.error("❌ Failed to initialize Firebase from Base64: {}", e.getMessage());
-                // Fall through to file loading if Base64 fails
             }
-        }
 
-        if (serviceAccountPath == null || serviceAccountPath.trim().isEmpty()) {
-            logger.error("❌ Firebase is enabled but neither FIREBASE_KEY_BASE64 nor path is provided!");
+            // 📡 STRATEGY 1: Base64 String (Cloud Production - Highest Priority)
+            if (firebaseKeyBase64 != null && !firebaseKeyBase64.trim().isEmpty()) {
+                if (initializeFromBase64(firebaseKeyBase64)) {
+                    return FirebaseMessaging.getInstance();
+                }
+            }
+
+            // 📡 STRATEGY 2: File System (Render/Production Deployment)
+            if (serviceAccountPath != null && !serviceAccountPath.trim().isEmpty()) {
+                if (initializeFromFile(serviceAccountPath)) {
+                    return FirebaseMessaging.getInstance();
+                }
+            }
+
+            // ⚠️ GRACEFUL DEGRADATION: Firebase disabled if no credentials available
+            logger.warn("⚠️ Firebase disabled: Neither FIREBASE_KEY_BASE64 nor FIREBASE_SERVICE_ACCOUNT_PATH provided valid credentials");
+            firebaseInitialized = true; // Mark as attempted
             return null;
         }
+    }
 
+    /**
+     * Initialize Firebase from Base64-encoded service account JSON
+     */
+    private boolean initializeFromBase64(String base64Key) {
         try {
-            // 📡 SMART LOADING: Check FileSystem (Render) then ClassPath (Local)
-            java.io.File file = new java.io.File(serviceAccountPath);
+            logger.info("📡 Attempting Firebase initialization from FIREBASE_KEY_BASE64...");
+            
+            String sanitizedKey = base64Key.trim().replaceAll("[^a-zA-Z0-9+/=]", "");
+            
+            if (sanitizedKey.isEmpty()) {
+                logger.error("❌ FIREBASE_KEY_BASE64 is invalid (empty after sanitization)");
+                return false;
+            }
+
+            byte[] decodedKey = Base64.getDecoder().decode(sanitizedKey);
+            FirebaseOptions options = FirebaseOptions.builder()
+                    .setCredentials(GoogleCredentials.fromStream(new ByteArrayInputStream(decodedKey)))
+                    .build();
+            
+            if (FirebaseApp.getApps().isEmpty()) {
+                FirebaseApp.initializeApp(options);
+                firebaseInitialized = true;
+                logger.info("✅ Firebase successfully initialized from FIREBASE_KEY_BASE64!");
+                return true;
+            }
+            return true;
+        } catch (IllegalArgumentException e) {
+            logger.error("❌ Base64 decoding failed: Invalid Base64 format - {}", e.getMessage());
+        } catch (Exception e) {
+            logger.error("❌ Firebase initialization from Base64 failed: {} [{}]", e.getMessage(), e.getClass().getSimpleName());
+        }
+        return false;
+    }
+
+    /**
+     * Initialize Firebase from file path (filesystem or classpath)
+     */
+    private boolean initializeFromFile(String path) {
+        try {
+            logger.info("📡 Attempting Firebase initialization from file: {}", path);
+            
             java.io.InputStream inputStream;
+            java.io.File file = new java.io.File(path);
 
             if (file.exists()) {
                 inputStream = new java.io.FileInputStream(file);
-                logger.info("✅ Firebase initializing via FileSystem: {}", serviceAccountPath);
+                logger.info("✅ Found Firebase key at filesystem: {}", path);
             } else {
-                // Fallback to ClassPath (inside the JAR)
-                var resource = new org.springframework.core.io.ClassPathResource(serviceAccountPath);
-                if (!resource.exists()) {
-                    // Try to see if it's in a subdirectory in classpath
-                    logger.warn("⚠️ File not found at root, checking for variants...");
-                    throw new IOException("Firebase key file not found at: " + serviceAccountPath);
+                var resource = new org.springframework.core.io.ClassPathResource(path);
+                if (resource.exists()) {
+                    inputStream = resource.getInputStream();
+                    logger.info("✅ Found Firebase key in classpath: {}", path);
+                } else {
+                    logger.error("❌ Firebase key file not found at: {} (filesystem or classpath)", path);
+                    return false;
                 }
-                inputStream = resource.getInputStream();
-                logger.info("✅ Firebase initializing via ClassPath: {}", serviceAccountPath);
             }
 
             FirebaseOptions options = FirebaseOptions.builder()
@@ -83,24 +131,34 @@ public class FirebaseConfig {
 
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options);
-                logger.info("🚀 FirebaseApp initialized successfully!");
+                firebaseInitialized = true;
+                logger.info("✅ Firebase successfully initialized from file!");
+                return true;
             }
-
-            return FirebaseMessaging.getInstance();
-
+            return true;
         } catch (Exception e) {
-            logger.error("⚠️ Firebase initialization failed: {}. Continuing without Firebase features.", e.getMessage());
-            return null;
+            logger.error("❌ Firebase initialization from file failed: {} [{}]", e.getMessage(), e.getClass().getSimpleName());
         }
+        return false;
     }
 
+    /**
+     * Firestore bean - gracefully handles missing Firebase initialization
+     */
     @Bean
     @ConditionalOnProperty(name = "firebase.enabled", havingValue = "true")
     public Firestore firestore() {
-        if (FirebaseApp.getApps().isEmpty()) {
-            logger.error("❌ Cannot initialize Firestore: FirebaseApp is not initialized!");
+        try {
+            if (FirebaseApp.getApps().isEmpty()) {
+                logger.warn("⚠️ Firestore not initialized: FirebaseApp not available. Threat detection will use local caching only.");
+                return null;
+            }
+            Firestore fs = FirestoreClient.getFirestore();
+            logger.info("✅ Firestore bean created successfully");
+            return fs;
+        } catch (Exception e) {
+            logger.error("❌ Failed to create Firestore bean: {}", e.getMessage());
             return null;
         }
-        return FirestoreClient.getFirestore();
     }
 }
