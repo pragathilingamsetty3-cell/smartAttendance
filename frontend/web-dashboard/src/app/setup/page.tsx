@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '../../stores/authStore';
-import authService from '../../services/auth.service';
+import { useAuthStore } from '@/stores/authStore';
+import authService from '@/services/auth.service';
 import { Fingerprint, Smartphone, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function SetupPage() {
