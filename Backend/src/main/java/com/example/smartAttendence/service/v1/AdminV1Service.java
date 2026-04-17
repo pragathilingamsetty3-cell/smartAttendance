@@ -407,18 +407,24 @@ public class AdminV1Service {
         }
 
         // Reset device and biometric credentials
+        String oldDeviceId = student.getDeviceId();
         student.setDeviceId(null);
         student.setDeviceFingerprint(null);
         student.setBiometricSignature(null);
         student.setDeviceRegisteredAt(null);
         
-        // Also reset in device binding table if exists
+        // Also reset in device binding table if exists with audit trail
         deviceBindingRepository.findByUser(student).ifPresent(deviceBinding -> {
             deviceBinding.setIsActive(false);
+            deviceBinding.setRevokedAt(java.time.Instant.now());
+            deviceBinding.setRevocationReason("Admin reset device lock");
             deviceBindingRepository.save(deviceBinding);
+            log.info("✅ DEVICE UNLOCK: DeviceBinding deactivated for student: {} (Device: {})", registrationNumber, oldDeviceId);
         });
 
-        return userV1Repository.save(student);
+        User savedStudent = userV1Repository.save(student);
+        log.info("✅ DEVICE RESET: All device credentials cleared for student: {}", registrationNumber);
+        return savedStudent;
     }
 
 

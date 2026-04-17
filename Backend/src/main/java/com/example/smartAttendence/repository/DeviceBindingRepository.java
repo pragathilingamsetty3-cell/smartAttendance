@@ -25,5 +25,8 @@ public interface DeviceBindingRepository extends JpaRepository<DeviceBinding, UU
     @Query("SELECT COUNT(d) > 0 FROM DeviceBinding d WHERE d.user.id = :userId AND d.isActive = true")
     boolean hasActiveDeviceBinding(@Param("userId") UUID userId);
 
+    @Query("SELECT d FROM DeviceBinding d WHERE d.user.id = :userId AND d.deviceId = :deviceId")
+    Optional<DeviceBinding> findByUserIdAndDeviceId(@Param("userId") UUID userId, @Param("deviceId") String deviceId);
+
     void deleteByUser(User user);
 }

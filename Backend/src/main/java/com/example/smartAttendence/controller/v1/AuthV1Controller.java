@@ -67,7 +67,16 @@ public class AuthV1Controller {
             }
             
             log.info("🔍 [DIAGNOSTIC] Step 1: Attempting AuthenticationService.login...");
-            AuthenticationService.LoginResult result = unifiedAuthService.login(request.getEmail(), request.getPassword());
+            
+            // Extract device ID from request headers
+            String deviceId = extractDeviceId(httpRequest);
+            log.info("🔍 Device ID extracted from request: {}", deviceId != null ? deviceId.substring(0, Math.min(10, deviceId.length())) + "..." : "UNKNOWN");
+            
+            AuthenticationService.LoginResult result = unifiedAuthService.login(
+                request.getEmail(), 
+                request.getPassword(),
+                deviceId
+            );
             
             if (result == null || result.user() == null) {
                 log.error("❌ [DIAGNOSTIC] Step 1 FAILED: AuthenticationService returned null user!");
@@ -77,8 +86,8 @@ public class AuthV1Controller {
             log.info("✅ [DIAGNOSTIC] Step 1 SUCCESS: User verified: {}", result.user().getEmail());
 
             // 🔐 ADVANCED ZERO-TRUST TOKEN GENERATION
-            log.info("🔍 [DIAGNOSTIC] Step 2: Generating Device Fingerprint...");
-            String deviceFingerprint = generateDeviceFingerprint(httpRequest);
+            log.info("🔍 [DIAGNOSTIC] Step 2: Generating Token Fingerprint for JWT...");
+            String tokenFingerprint = generateDeviceFingerprint(httpRequest);
             String sessionId = java.util.UUID.randomUUID().toString();
             String clientIP = getClientIP(httpRequest);
             String userAgent = httpRequest.getHeader("User-Agent");
@@ -90,7 +99,7 @@ public class AuthV1Controller {
                 accessToken = jwtUtil.generateToken(
                     result.user().getEmail(), 
                     result.user().getRole() != null ? result.user().getRole().toString() : "UNKNOWN", 
-                    deviceFingerprint, 
+                    tokenFingerprint, 
                     sessionId,
                     clientIP,
                     userAgent,
@@ -396,6 +405,36 @@ public class AuthV1Controller {
     }
 
     // 🔐 SECURITY HELPER METHODS
+    private String extractDeviceId(HttpServletRequest request) {
+        // Try to extract Device ID from custom header first
+        String deviceIdHeader = request.getHeader("X-Device-ID");
+        if (deviceIdHeader != null && !deviceIdHeader.isEmpty()) {
+            return deviceIdHeader;
+        }
+        
+        // Fall back to generating from User-Agent
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent != null && !userAgent.isEmpty()) {
+            try {
+                java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+                byte[] hash = digest.digest(userAgent.getBytes());
+                
+                StringBuilder hexString = new StringBuilder();
+                for (byte b : hash) {
+                    String hex = Integer.toHexString(0xff & b);
+                    if (hex.length() == 1) hexString.append('0');
+                    hexString.append(hex);
+                }
+                
+                return hexString.toString();
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        
+        return null;
+    }
+    
     private String generateDeviceFingerprint(HttpServletRequest request) {
         try {
             String userAgent = request.getHeader("User-Agent");

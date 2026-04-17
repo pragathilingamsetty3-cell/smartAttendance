@@ -29,6 +29,10 @@ public class UnifiedAuthService {
         return authenticationService.login(email, password);
     }
 
+    public AuthenticationService.LoginResult login(String email, String password, String deviceId) {
+        return authenticationService.login(email, password, deviceId);
+    }
+
     public Optional<User> getUserByEmail(String email) {
         return authenticationService.getUserByEmail(email);
     }
