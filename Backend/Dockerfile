@@ -23,8 +23,8 @@ RUN MAVEN_OPTS="-Xmx512m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC -XX:+DisableExpl
     -q \
     -T 1C
 
-# 🚀 Runtime Stage - Lightweight Java Runtime
-FROM eclipse-temurin:21-jre-alpine
+# 🚀 Runtime Stage - Java Runtime with Native Libraries (Ubuntu-based for Firebase/gRPC support)
+FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
@@ -47,7 +47,6 @@ USER appuser
 # 🧠 MEMORY OPTIMIZATION FOR CLOUD RUN
 # -XX:MaxRAMPercentage: Ensures JVM doesn't exceed 75% of container RAM
 # -Xss: Smaller thread stack size (256k) to save memory
-# -Dgrpc.netty.shaded.io.netty.transport.noNative: Disable native Netty TLS to prevent SIGSEGV in Alpine containers
 ENTRYPOINT ["java", \
     "-XX:InitialRAMPercentage=40.0", \
     "-XX:MaxRAMPercentage=75.0", \
@@ -56,5 +55,4 @@ ENTRYPOINT ["java", \
     "-Dspring.profiles.active=prod", \
     "-Djava.security.egd=file:/dev/./urandom", \
     "-Dserver.port=${PORT:-8080}", \
-    "-Dgrpc.netty.shaded.io.netty.transport.noNative=true", \
     "-jar", "app.jar"]
