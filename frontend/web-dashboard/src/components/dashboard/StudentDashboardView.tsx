@@ -13,7 +13,8 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Fingerprint
 } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/Card';
