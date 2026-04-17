@@ -47,6 +47,7 @@ USER appuser
 # 🧠 MEMORY OPTIMIZATION FOR CLOUD RUN
 # -XX:MaxRAMPercentage: Ensures JVM doesn't exceed 75% of container RAM
 # -Xss: Smaller thread stack size (256k) to save memory
+# -Dgrpc.netty.shaded.io.netty.transport.noNative: Disable native Netty TLS to prevent SIGSEGV in Alpine containers
 ENTRYPOINT ["java", \
     "-XX:InitialRAMPercentage=40.0", \
     "-XX:MaxRAMPercentage=75.0", \
@@ -55,4 +56,5 @@ ENTRYPOINT ["java", \
     "-Dspring.profiles.active=prod", \
     "-Djava.security.egd=file:/dev/./urandom", \
     "-Dserver.port=${PORT:-8080}", \
+    "-Dgrpc.netty.shaded.io.netty.transport.noNative=true", \
     "-jar", "app.jar"]
