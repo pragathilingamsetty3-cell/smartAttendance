@@ -415,6 +415,8 @@ public class AdminV1Service {
         student.setDeviceFingerprint(null);
         student.setBiometricSignature(null);
         student.setDeviceRegisteredAt(null);
+        student.setIsTemporaryPassword(true);
+        student.setFirstLogin(true);
         
         // Also reset in device binding table if exists with audit trail
         deviceBindingRepository.findByUser(student).ifPresent(deviceBinding -> {

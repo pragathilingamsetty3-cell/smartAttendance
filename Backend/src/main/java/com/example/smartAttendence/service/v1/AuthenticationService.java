@@ -74,7 +74,10 @@ public class AuthenticationService {
         logger.info("✅ Password verified for: {}", email);
 
         // --- 🛡️ AI SECURITY: DEVICE LOCKING SYSTEM ---
-        if (user.getRole() == com.example.smartAttendence.enums.Role.STUDENT) {
+        com.example.smartAttendence.enums.Role role = user.getRole();
+        if (role == com.example.smartAttendence.enums.Role.STUDENT || 
+            role == com.example.smartAttendence.enums.Role.CR || 
+            role == com.example.smartAttendence.enums.Role.LR) {
             // DEVICE LOCK ENFORCEMENT: If student has registered device, must login from same device
             if (user.getDeviceId() != null) {
                 logger.info("🛡️ DEVICE LOCK: Student has registered device: {}", user.getDeviceId());

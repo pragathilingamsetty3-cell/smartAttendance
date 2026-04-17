@@ -111,7 +111,7 @@ export default function UserDetailsPage({ params }: { params: Promise<{ id: stri
     );
   }
 
-  const isStudent = userDetails.role === "STUDENT";
+  const isStudent = userDetails.role === "STUDENT" || userDetails.role === "CR" || userDetails.role === "LR";
 
   return (
     <div className="space-y-8 pb-10">
