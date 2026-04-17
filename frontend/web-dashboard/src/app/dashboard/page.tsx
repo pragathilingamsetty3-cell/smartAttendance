@@ -84,7 +84,7 @@ export default function Dashboard() {
         {user?.role === Role.FACULTY ? (
           <FacultyDashboardView stats={stats} loading={loading} sectionId={user?.sectionId} />
         ) : user?.role === Role.STUDENT ? (
-          <StudentDashboardView stats={stats} loading={loading} />
+          <StudentDashboardView stats={stats} loading={loading} user={user} />
         ) : (
           <AdminDashboardView stats={stats} loading={loading} AnimatedCounter={AnimatedCounter} />
         )}

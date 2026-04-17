@@ -18,20 +18,28 @@ import {
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { StudentDashboardStatsDTO } from '@/types';
+import { StudentDashboardStatsDTO, EnhancedUserDTO } from '@/types';
 
 interface StudentDashboardViewProps {
   stats: StudentDashboardStatsDTO | null;
   loading: boolean;
+  user: EnhancedUserDTO | null;
 }
 
-export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stats, loading }) => {
+export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stats, loading, user }) => {
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 }
   };
 
   const quickActions = [
+    {
+      title: 'Biometric Setup',
+      desc: 'Register fingerprint & device',
+      icon: <Shield className="text-primary" size={20} />,
+      href: '/setup',
+      color: 'primary'
+    },
     {
       title: 'Exit Request',
       desc: 'Digital Hall Pass request',
@@ -63,8 +71,36 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
     );
   }
 
+  const needsSetup = !user?.deviceId || user.deviceId === 'UNBOUND_DEVICE';
+
   return (
     <div className="space-y-8">
+      {/* Security Alert if setup needed */}
+      {needsSetup && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-6 rounded-3xl bg-red-500/10 border border-red-500/20 flex flex-col md:flex-row items-center justify-between gap-4"
+        >
+          <div className="flex gap-4 items-center">
+            <div className="p-3 bg-red-500/20 rounded-2xl text-red-500">
+              <Fingerprint size={24} />
+            </div>
+            <div>
+              <p className="text-white font-bold">Biometric Setup Required</p>
+              <p className="text-slate-400 text-xs mt-1">
+                Your account is currently not bound to any device. You must register your device and fingerprint to mark attendance.
+              </p>
+            </div>
+          </div>
+          <Link href="/setup">
+            <Button className="bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl px-6 py-2">
+              Complete Setup Now
+            </Button>
+          </Link>
+        </motion.div>
+      )}
+
       {/* Header Info */}
       <motion.div 
         initial={{ opacity: 0, x: -20 }}
