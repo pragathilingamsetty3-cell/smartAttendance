@@ -326,15 +326,19 @@ export default function UserDetailsPage({ params }: { params: Promise<{ id: stri
                     </div>
                     <h4 className="font-bold text-white mb-1">Hardware Bound ID</h4>
                     <p className="text-xs text-slate-500 mb-4 font-mono">{userDetails.deviceId || "UNBOUND_DEVICE"}</p>
-                    <button 
-                      className={`text-[11px] font-bold transition-colors flex items-center gap-2 uppercase tracking-widest ${
-                        resetDeviceLoading || !userDetails.deviceId ? 'opacity-50 cursor-not-allowed text-slate-400' : 'text-primary hover:text-white'
-                      }`}
-                      onClick={handleResetDevice}
-                      disabled={resetDeviceLoading || !userDetails.deviceId}
-                    >
-                       {resetDeviceLoading ? '⏳ Resetting...' : 'Reset Hardware Binding'}
-                    </button>
+                    {userDetails.deviceId ? (
+                      <button 
+                        className={`text-[11px] font-bold transition-colors flex items-center gap-2 uppercase tracking-widest ${
+                          resetDeviceLoading ? 'opacity-50 cursor-not-allowed text-slate-400' : 'text-primary hover:text-white'
+                        }`}
+                        onClick={handleResetDevice}
+                        disabled={resetDeviceLoading}
+                      >
+                         {resetDeviceLoading ? '⏳ Resetting...' : 'Reset Hardware Binding'}
+                      </button>
+                    ) : (
+                      <p className="text-xs text-slate-500">No device registered</p>
+                    )}
                     {resetDeviceMessage && (
                       <p className={`text-xs mt-3 font-medium ${
                         resetDeviceMessage.type === 'success' ? 'text-emerald-400' : 'text-red-400'

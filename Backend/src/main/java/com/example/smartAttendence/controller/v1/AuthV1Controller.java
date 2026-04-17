@@ -179,12 +179,12 @@ public class AuthV1Controller {
             // 🔐 ENHANCED INPUT VALIDATION
             AdvancedInputValidator validator = new AdvancedInputValidator();
             
-            // Validate device ID
+            // Validate device ID - accept alphanumeric format (MOBILE + timestamp + random)
             if (request.deviceId() != null) {
-                AdvancedInputValidator.ValidationResult deviceValidation = validator.validateDeviceId(request.deviceId());
-                if (!deviceValidation.isValid()) {
+                // Allow flexible device ID format: alphanumeric, hyphens, underscores only
+                if (!request.deviceId().matches("^[A-Za-z0-9\\-_]+$")) {
                     return ResponseEntity.badRequest()
-                            .body(Map.of("error", "Invalid device ID: " + deviceValidation.getErrorMessage()));
+                            .body(Map.of("error", "Invalid device ID format"));
                 }
             }
             

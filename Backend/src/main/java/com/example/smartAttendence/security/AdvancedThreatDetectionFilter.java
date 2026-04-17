@@ -92,7 +92,10 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
             if (level != ThreatLevel.LOW) {
                 auditLogger.logSecurityEvent(level.name() + "_THREAT", clientIP, endpoint, "BLOCK", Map.of("ua", userAgent != null ? userAgent : "N/A"));
                 response.setStatus(level == ThreatLevel.CRITICAL ? 403 : 429);
-                response.getWriter().write("{\"error\":\"" + level.name() + " threat detected\"}");
+                
+                // User-friendly message for device mismatch instead of technical threat level
+                String errorMessage = "You can't login multiple devices. Please use the same device or contact admin to reset your device.";
+                response.getWriter().write("{\"error\":\"" + errorMessage + "\"}");
                 return;
             }
 

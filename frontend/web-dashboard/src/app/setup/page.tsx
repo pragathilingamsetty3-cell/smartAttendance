@@ -24,11 +24,11 @@ export default function SetupPage() {
       setLoading(true);
       setError('');
 
-      // Generate device ID from browser fingerprint
-      const deviceId = `MOBILE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      // Generate device ID - alphanumeric only, no special chars
+      const deviceId = `MOBILE${Date.now()}${Math.random().toString(36).substr(2, 9)}`.toUpperCase();
       
       // For now, use a placeholder biometric signature
-      const biometricSignature = `BIO-${Date.now()}`;
+      const biometricSignature = `BIO${Date.now()}`.toUpperCase();
 
       await authService.completeSetup({
         deviceId,
