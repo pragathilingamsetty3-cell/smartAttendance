@@ -149,7 +149,8 @@ public class AuthV1Controller {
                 "name", result.user().getName(),
                 "role", result.user().getRole() != null ? result.user().getRole().toString() : "null",
                 "department", deptUuid != null ? deptUuid.toString() : "",
-                "sectionId", result.user().getSectionId() != null ? result.user().getSectionId().toString() : ""
+                "sectionId", result.user().getSectionId() != null ? result.user().getSectionId().toString() : "",
+                "biometricSignature", result.user().getBiometricSignature() != null ? "REGISTERED" : null
             ));
 
             return ResponseEntity.ok(response);
