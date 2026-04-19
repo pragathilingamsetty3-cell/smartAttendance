@@ -135,10 +135,16 @@ public class AuthV1Controller {
                 return ResponseEntity.status(202).body(response);
             }
 
-            // 🔐 Resolve Department UUID
+            // 🔐 Resolve Department UUID (skip for SUPER_ADMIN - global access, no dept restrictions)
             log.info("🔍 [DIAGNOSTIC] Step 5: Resolving Department UUID...");
-            String rawDept = result.user().getDepartment();
-            UUID deptUuid = securityUtils.resolveDepartmentUuid(rawDept);
+            UUID deptUuid = null;
+            if (result.user().getRole() != null && !result.user().getRole().toString().equals("SUPER_ADMIN")) {
+                String rawDept = result.user().getDepartment();
+                deptUuid = securityUtils.resolveDepartmentUuid(rawDept);
+                log.info("✅ Department UUID resolved for {} role", result.user().getRole());
+            } else {
+                log.info("⏭️ Skipping department resolution for SUPER_ADMIN - global access");
+            }
             
             log.info("✅ [DIAGNOSTIC] Step 5 SUCCESS: Finalizing successful response");
             response.put("message", "Login successful");
