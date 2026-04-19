@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/authStore';
 import authService from '@/services/auth.service';
 import { Fingerprint, Smartphone, CheckCircle2, AlertCircle, ScanFace } from 'lucide-react';
 import { registerBiometric, isBiometricSupported } from '@/lib/biometrics';
+import { getDeviceFingerprint } from '@/lib/utils';
 
 export default function SetupPage() {
   const router = useRouter();
@@ -44,8 +45,8 @@ export default function SetupPage() {
         biometricSignature = `BIO${Date.now()}`.toUpperCase();
       }
 
-      // 2. Generate or Keep Device ID
-      const deviceId = isAlreadySetup ? user.deviceId : `MOBILE${Date.now()}${Math.random().toString(36).substr(2, 9)}`.toUpperCase();
+      // 2. Obtain Consistent Device ID (Fingerprint)
+      const deviceId = getDeviceFingerprint();
       
       await authService.completeSetup({
         deviceId,
