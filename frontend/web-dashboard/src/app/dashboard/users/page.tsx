@@ -1,5 +1,6 @@
 "use client";
 
+import axios, { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, MoreHorizontal, AlertCircle, Eye, X, Check } from "lucide-react";
@@ -23,22 +24,45 @@ export default function UsersPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Wiring up to the audited endpoint: GET /api/v1/admin/users
+    const getBackendHealthMessage = async () => {
+      try {
+        const { data } = await apiClient.get<{ status: string; details?: unknown }>('/api/v1/performance/health');
+        return `Backend health: ${data.status}${data.details ? ` (${JSON.stringify(data.details)})` : ''}`;
+      } catch {
+        return "Unable to reach backend health endpoint.";
+      }
+    };
+
+    const getErrorMessage = async (err: unknown) => {
+      if (axios.isAxiosError(err)) {
+        const axiosError = err as AxiosError<{ error?: string; message?: string }>;
+        if (axiosError.response) {
+          const status = axiosError.response.status;
+          const statusText = axiosError.response.statusText || "Error";
+          const serverMessage = axiosError.response.data?.error || axiosError.response.data?.message;
+          const backendHealth = await getBackendHealthMessage();
+
+          return `${status} ${statusText}${serverMessage ? `: ${serverMessage}` : ''}. ${backendHealth}`;
+        }
+
+        if (axiosError.request) {
+          return `No response from backend. ${await getBackendHealthMessage()}`;
+        }
+      }
+
+      return typeof err === 'string' ? err : 'Unexpected backend failure. Please check the Render deployment logs.';
+    };
+
     const fetchUsers = async () => {
       try {
         const { data } = await apiClient.get<EnhancedUserDTO[]>("/api/v1/admin/users");
-        // Convert map response into array if the backend wraps in { items: [] } 
-        // Based on our spec assumption `EnhancedUserDTO[]`
-        // @ts-expect-error omega clearance
         setUsers(Array.isArray(data) ? data : (data as unknown)?.users || []);
       } catch (err: unknown) {
-        // @ts-expect-error omega clearance
-        setError(err.response?.data?.error || "Failed to establish zero-trust connection");
-        
-        // Mock data fallback removed; just set empty results
+        const message = await getErrorMessage(err);
+        setError(message);
         setUsers([]);
       } finally {
-        setTimeout(() => setLoading(false), 800); // Artificial delay to show beautiful skeleton
+        setTimeout(() => setLoading(false), 800);
       }
     };
 
@@ -150,7 +174,7 @@ export default function UsersPage() {
         {error && (
           <div className="mb-6 p-4 rounded-xl bg-accent/10 border border-accent/20 flex items-center text-accent/90 text-sm">
              <AlertCircle size={18} className="mr-3 shrink-0" />
-             {error}. Loading local mock snapshot instead.
+             {error}
           </div>
         )}
 
