@@ -47,12 +47,4 @@ USER appuser
 # 🧠 MEMORY OPTIMIZATION FOR CLOUD RUN
 # -XX:MaxRAMPercentage: Ensures JVM doesn't exceed 75% of container RAM
 # -Xss: Smaller thread stack size (256k) to save memory
-ENTRYPOINT ["java", \
-    "-XX:InitialRAMPercentage=40.0", \
-    "-XX:MaxRAMPercentage=75.0", \
-    "-XX:MinRAMPercentage=50.0", \
-    "-Xss256k", \
-    "-Dspring.profiles.active=prod", \
-    "-Djava.security.egd=file:/dev/./urandom", \
-    "-Dserver.port=${PORT:-8080}", \
-    "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java -XX:InitialRAMPercentage=40.0 -XX:MaxRAMPercentage=75.0 -XX:MinRAMPercentage=50.0 -Xss256k -Dspring.profiles.active=prod -Djava.security.egd=file:/dev/./urandom -Dserver.port=${PORT:-8080} -jar app.jar"]
