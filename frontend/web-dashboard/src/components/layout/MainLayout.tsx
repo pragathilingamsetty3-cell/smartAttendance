@@ -80,7 +80,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       label: 'Attendance',
       icon: <Activity className="h-4 w-4" />,
       href: '/attendance',
-      requiredRole: ['ADMIN', 'SUPER_ADMIN', 'FACULTY', 'STUDENT'],
+      requiredRole: ['FACULTY', 'STUDENT'],
     },
     {
       id: 'timetable',

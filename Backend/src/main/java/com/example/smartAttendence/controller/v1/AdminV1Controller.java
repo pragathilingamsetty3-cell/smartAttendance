@@ -25,6 +25,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import com.example.smartAttendence.dto.v1.ImageCalibrationRequest;
+import com.example.smartAttendence.dto.v1.CoordinateDTO;
+import com.example.smartAttendence.service.VirtualCalibrationService;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -32,10 +35,14 @@ public class AdminV1Controller {
 
     private final AdminV1Service adminV1Service;
     private final ClassroomSessionV1Repository classroomSessionRepository;
+    private final VirtualCalibrationService virtualCalibrationService;
 
-    public AdminV1Controller(AdminV1Service adminV1Service, ClassroomSessionV1Repository classroomSessionRepository) {
+    public AdminV1Controller(AdminV1Service adminV1Service, 
+                             ClassroomSessionV1Repository classroomSessionRepository,
+                             VirtualCalibrationService virtualCalibrationService) {
         this.adminV1Service = adminV1Service;
         this.classroomSessionRepository = classroomSessionRepository;
+        this.virtualCalibrationService = virtualCalibrationService;
     }
 
     /**
@@ -243,6 +250,36 @@ public class AdminV1Controller {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to update room boundary: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 3.2.1 Virtual Geofencing Calibration (The Calibration Bridge)
+     * Maps 4 pinned 2D pixels to geographic 3D coordinates.
+     * POST /api/v1/admin/rooms/calibrate-boundary
+     */
+    @PostMapping("/rooms/calibrate-boundary")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<Map<String, Object>> calibrateVirtualBoundary(
+            @Valid @RequestBody ImageCalibrationRequest request) {
+        try {
+            List<CoordinateDTO> boundaryCoords = virtualCalibrationService.calculateBoundaryCoordinates(request);
+            
+            return ResponseEntity.ok(Map.of(
+                "message", "Virtual calibration completed successfully",
+                "coordinates", boundaryCoords,
+                "metadata", Map.of(
+                    "baseLat", request.getBaseLatitude(),
+                    "baseLon", request.getBaseLongitude(),
+                    "processedPoints", request.getPoints().size()
+                )
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Calibration failed: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to calibrate boundary: " + e.getMessage()));
         }
     }
 
