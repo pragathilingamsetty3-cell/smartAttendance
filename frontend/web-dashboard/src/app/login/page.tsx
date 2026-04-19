@@ -33,11 +33,18 @@ export default function LoginPage() {
 
       setToken(res.data.accessToken, res.data.refreshToken);
       setUser(res.data.user);
-      
-      setSuccess('Login successful! Redirecting to dashboard...');
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 800);
+
+      if (res.data.requiresFirstLoginSetup) {
+        setSuccess('Setup required. Redirecting to setup...');
+        setTimeout(() => {
+          router.push('/setup');
+        }, 800);
+      } else {
+        setSuccess('Login successful! Redirecting to dashboard...');
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 800);
+      }
     } catch (err: unknown) {
       // @ts-expect-error omega clearance
       const errorMessage = err.response?.data?.error || err.message || 'Login failed. Please try again.';
