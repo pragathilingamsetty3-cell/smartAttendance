@@ -59,6 +59,16 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
     radiusMeters: 0
   });
 
+  // NEW: Calibration Metadata for "Honest Proof"
+  const [calibrationData, setCalibrationData] = useState<{
+    lat: number;
+    lng: number;
+    heading: number;
+    pitch: number;
+    source: string;
+  } | null>(null);
+  const [calibrating, setCalibrating] = useState(false);
+
   useEffect(() => {
     if (isCalibrationMode && calibrationSource === 'url' && sensorUrl) {
       const img = new Image();
@@ -72,6 +82,19 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
   const startCamera = async () => {
     setCameraError(null);
     try {
+      // 📍 Capture GPS simultaneously for "Honest Proof"
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition((pos) => {
+          setCalibrationData({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            heading: 0, // Heading would usually come from DeviceOrientation event
+            pitch: 45,  // Default pitch
+            source: 'Live Camera Sensor'
+          });
+        });
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: 'environment' }
       });
@@ -276,16 +299,47 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
       // Auto-finish calibration mode when 4 points are pinned
       if (isCalibrationMode && newPoints.length === 4) {
         setIsDrawing(false);
-        // We delay slightly to ensure state is ready, or pass points directly to a shared logic
-        setTimeout(() => {
-          const coordinates: Coordinate[] = newPoints.map(point => ({
-            longitude: point.x,
-            latitude: point.y
-          }));
-          setFormData(prev => ({ ...prev, boundaryPoints: coordinates }));
-          setShowPreview(true);
-        }, 100);
+        handleCalibration(newPoints);
       }
+    }
+  };
+
+  const handleCalibration = async (points: CanvasPoint[]) => {
+    if (!calibrationData) {
+      alert("Please ensure camera/GPS permissions are active for calibration.");
+      return;
+    }
+
+    setCalibrating(true);
+    try {
+      // Map canvas 400x400 normalized coordinates
+      const normalizedPoints = points.map(p => ({
+        x: p.x / 400,
+        y: p.y / 400
+      }));
+
+      const result = await roomManagementService.calibrateVirtualBoundary({
+        baseLatitude: calibrationData.lat,
+        baseLongitude: calibrationData.lng,
+        heading: calibrationData.heading,
+        pitch: calibrationData.pitch,
+        cameraHeight: 1.5,
+        fov: 60.0,
+        points: normalizedPoints
+      });
+
+      // Update boundaries with actual GPS results from Backend
+      const coordinates: Coordinate[] = result.coordinates.map(c => ({
+        longitude: c.longitude,
+        latitude: c.latitude
+      }));
+
+      setFormData(prev => ({ ...prev, boundaryPoints: coordinates }));
+      setShowPreview(true);
+    } catch (error) {
+      console.error("Calibration failed:", error);
+    } finally {
+      setCalibrating(false);
     }
   };
 
@@ -422,6 +476,27 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
         </CardHeader>
         
         <CardContent>
+          {/* 📍 GPS Status Header (The Honest Proof) */}
+          {calibrationData && (
+            <div className="mb-6 p-4 bg-violet-600/10 border border-violet-500/20 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
+               <div className="flex items-center gap-3">
+                  <div className="p-2 bg-violet-500/20 rounded-lg">
+                    <MapPin className="h-4 w-4 text-violet-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-violet-400 uppercase tracking-widest">GPS Sensor Internal Tracking</p>
+                    <p className="text-sm text-white font-medium">
+                      {calibrationData.lat.toFixed(6)}, {calibrationData.lng.toFixed(6)}
+                    </p>
+                  </div>
+               </div>
+               <div className="text-right">
+                  <p className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Source</p>
+                  <p className="text-xs text-gray-400 font-medium italic">{calibrationData.source}</p>
+               </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Information */}
             <div className="space-y-6">

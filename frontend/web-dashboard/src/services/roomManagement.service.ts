@@ -233,6 +233,20 @@ class RoomManagementService {
     });
     return response.data;
   }
+
+  // --- Virtual Geofencing Calibration ---
+  async calibrateVirtualBoundary(request: any): Promise<{
+    message: string, 
+    coordinates: {latitude: number, longitude: number}[],
+    metadata: any
+  }> {
+    try {
+      const response = await apiClient.post('/api/v1/admin/rooms/calibrate-boundary', request);
+      return response.data;
+    } catch (error) {
+      throw handleRoomError(error, 'Failed to calibrate virtual boundary');
+    }
+  }
 }
 
 export const roomManagementService = new RoomManagementService();
