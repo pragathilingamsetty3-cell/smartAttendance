@@ -798,11 +798,23 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                     <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
                       <h4 className="text-blue-400 font-medium mb-2">Boundary Points:</h4>
                       <div className="text-gray-300 text-sm space-y-1">
-                        {boundaryPoints.map((point, index) => (
-                          <div key={index}>
-                            Point {index + 1}: ({Math.round(point.x)}, {Math.round(point.y)})
-                          </div>
-                        ))}
+                        {boundaryPoints.map((point, index) => {
+                          const gps = formData.boundaryPoints[index];
+                          return (
+                            <div key={index} className="flex justify-between items-center text-xs py-1 border-b border-white/5 last:border-0">
+                              <span className="text-gray-400">Point {index + 1}:</span>
+                              {gps ? (
+                                <span className="text-emerald-400 font-mono">
+                                  {gps.latitude.toFixed(6)}, {gps.longitude.toFixed(6)}
+                                </span>
+                              ) : (
+                                <span className="text-gray-500 italic">
+                                  Pixel: ({Math.round(point.x)}, {Math.round(point.y)})
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -840,15 +852,40 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
 
             {/* Preview */}
             {showPreview && formData.boundaryPoints.length > 0 && (
-              <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20">
-                <h4 className="text-green-400 font-medium mb-2">Boundary Preview:</h4>
-                <div className="text-gray-300 text-sm">
-                  <p>Type: Boundary</p>
-                  <p>Points: {boundaryPoints.length}</p>
-                  {boundaryData.radiusMeters && boundaryData.radiusMeters > 0 && (
-                    <p>Radius: {Math.round(boundaryData.radiusMeters)}m</p>
-                  )}
+              <div className="p-6 bg-emerald-600/10 rounded-2xl border border-emerald-500/20 animate-in fade-in zoom-in duration-300">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-emerald-500/20 rounded-lg">
+                    <MapPin className="h-5 w-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-emerald-400 font-bold uppercase tracking-widest text-xs">Calibration Successful</h4>
+                    <p className="text-white text-sm font-semibold">4 Geographic Corners Generated</p>
+                  </div>
                 </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {formData.boundaryPoints.map((coord, idx) => (
+                    <div key={idx} className="bg-black/20 p-3 rounded-xl border border-white/5">
+                      <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Corner {idx + 1}</p>
+                      <p className="text-xs text-emerald-300 font-mono tracking-tighter">
+                        {coord.latitude.toFixed(7)}, {coord.longitude.toFixed(7)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                
+                {boundaryData.widthMeters > 0 && (
+                  <div className="mt-4 pt-4 border-t border-white/5 flex gap-6">
+                    <div>
+                      <p className="text-[10px] text-gray-500 font-bold uppercase">Estimated Width</p>
+                      <p className="text-sm text-white">{boundaryData.widthMeters}m</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-500 font-bold uppercase">Estimated Length</p>
+                      <p className="text-sm text-white">{boundaryData.heightMeters}m</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
