@@ -9,6 +9,7 @@ import { Button } from "../../../components/ui/Button";
 import { Skeleton } from "../../../components/ui/Skeleton";
 import apiClient from "../../../lib/apiClient";
 import { EnhancedUserDTO, UserStatus, Role } from "../../../types";
+import axios from "axios";
 
 export default function UsersPage() {
   const [users, setUsers] = useState<EnhancedUserDTO[]>([]);
@@ -25,17 +26,18 @@ export default function UsersPage() {
   useEffect(() => {
     const getErrorMessage = (err: unknown): string => {
       // Check if it's an axios error with response
-      const errorObj = err as any;
-      if (errorObj?.response?.status) {
-        const status = errorObj.response.status;
-        const statusText = errorObj.response.statusText || "Error";
-        const serverMessage = errorObj.response.data?.error || errorObj.response.data?.message;
-        return `${status} ${statusText}${serverMessage ? `: ${serverMessage}` : ''}`;
-      }
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status) {
+          const status = err.response.status;
+          const statusText = err.response.statusText || "Error";
+          const serverMessage = err.response.data?.error || err.response.data?.message;
+          return `${status} ${statusText}${serverMessage ? `: ${serverMessage}` : ''}`;
+        }
 
-      // Check if it's a network error
-      if (errorObj?.request && !errorObj?.response) {
-        return `No response from backend. Check server status.`;
+        // Check if it's a network error
+        if (err.request) {
+          return `No response from backend. Check server status.`;
+        }
       }
 
       return typeof err === 'string' ? err : 'Backend connection failed';
@@ -44,7 +46,7 @@ export default function UsersPage() {
     const fetchUsers = async () => {
       try {
         const { data } = await apiClient.get<EnhancedUserDTO[]>("/api/v1/admin/users");
-        setUsers(Array.isArray(data) ? data : (data as unknown)?.users || []);
+        setUsers(Array.isArray(data) ? data : (data as { users: EnhancedUserDTO[] })?.users || []);
       } catch (err: unknown) {
         setError(getErrorMessage(err));
         setUsers([]);

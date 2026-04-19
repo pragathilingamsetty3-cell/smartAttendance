@@ -18,6 +18,7 @@ import {
   List as ListIcon
 } from 'lucide-react';
 import apiClient from '@/lib/apiClient';
+import axios from 'axios';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -582,8 +583,10 @@ export const DepartmentSectionManagement: React.FC = () => {
       await fetchDepartments();
       setDeptModal({ open: false });
     } catch (error: unknown) {
-      const axiosError = error as any;
-      const errorMessage = axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to create department';
+      let errorMessage = 'Failed to create department';
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.error || error.response?.data?.message || errorMessage;
+      }
       setModalError(errorMessage);
       console.error('Failed to create department:', error);
     } finally {
@@ -600,8 +603,10 @@ export const DepartmentSectionManagement: React.FC = () => {
       await fetchDepartments();
       setDeptModal({ open: false });
     } catch (error: unknown) {
-      const axiosError = error as any;
-      const errorMessage = axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to update department';
+      let errorMessage = 'Failed to update department';
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.error || error.response?.data?.message || errorMessage;
+      }
       setModalError(errorMessage);
       console.error('Failed to update department:', error);
     } finally {
@@ -629,8 +634,10 @@ export const DepartmentSectionManagement: React.FC = () => {
       await fetchSections(selectedDeptId);
       setSectionModal({ open: false });
     } catch (error: unknown) {
-      const axiosError = error as any;
-      const errorMessage = axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to create section';
+      let errorMessage = 'Failed to create section';
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.error || error.response?.data?.message || errorMessage;
+      }
       setModalError(errorMessage);
       console.error('Failed to create section:', error);
     } finally {
@@ -658,8 +665,10 @@ export const DepartmentSectionManagement: React.FC = () => {
       await fetchSections(selectedDeptId);
       setSectionModal({ open: false, data: undefined });
     } catch (error: unknown) {
-      const axiosError = error as any;
-      const errorMessage = axiosError.response?.data?.error || axiosError.response?.data?.message || 'Failed to update section';
+      let errorMessage = 'Failed to update section';
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.error || error.response?.data?.message || errorMessage;
+      }
       setModalError(errorMessage);
       console.error('Failed to update section:', error);
     } finally {
