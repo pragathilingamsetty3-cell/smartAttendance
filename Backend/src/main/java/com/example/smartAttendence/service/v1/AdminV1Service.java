@@ -16,6 +16,7 @@ import com.example.smartAttendence.entity.Room;
 import com.example.smartAttendence.entity.Department;
 import com.example.smartAttendence.entity.Section;
 import com.example.smartAttendence.entity.Timetable;
+import com.example.smartAttendence.entity.DeviceBinding;
 import com.example.smartAttendence.repository.DeviceBindingRepository;
 import com.example.smartAttendence.repository.RoomRepository;
 import com.example.smartAttendence.repository.DepartmentRepository;
@@ -418,14 +419,20 @@ public class AdminV1Service {
         student.setIsTemporaryPassword(true);
         student.setFirstLogin(true);
         
-        // Also reset in device binding table if exists with audit trail
-        deviceBindingRepository.findByUser(student).ifPresent(deviceBinding -> {
-            deviceBinding.setIsActive(false);
-            deviceBinding.setRevokedAt(java.time.Instant.now());
-            deviceBinding.setRevocationReason("Admin reset device lock");
-            deviceBindingRepository.save(deviceBinding);
-            log.info("✅ DEVICE UNLOCK: DeviceBinding deactivated for student: {} (Device: {})", registrationNumber, oldDeviceId);
-        });
+        // Also deactivate ALL records in device binding table if they exist
+        List<DeviceBinding> bindings = deviceBindingRepository.findAllByUser(student);
+        if (!bindings.isEmpty()) {
+            for (DeviceBinding deviceBinding : bindings) {
+                if (deviceBinding.getIsActive()) {
+                    deviceBinding.setIsActive(false);
+                    deviceBinding.setRevokedAt(java.time.Instant.now());
+                    deviceBinding.setRevocationReason("Admin reset device lock");
+                    deviceBindingRepository.save(deviceBinding);
+                    log.info("✅ DEVICE UNLOCK: DeviceBinding deactivated for student: {} (Device: {})", 
+                        registrationNumber, deviceBinding.getDeviceId());
+                }
+            }
+        }
 
         User savedStudent = userV1Repository.save(student);
         log.info("✅ DEVICE RESET: All device credentials cleared for student: {}", registrationNumber);

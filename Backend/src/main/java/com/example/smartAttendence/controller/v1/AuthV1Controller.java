@@ -406,8 +406,13 @@ public class AuthV1Controller {
 
     // 🔐 SECURITY HELPER METHODS
     private String extractDeviceId(HttpServletRequest request) {
-        // Try to extract Device ID from custom header first
+        // Try to extract Device ID from custom headers
         String deviceIdHeader = request.getHeader("X-Device-ID");
+        if (deviceIdHeader == null || deviceIdHeader.isEmpty()) {
+            // Fallback to the header name used by the frontend interceptor
+            deviceIdHeader = request.getHeader("X-Device-Fingerprint");
+        }
+        
         if (deviceIdHeader != null && !deviceIdHeader.isEmpty()) {
             return deviceIdHeader;
         }

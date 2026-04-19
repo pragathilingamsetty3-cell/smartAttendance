@@ -89,9 +89,9 @@ public class AuthenticationService {
                 }
                 
                 if (!user.getDeviceId().equals(incomingDeviceId)) {
-                    logger.warn("🚨 DEVICE LOCK VIOLATION: Device mismatch for student {}. Expected: {}, Got: {}", 
+                    logger.warn("🚨 DEVICE LOCK VIOLATION: Device mismatch for student {}. Registered: {}, Incoming: {}", 
                         email, user.getDeviceId(), incomingDeviceId);
-                    throw new IllegalArgumentException("Device not authorized. This account is locked to a different device. Contact admin to reset device.");
+                    throw new IllegalArgumentException("Device not authorized. This account is locked to a different device. Expected [" + user.getDeviceId().substring(0, Math.min(8, user.getDeviceId().length())) + "...]");
                 }
                 
                 // Also validate DeviceBinding is active

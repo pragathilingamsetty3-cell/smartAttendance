@@ -12,6 +12,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface DeviceBindingRepository extends JpaRepository<DeviceBinding, UUID> {
 
+    java.util.List<DeviceBinding> findAllByUser(User user);
+
     Optional<DeviceBinding> findByUser(User user);
 
     Optional<DeviceBinding> findByDeviceId(String deviceId);
