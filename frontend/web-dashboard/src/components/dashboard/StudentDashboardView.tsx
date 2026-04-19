@@ -35,13 +35,6 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
 
   const quickActions = [
     {
-      title: 'Biometric Setup',
-      desc: 'Register fingerprint & device',
-      icon: <Shield className="text-violet-400" size={20} />,
-      href: '/setup',
-      color: 'violet'
-    },
-    {
       title: 'Exit Request',
       desc: 'Digital Hall Pass request',
       icon: <Activity className="text-violet-400" size={20} />,
@@ -64,6 +57,22 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
     }
   ];
 
+  // Only show Biometric Setup if not already done
+  const needsSetup = !user?.biometricSignature;
+  
+  const activeQuickActions = needsSetup 
+    ? [
+        {
+          title: 'Biometric Setup',
+          desc: 'Register fingerprint & device',
+          icon: <Shield className="text-violet-400" size={20} />,
+          href: '/setup',
+          color: 'violet'
+        },
+        ...quickActions
+      ]
+    : quickActions;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -72,7 +81,7 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
     );
   }
 
-  const needsSetup = !user?.deviceId || user.deviceId === 'UNBOUND_DEVICE';
+  // needsSetup defined above inside component body
 
   return (
     <div className="space-y-8">
@@ -310,8 +319,8 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
           <div className="space-y-4">
             <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] pl-2 text-center md:text-left">Quick Actions</h4>
             <div className="grid grid-cols-1 gap-4">
-                {quickActions.map((action) => (
-                <Link key={action.title} href={action.href}>
+                {activeQuickActions.map((action) => (
+                 <Link key={action.title} href={action.href}>
                     <motion.div
                     whileHover={{ x: 6 }}
                     className="glass-card p-5 group flex items-center justify-between hover:border-violet-500/30 transition-all border-white/5"

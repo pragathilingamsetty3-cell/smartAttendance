@@ -17,10 +17,16 @@ export default function SetupPage() {
   useEffect(() => {
     if (!user) {
       router.push('/login');
+      return;
+    }
+    
+    // 🛡️ SECURITY LOCK: If biometric is already set, don't allow access to this page
+    if (user.biometricSignature) {
+      router.push('/dashboard');
     }
   }, [user, router]);
 
-  const isAlreadySetup = user?.deviceId && user.deviceId !== 'UNBOUND_DEVICE';
+  const isAlreadySetup = !!user?.biometricSignature;
 
   const handleCompleteSetup = async () => {
     try {
@@ -47,7 +53,7 @@ export default function SetupPage() {
         phoneNumber: user?.phoneNumber || '',
       });
 
-      setMessage(isAlreadySetup ? '✅ Biometric updated successfully!' : '✅ Setup completed! Device registered successfully.');
+      setMessage('✅ Setup completed! Device registered successfully.');
       
       // Update local auth store so user state matches
       if (user) {
@@ -55,7 +61,8 @@ export default function SetupPage() {
           ...user,
           deviceId,
           biometricSignature,
-          isTemporaryPassword: false
+          isTemporaryPassword: false,
+          firstLogin: false
         });
       }
 
@@ -85,12 +92,10 @@ export default function SetupPage() {
           </div>
 
           <h1 className="text-2xl font-bold text-white text-center mb-2">
-            {isAlreadySetup ? 'Update Biometric' : 'Complete Setup'}
+            Complete Setup
           </h1>
           <p className="text-slate-400 text-center mb-8">
-            {isAlreadySetup 
-              ? 'Update your fingerprint or face data for secure access' 
-              : 'Register your device for secure attendance tracking'}
+            Register your device for secure attendance tracking
           </p>
 
           {error && (
@@ -135,11 +140,11 @@ export default function SetupPage() {
             }`}
           >
             {loading ? (
-              <>⏳ {isAlreadySetup ? 'Updating...' : 'Setting up...'}</>
+              <>⏳ Setting up...</>
             ) : (
               <>
                 <Fingerprint size={20} />
-                {isAlreadySetup ? 'Initialize Biometric Update' : 'Initialize Setup'}
+                Initialize Setup
               </>
             )}
           </button>

@@ -153,9 +153,16 @@ public class AuthenticationService {
         }
 
         User user = userOpt.get();
-        boolean isInitialSetup = user.getIsTemporaryPassword();
+        boolean isAlreadySetup = user.getBiometricSignature() != null && !user.getBiometricSignature().isEmpty();
         
-        // Validate device doesn't already belong to another user (only if device ID is changing)
+        // 🛡️ SECURITY LOCK: Block any biometric update if already registered. 
+        // Only an Admin can reset this via AdminV1Controller.resetStudentDevice()
+        if (isAlreadySetup) {
+            logger.warn("🚨 SECURITY VIOLATION: User {} attempted to update locked biometric data", email);
+            throw new IllegalArgumentException("Biometric already registered. Contact administrator to reset hardware binding.");
+        }
+
+        // Validate device doesn't already belong to another user
         if (request.deviceId() != null && (user.getDeviceId() == null || !user.getDeviceId().equals(request.deviceId()))) {
             if (deviceBindingRepository.existsByDeviceId(request.deviceId())) {
                 Optional<DeviceBinding> existingBinding = deviceBindingRepository.findByDeviceId(request.deviceId());
@@ -164,12 +171,6 @@ public class AuthenticationService {
                     throw new IllegalArgumentException("Device is already registered to another account.");
                 }
             }
-        }
-
-        // If not initial setup and student tries to change device ID, block it (Security: only admin can reset device)
-        if (!isInitialSetup && user.getDeviceId() != null && !user.getDeviceId().equals(request.deviceId())) {
-            logger.warn("🚨 DEVICE TAMPERING ATTEMPT: User {} tried to change locked device from {} to {}", email, user.getDeviceId(), request.deviceId());
-            throw new IllegalArgumentException("Device hardware is locked. Contact administrator to change devices.");
         }
 
         // Update biometric and device data
@@ -182,11 +183,11 @@ public class AuthenticationService {
 
         user = userV1Repository.save(user);
 
-        // Create DeviceBinding record for audit trail and admin operations
+        // Create DeviceBinding record for audit trail (No fingerprint duplicate storage here)
         DeviceBinding deviceBinding = new DeviceBinding();
         deviceBinding.setUser(user);
         deviceBinding.setDeviceId(request.deviceId());
-        deviceBinding.setDeviceFingerprint(request.biometricSignature()); // Use biometric signature as fingerprint
+        deviceBinding.setDeviceFingerprint("SECURE_HARDWARE_BINDING_" + user.getId().toString().substring(0, 8)); // Avoid duplicate PII storage
         deviceBinding.setDeviceName("Mobile Device");
         deviceBinding.setDeviceType("MOBILE");
         deviceBinding.setRegisteredAt(Instant.now());
