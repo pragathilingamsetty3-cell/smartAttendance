@@ -24,33 +24,22 @@ export default function UsersPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const getBackendHealthMessage = async () => {
-      try {
-        const { data } = await apiClient.get<{ status: string; details?: unknown }>('/api/v1/performance/health');
-        return `Backend health: ${data.status}${data.details ? ` (${JSON.stringify(data.details)})` : ''}`;
-      } catch {
-        return "Unable to reach backend health endpoint.";
-      }
-    };
-
-    const getErrorMessage = async (err: unknown) => {
+    const getErrorMessage = (err: unknown): string => {
       if (axios.isAxiosError(err)) {
         const axiosError = err as AxiosError<{ error?: string; message?: string }>;
         if (axiosError.response) {
           const status = axiosError.response.status;
           const statusText = axiosError.response.statusText || "Error";
           const serverMessage = axiosError.response.data?.error || axiosError.response.data?.message;
-          const backendHealth = await getBackendHealthMessage();
-
-          return `${status} ${statusText}${serverMessage ? `: ${serverMessage}` : ''}. ${backendHealth}`;
+          return `${status} ${statusText}${serverMessage ? `: ${serverMessage}` : ''}`;
         }
 
         if (axiosError.request) {
-          return `No response from backend. ${await getBackendHealthMessage()}`;
+          return `No response from backend. Check server status.`;
         }
       }
 
-      return typeof err === 'string' ? err : 'Unexpected backend failure. Please check the Render deployment logs.';
+      return typeof err === 'string' ? err : 'Backend connection failed';
     };
 
     const fetchUsers = async () => {
@@ -58,8 +47,7 @@ export default function UsersPage() {
         const { data } = await apiClient.get<EnhancedUserDTO[]>("/api/v1/admin/users");
         setUsers(Array.isArray(data) ? data : (data as unknown)?.users || []);
       } catch (err: unknown) {
-        const message = await getErrorMessage(err);
-        setError(message);
+        setError(getErrorMessage(err));
         setUsers([]);
       } finally {
         setTimeout(() => setLoading(false), 800);
