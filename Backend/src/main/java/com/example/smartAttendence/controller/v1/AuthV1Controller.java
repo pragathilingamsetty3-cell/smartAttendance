@@ -126,12 +126,14 @@ public class AuthV1Controller {
                 log.info("🔐 [DIAGNOSTIC] First login flow detected");
                 response.put("message", "First login detected. Setup required.");
                 response.put("requiresFirstLoginSetup", true);
-                response.put("user", java.util.Map.of(
-                    "id", result.user().getId() != null ? result.user().getId().toString() : "null",
-                    "email", result.user().getEmail(),
-                    "name", result.user().getName(),
-                    "role", result.user().getRole() != null ? result.user().getRole().toString() : "null"
-                ));
+                // 🛡️ SAFE USER DATA CONSTRUCTION
+                java.util.Map<String, Object> userData = new java.util.HashMap<>();
+                userData.put("id", result.user().getId() != null ? result.user().getId().toString() : "null");
+                userData.put("email", result.user().getEmail() != null ? result.user().getEmail() : "");
+                userData.put("name", result.user().getName() != null ? result.user().getName() : "");
+                userData.put("role", result.user().getRole() != null ? result.user().getRole().toString() : "null");
+                
+                response.put("user", userData);
                 return ResponseEntity.status(202).body(response);
             }
 
@@ -149,15 +151,24 @@ public class AuthV1Controller {
             log.info("✅ [DIAGNOSTIC] Step 5 SUCCESS: Finalizing successful response");
             response.put("message", "Login successful");
             response.put("requiresFirstLoginSetup", false);
-            response.put("user", java.util.Map.of(
-                "id", result.user().getId() != null ? result.user().getId().toString() : "null",
-                "email", result.user().getEmail(),
-                "name", result.user().getName(),
-                "role", result.user().getRole() != null ? result.user().getRole().toString() : "null",
-                "department", deptUuid != null ? deptUuid.toString() : "",
-                "sectionId", result.user().getSectionId() != null ? result.user().getSectionId().toString() : "",
-                "biometricSignature", result.user().getBiometricSignature() != null ? "REGISTERED" : null
-            ));
+            // 🛡️ SAFE USER DATA CONSTRUCTION (Fixes 500 NPE Error)
+            java.util.Map<String, Object> userData = new java.util.HashMap<>();
+            userData.put("id", result.user().getId() != null ? result.user().getId().toString() : "null");
+            userData.put("email", result.user().getEmail() != null ? result.user().getEmail() : "");
+            userData.put("name", result.user().getName() != null ? result.user().getName() : "");
+            userData.put("role", result.user().getRole() != null ? result.user().getRole().toString() : "null");
+            userData.put("department", deptUuid != null ? deptUuid.toString() : "");
+            userData.put("sectionId", result.user().getSectionId() != null ? result.user().getSectionId().toString() : "");
+
+            // 🔐 Biometric status - ONLY for STUDENT, CR, LR (as per requirements)
+            com.example.smartAttendence.enums.Role role = result.user().getRole();
+            if (role == com.example.smartAttendence.enums.Role.STUDENT || 
+                role == com.example.smartAttendence.enums.Role.CR || 
+                role == com.example.smartAttendence.enums.Role.LR) {
+                userData.put("biometricSignature", result.user().getBiometricSignature() != null ? "REGISTERED" : "NOT_REGISTERED");
+            }
+
+            response.put("user", userData);
 
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
