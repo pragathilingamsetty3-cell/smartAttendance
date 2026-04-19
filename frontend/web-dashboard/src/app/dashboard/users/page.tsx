@@ -1,6 +1,5 @@
 "use client";
 
-import axios, { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, MoreHorizontal, AlertCircle, Eye, X, Check } from "lucide-react";
@@ -25,18 +24,18 @@ export default function UsersPage() {
 
   useEffect(() => {
     const getErrorMessage = (err: unknown): string => {
-      if (axios.isAxiosError(err)) {
-        const axiosError = err as AxiosError<{ error?: string; message?: string }>;
-        if (axiosError.response) {
-          const status = axiosError.response.status;
-          const statusText = axiosError.response.statusText || "Error";
-          const serverMessage = axiosError.response.data?.error || axiosError.response.data?.message;
-          return `${status} ${statusText}${serverMessage ? `: ${serverMessage}` : ''}`;
-        }
+      // Check if it's an axios error with response
+      const errorObj = err as any;
+      if (errorObj?.response?.status) {
+        const status = errorObj.response.status;
+        const statusText = errorObj.response.statusText || "Error";
+        const serverMessage = errorObj.response.data?.error || errorObj.response.data?.message;
+        return `${status} ${statusText}${serverMessage ? `: ${serverMessage}` : ''}`;
+      }
 
-        if (axiosError.request) {
-          return `No response from backend. Check server status.`;
-        }
+      // Check if it's a network error
+      if (errorObj?.request && !errorObj?.response) {
+        return `No response from backend. Check server status.`;
       }
 
       return typeof err === 'string' ? err : 'Backend connection failed';
