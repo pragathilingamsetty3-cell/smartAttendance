@@ -874,7 +874,7 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                   ))}
                 </div>
                 
-                {boundaryData.widthMeters > 0 && (
+                {(boundaryData.widthMeters || 0) > 0 && (
                   <div className="mt-4 pt-4 border-t border-white/5 flex gap-6">
                     <div>
                       <p className="text-[10px] text-gray-500 font-bold uppercase">Estimated Width</p>
