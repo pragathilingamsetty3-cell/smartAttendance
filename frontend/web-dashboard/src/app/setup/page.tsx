@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import authService from '@/services/auth.service';
-import { Fingerprint, Smartphone, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Fingerprint, Smartphone, CheckCircle2, AlertCircle, ScanFace } from 'lucide-react';
+import { registerBiometric, isBiometricSupported } from '@/lib/biometrics';
 
 export default function SetupPage() {
   const router = useRouter();
@@ -19,30 +20,51 @@ export default function SetupPage() {
     }
   }, [user, router]);
 
+  const isAlreadySetup = user?.deviceId && user.deviceId !== 'UNBOUND_DEVICE';
+
   const handleCompleteSetup = async () => {
     try {
       setLoading(true);
       setError('');
+      setMessage('');
 
-      // Generate device ID - alphanumeric only, no special chars
-      const deviceId = `MOBILE${Date.now()}${Math.random().toString(36).substr(2, 9)}`.toUpperCase();
+      // 1. Trigger Real Biometric Prompt (Add Fingerprint Sensor experience)
+      let biometricSignature: string;
+      try {
+        biometricSignature = await registerBiometric(user?.name || 'User');
+      } catch (bioErr: any) {
+        console.warn('Biometric HW failed or cancelled, using fallback:', bioErr.message);
+        // Fallback for devices without sensors or if user cancels
+        biometricSignature = `BIO${Date.now()}`.toUpperCase();
+      }
+
+      // 2. Generate or Keep Device ID
+      const deviceId = isAlreadySetup ? user.deviceId : `MOBILE${Date.now()}${Math.random().toString(36).substr(2, 9)}`.toUpperCase();
       
-      // For now, use a placeholder biometric signature
-      const biometricSignature = `BIO${Date.now()}`.toUpperCase();
-
       await authService.completeSetup({
         deviceId,
         biometricSignature,
         phoneNumber: user?.phoneNumber || '',
       });
 
-      setMessage('✅ Setup completed! Device registered successfully.');
+      setMessage(isAlreadySetup ? '✅ Biometric updated successfully!' : '✅ Setup completed! Device registered successfully.');
       
+      // Update local auth store so user state matches
+      if (user) {
+        useAuthStore.getState().setUser({
+          ...user,
+          deviceId,
+          biometricSignature,
+          isTemporaryPassword: false
+        });
+      }
+
       setTimeout(() => {
         router.push('/dashboard');
       }, 2000);
     } catch (err: any) {
-      setError(`❌ ${err.message || 'Setup failed'}`);
+      const serverError = err.response?.data?.error || err.message;
+      setError(`❌ ${serverError || 'Setup failed'}`);
     } finally {
       setLoading(false);
     }
@@ -63,10 +85,12 @@ export default function SetupPage() {
           </div>
 
           <h1 className="text-2xl font-bold text-white text-center mb-2">
-            Complete Setup
+            {isAlreadySetup ? 'Update Biometric' : 'Complete Setup'}
           </h1>
           <p className="text-slate-400 text-center mb-8">
-            Register your device for secure attendance tracking
+            {isAlreadySetup 
+              ? 'Update your fingerprint or face data for secure access' 
+              : 'Register your device for secure attendance tracking'}
           </p>
 
           {error && (
@@ -104,13 +128,20 @@ export default function SetupPage() {
           <button
             onClick={handleCompleteSetup}
             disabled={loading}
-            className={`w-full py-3 px-4 rounded-lg font-bold text-white transition-all ${
+            className={`w-full py-4 px-4 rounded-2xl font-bold text-white transition-all flex items-center justify-center gap-3 ${
               loading
                 ? 'bg-slate-600 cursor-not-allowed opacity-50'
-                : 'bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/50'
+                : 'bg-primary hover:shadow-xl hover:shadow-primary/30 active:scale-95'
             }`}
           >
-            {loading ? '⏳ Setting up...' : 'Complete Setup'}
+            {loading ? (
+              <>⏳ {isAlreadySetup ? 'Updating...' : 'Setting up...'}</>
+            ) : (
+              <>
+                <Fingerprint size={20} />
+                {isAlreadySetup ? 'Initialize Biometric Update' : 'Initialize Setup'}
+              </>
+            )}
           </button>
 
           <p className="text-xs text-slate-500 text-center mt-4">

@@ -153,21 +153,29 @@ public class AuthenticationService {
         }
 
         User user = userOpt.get();
-        if (!user.getIsTemporaryPassword()) {
-            throw new IllegalArgumentException("Setup already completed");
-        }
-
-        // Validate device doesn't already belong to another user
-        if (deviceBindingRepository.existsByDeviceId(request.deviceId())) {
-            Optional<DeviceBinding> existingBinding = deviceBindingRepository.findByDeviceId(request.deviceId());
-            if (existingBinding.isPresent() && !existingBinding.get().getUser().getId().equals(user.getId())) {
-                logger.warn("🚨 SETUP VIOLATION: Device already registered to another user: {}", request.deviceId());
-                throw new IllegalArgumentException("Device is already registered to another account.");
+        boolean isInitialSetup = user.getIsTemporaryPassword();
+        
+        // Validate device doesn't already belong to another user (only if device ID is changing)
+        if (request.deviceId() != null && (user.getDeviceId() == null || !user.getDeviceId().equals(request.deviceId()))) {
+            if (deviceBindingRepository.existsByDeviceId(request.deviceId())) {
+                Optional<DeviceBinding> existingBinding = deviceBindingRepository.findByDeviceId(request.deviceId());
+                if (existingBinding.isPresent() && !existingBinding.get().getUser().getId().equals(user.getId())) {
+                    logger.warn("🚨 SETUP VIOLATION: Device already registered to another user: {}", request.deviceId());
+                    throw new IllegalArgumentException("Device is already registered to another account.");
+                }
             }
         }
 
+        // If not initial setup and student tries to change device ID, block it (Security: only admin can reset device)
+        if (!isInitialSetup && user.getDeviceId() != null && !user.getDeviceId().equals(request.deviceId())) {
+            logger.warn("🚨 DEVICE TAMPERING ATTEMPT: User {} tried to change locked device from {} to {}", email, user.getDeviceId(), request.deviceId());
+            throw new IllegalArgumentException("Device hardware is locked. Contact administrator to change devices.");
+        }
+
         // Update biometric and device data
-        user.setDeviceId(request.deviceId());
+        if (request.deviceId() != null) {
+            user.setDeviceId(request.deviceId());
+        }
         user.setBiometricSignature(request.biometricSignature());
         user.setIsTemporaryPassword(false);
         user.setFirstLogin(false);

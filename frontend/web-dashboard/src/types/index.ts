@@ -37,6 +37,8 @@ export interface EnhancedUserDTO {
   firstLogin: boolean;
   deviceId: string;
   sectionId: string;
+  isTemporaryPassword?: boolean;
+  biometricSignature?: string;
   academicProfile?: StudentProfileDTO;
   studentMobile?: string;
   parentMobile?: string;
