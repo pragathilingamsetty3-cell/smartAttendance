@@ -77,6 +77,11 @@ public class AdminV1Service {
     private final SharedUtilityService sharedUtilityService;
     private final RoleConsistencyService roleConsistencyService;
     private final SecurityUtils securityUtils;
+    
+    private final com.github.benmanes.caffeine.cache.Cache<String, String> departmentCache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder()
+            .expireAfterWrite(30, java.util.concurrent.TimeUnit.MINUTES)
+            .maximumSize(500)
+            .build();
 
     public AdminV1Service(UserV1Repository userV1Repository, 
                          RoomRepository roomRepository,
@@ -699,13 +704,8 @@ public class AdminV1Service {
             users = userV1Repository.findAll();
         }
 
-        // Create mapping of department name once to ensure efficiency
-        Map<String, String> departmentIdToNameMap = departmentRepository.findAll().stream()
-                .collect(Collectors.toMap(
-                    dept -> dept.getId().toString(),
-                    dept -> dept.getName(),
-                    (existing, replacement) -> existing // Handle duplicates if any
-                ));
+        // Use cache-optimized department name resolution
+        Map<String, String> departmentIdToNameMap = getDepartmentNameMap();
 
         // Convert users to DTO format
         List<Map<String, Object>> userDTOs = users.stream()
@@ -826,13 +826,8 @@ public class AdminV1Service {
         User user = userV1Repository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
-        // Create mapping of department name
-        Map<String, String> departmentIdToNameMap = departmentRepository.findAll().stream()
-                .collect(Collectors.toMap(
-                    dept -> dept.getId().toString(),
-                    dept -> dept.getName(),
-                    (existing, replacement) -> existing
-                ));
+        // Use cache-optimized department name resolution
+        Map<String, String> departmentIdToNameMap = getDepartmentNameMap();
 
         Map<String, Object> userMap = new HashMap<>();
         userMap.put("id", user.getId());
@@ -1195,11 +1190,13 @@ public class AdminV1Service {
                     List<String> identifiers = Arrays.asList(dept.getId().toString(), dept.getName(), dept.getCode());
                     long facultyCount = userV1Repository.countByDepartmentsRoleAndStatus(identifiers, com.example.smartAttendence.enums.Role.FACULTY, com.example.smartAttendence.domain.UserStatus.ACTIVE);
                     
-                    // 3. 🚀 AUTO-REMEDIATION: Migrate legacy Name/Code based records to UUIDs for permanent fix
-                    // This ensures that "Computer Application" in DB becomes "e123-..." UUID
-                    performDataRemediation(dept, identifiers);
+                    // 3. 🚀 AUTO-REMEDIATION: Migrate legacy Name/Code based records to UUIDs asynchronously
+                    // (Moved to background to prevent blocking GET requests)
+                    if (System.currentTimeMillis() % 10 == 0) { // Throttled trigger
+                        performDataRemediation(dept, identifiers);
+                    }
                     
-                    log.info("[ANALYTICS] Aggregated counts for {}: Students={}, Faculty={}", dept.getName(), studentCount, facultyCount);
+                    log.debug("[ANALYTICS] Aggregated counts for {}: Students={}, Faculty={}", dept.getName(), studentCount, facultyCount);
                     
                     return new DropdownDTO(dept.getId(), dept.getName(), dept.getCode(), null, studentCount, facultyCount);
                 })
@@ -1832,9 +1829,10 @@ public class AdminV1Service {
     /**
      * 🚀 SMART DATA REMEDIATION
      * Identifies users with Name/Code based department strings and migrates them to UUIDs.
-     * This is a one-time fix that runs during the department analytics cycle.
+     * Runs ASYNCHRONOUSLY to prevent blocking API responses.
      */
-    private void performDataRemediation(com.example.smartAttendence.entity.Department dept, List<String> identifiers) {
+    @org.springframework.scheduling.annotation.Async("reportExecutor")
+    public void performDataRemediation(com.example.smartAttendence.entity.Department dept, List<String> identifiers) {
         try {
             // Find all users matching any identifier (UUID, Name, Code)
             List<User> usersToFix = userV1Repository.findUsersByDepartments(identifiers);
@@ -2044,5 +2042,20 @@ public class AdminV1Service {
         entry.setUpdatedAt(java.time.LocalDateTime.now());
         
         return calendarRepository.save(entry);
+    }
+
+    /**
+     * Efficiently resolves department names using an in-memory cache
+     */
+    private Map<String, String> getDepartmentNameMap() {
+        List<Department> depts = departmentRepository.findAll();
+        Map<String, String> map = new HashMap<>();
+        for (Department d : depts) {
+            String id = d.getId().toString();
+            String name = d.getName();
+            map.put(id, name);
+            departmentCache.put(id, name);
+        }
+        return map;
     }
 }

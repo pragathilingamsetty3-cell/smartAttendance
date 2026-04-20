@@ -45,7 +45,7 @@ public class SecurityAuditLogger implements HandlerInterceptor {
     private final Map<String, Integer> failedAttemptCount = new ConcurrentHashMap<>();
     private final Map<String, Instant> recentEvents = new ConcurrentHashMap<>();
     
-    private static final List<String> SUSPICIOUS_ENDPOINTS = Arrays.asList("/admin", "/api/v1/admin", "/api/v1/users", "/api/v1/system");
+    private static final List<String> SUSPICIOUS_ENDPOINTS = Arrays.asList("/api/v1/users/admin", "/api/v1/system/config");
     private static final List<String> ATTACK_INDICATORS = Arrays.asList("sql", "script", "select", "drop", "union", "--", "/*", "powershell");
     
     private static final int MAX_RESPONSE_TIME_MS = 500;
@@ -88,6 +88,7 @@ public class SecurityAuditLogger implements HandlerInterceptor {
         if (durationMs > MAX_RESPONSE_TIME_MS) logger.warn("🚨 Security slow event: {}ms for {}", durationMs, type);
     }
 
+    @Async("auditTaskExecutor")
     public void logSecurityEvent(String type, String ip, String endpoint, String action, Map<String, String> details) {
         try {
             Instant now = Instant.now();
