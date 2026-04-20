@@ -64,10 +64,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    logger.info("🔐 JWT Authenticated: user={}, roles={}", userEmail, userDetails.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    logger.warn("🚨 JWT VALIDATION FAILED for user: {}", userEmail);
                 }
+            } else if (userEmail != null) {
+                logger.debug("⏭️ Skipping authentication: User already authenticated in context");
             }
-
+        } catch (org.springframework.security.core.userdetails.UsernameNotFoundException e) {
+            logger.error("🚨 AUTHENTICATION FAILED: User account invalid or inactive: {}", e.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Account inactive or not found: " + e.getMessage() + "\"}");
+            return;
         } catch (io.jsonwebtoken.ExpiredJwtException e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");

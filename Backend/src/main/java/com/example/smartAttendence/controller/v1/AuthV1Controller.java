@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 import java.util.UUID;
 
@@ -189,7 +190,14 @@ public class AuthV1Controller {
     @PostMapping("/complete-setup")
     public ResponseEntity<?> completeSetup(@Valid @RequestBody CompleteSetupRequest request, Authentication auth) {
         try {
+            log.info("🔍 [DIAGNOSTIC] completeSetup attempt - Auth populated: {}", auth != null);
+            if (auth != null) {
+                log.info("🔍 [DIAGNOSTIC] Auth Details: Name={}, Authenticated={}, authorities={}", 
+                    auth.getName(), auth.isAuthenticated(), auth.getAuthorities());
+            }
+
             if (auth == null || !auth.isAuthenticated()) {
+                log.warn("❌ [DIAGNOSTIC] Blocking setup attempt: User NOT properly authenticated in controller");
                 return ResponseEntity.status(401)
                         .body(Map.of("error", "Authentication required"));
             }
@@ -297,6 +305,7 @@ public class AuthV1Controller {
      * Refresh Token
      */
     @PostMapping("/refresh-token")
+    @Transactional
     public ResponseEntity<?> refreshToken(@RequestBody Map<String, String> request, HttpServletRequest httpRequest) {
         try {
             String refreshTokenStr = request.get("refreshToken");
@@ -348,6 +357,7 @@ public class AuthV1Controller {
      * Logout
      */
     @PostMapping("/logout")
+    @Transactional
     public ResponseEntity<?> logout(Authentication auth) {
         // 🚀 THE FIX: Catch the null token before it crashes the server!
         if (auth == null || !auth.isAuthenticated() || auth.getName().equals("anonymousUser")) {

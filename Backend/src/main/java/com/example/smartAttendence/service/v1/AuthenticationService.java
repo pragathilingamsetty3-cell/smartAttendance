@@ -131,7 +131,7 @@ public class AuthenticationService {
      * Get user by email
      */
     public Optional<User> getUserByEmail(String email) {
-        return userV1Repository.findByEmail(email);
+        return userV1Repository.findByEmailIgnoreCase(email);
     }
 
     /**
@@ -147,7 +147,7 @@ public class AuthenticationService {
         }
         
         String email = auth.getName();
-        Optional<User> userOpt = userV1Repository.findByEmail(email);
+        Optional<User> userOpt = userV1Repository.findByEmailIgnoreCase(email);
         if (userOpt.isEmpty()) {
             throw new IllegalArgumentException("User not found");
         }

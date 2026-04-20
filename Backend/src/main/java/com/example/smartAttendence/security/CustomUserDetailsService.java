@@ -51,8 +51,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         // 🔐 USER LOOKUP WITH COMPREHENSIVE ERROR HANDLING
         User user;
         try {
-            user = userV1Repository.findByEmail(normalizedInput)
-                    .or(() -> userV1Repository.findByRegistrationNumber(emailOrRegNumber.trim()))
+            // Trim to prevent whitespace issues but maintain case for registration numbers
+            String emailOrReg = emailOrRegNumber.trim();
+            user = userV1Repository.findByEmailIgnoreCase(emailOrReg)
+                    .or(() -> userV1Repository.findByRegistrationNumber(emailOrReg))
                     .orElseThrow(() ->
                             new UsernameNotFoundException(
                                 "🔐 AUTHENTICATION FAILED: User not found with email or registration number: " + 
@@ -88,7 +90,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .accountExpired(false) // 🔐 IMPLEMENT ACCOUNT EXPIRY LOGIC IF NEEDED
                 .accountLocked(false)  // 🔐 IMPLEMENT ACCOUNT LOCKING LOGIC IF NEEDED
                 .credentialsExpired(false) // 🔐 IMPLEMENT CREDENTIAL EXPIRY LOGIC IF NEEDED
-                .disabled(!"ACTIVE".equals(user.getStatus())) // 🔐 USE STATUS FIELD
+                .disabled(user.getStatus() != com.example.smartAttendence.domain.UserStatus.ACTIVE) // 🔐 FIXED: Use Enum comparison instead of String.equals(Enum)
                 .build();
     }
 

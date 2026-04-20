@@ -174,8 +174,8 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
                     return "STUDENT_MISSING_FINGERPRINT"; 
                 }
                 
-                // Verify device fingerprint matches token binding
-                if (deviceFingerprint != null && requestDeviceFingerprint != null && !deviceFingerprint.equals(requestDeviceFingerprint)) {
+                // Verify device fingerprint matches token binding (Exempt setup flow to prevent 401/403 during initialization)
+                if (!isSetupFlow && deviceFingerprint != null && requestDeviceFingerprint != null && !deviceFingerprint.equals(requestDeviceFingerprint)) {
                     logger.warn("Device fingerprint mismatch for student from IP: {} at {}", ip, endpoint);
                     auditLogger.logSecurityEvent("DEVICE_MISMATCH_ATTEMPT", ip, endpoint, "BLOCK", 
                         Map.of("role", "STUDENT"));
