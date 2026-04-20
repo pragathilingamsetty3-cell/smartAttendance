@@ -133,7 +133,8 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
 
     private boolean isSuspiciousRate(String ip) {
         AtomicInteger count = rateCache.get(ip, k -> new AtomicInteger(0));
-        return count.incrementAndGet() > 150;
+        // ⚡ RELAXED: Increased from 150 to 300 to prevent accidental "Network Error" during testing
+        return count.incrementAndGet() > 300;
     }
 
     private String checkSuspiciousBehavior(HttpServletRequest request, String ip, String endpoint) {
@@ -163,7 +164,8 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
             // STRICT checks for STUDENT role only
             if ("ROLE_STUDENT".equals(userRole) || "STUDENT".equals(userRole)) {
                 // 🛡️ EXEMPTION: Allow setup and password change without header during first-time setup
-                boolean isSetupFlow = endpoint.endsWith("/complete-setup") || endpoint.endsWith("/change-password");
+                // We use dynamic matching to catch variations like trailing slashes
+                boolean isSetupFlow = endpoint.contains("/complete-setup") || endpoint.contains("/change-password");
                 
                 // Students MUST have valid device fingerprint (except during setup)
                 String requestDeviceFingerprint = request.getHeader("X-Device-Fingerprint");

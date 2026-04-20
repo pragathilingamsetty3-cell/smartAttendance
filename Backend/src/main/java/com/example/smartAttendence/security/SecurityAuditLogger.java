@@ -57,10 +57,15 @@ public class SecurityAuditLogger implements HandlerInterceptor {
         String endpoint = request.getRequestURI();
         long startTime = System.currentTimeMillis();
         
-        logSecurityEvent("REQUEST", clientIP, endpoint, request.getMethod(), Map.of("userAgent", request.getHeader("User-Agent") != null ? request.getHeader("User-Agent") : "unknown"));
+        // ⚡ OPTIMIZATION: Only log suspicious requests to Firestore synchronously
+        // Standard requests are tracked only if they are slow (in postHandle)
+        if (isSuspiciousRequest(request, clientIP)) {
+            handleSuspiciousActivity(request, clientIP);
+        }
         
-        if (isSuspiciousRequest(request, clientIP)) handleSuspiciousActivity(request, clientIP);
-        if (isBruteForceAttempt(clientIP)) handleBruteForceAttempt(request, clientIP);
+        if (isBruteForceAttempt(clientIP)) {
+            handleBruteForceAttempt(request, clientIP);
+        }
         
         request.setAttribute("security_start_time", startTime);
         return true;

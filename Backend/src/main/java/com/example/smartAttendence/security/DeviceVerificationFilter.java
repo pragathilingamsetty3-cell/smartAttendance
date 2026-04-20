@@ -28,9 +28,9 @@ public class DeviceVerificationFilter extends OncePerRequestFilter {
     private final Firestore firestore;
     private final JwtUtil jwtUtil;
     
-    // ⚡ SPEED-SHIELD: Local in-memory cache to avoid Firestore hits on every request
+    // ⚡ SPEED-SHIELD: Extended cache to 1 hour to reduce Firestore load
     private final Cache<String, Boolean> speedShieldCache = Caffeine.newBuilder()
-            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .expireAfterWrite(1, TimeUnit.HOURS)
             .maximumSize(10000)
             .build();
 
@@ -118,6 +118,10 @@ public class DeviceVerificationFilter extends OncePerRequestFilter {
     }
 
     private boolean requiresDeviceVerification(String endpoint) {
+        // ⚡ OPTIMIZATION: Auth endpoints should NEVER be blocked by the device verification filter
+        // because students need them to register their devices in the first place.
+        if (endpoint.contains("/api/v1/auth/")) return false;
+        
         return endpoint.contains("/attendance/check-in") || endpoint.contains("/admin/") || endpoint.contains("/faculty/");
     }
     

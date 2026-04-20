@@ -230,6 +230,7 @@ public class AuthenticationService {
         // Update password
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         user.setIsTemporaryPassword(false);
+        user.setFirstLogin(false); // ⚡ BREAK LOOP: Ensure they aren't asked for first-login setup again after manual change
 
         userV1Repository.save(user);
 
