@@ -10,8 +10,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @EnableMethodSecurity
 @SpringBootApplication
 @EnableScheduling
-@EnableAsync
-@EnableCaching
+@EnableAsync(proxyTargetClass = true)
+@EnableCaching(proxyTargetClass = true)
 public class SmartAttendenceApplication {
     public static void main(String[] args) {
         SpringApplication.run(SmartAttendenceApplication.class, args);

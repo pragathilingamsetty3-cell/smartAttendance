@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
  * Includes connection pooling, request routing, and resource optimization
  */
 @Configuration
-@EnableAsync
+@EnableAsync(proxyTargetClass = true)
 @EnableScheduling
 public class HighPerformanceLoadBalancingConfig {
 
