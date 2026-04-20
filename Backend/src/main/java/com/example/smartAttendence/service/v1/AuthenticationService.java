@@ -204,7 +204,7 @@ public class AuthenticationService {
      * Change password (authenticated)
      */
     public void changePassword(String email, com.example.smartAttendence.dto.v1.ChangePasswordRequest request) {
-        Optional<User> userOpt = userV1Repository.findByEmail(email);
+        Optional<User> userOpt = userV1Repository.findByEmailIgnoreCase(email);
         if (userOpt.isEmpty()) {
             throw new IllegalArgumentException("User not found");
         }
