@@ -87,19 +87,21 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
                 return;
             }
 
-            ThreatLevel level = analyzeThreat(request, clientIP, userAgent);
+            ThreatAnalysisResult analysis = analyzeThreat(request, clientIP, userAgent);
             
-            if (level != ThreatLevel.LOW) {
-                auditLogger.logSecurityEvent(level.name() + "_THREAT", clientIP, endpoint, "BLOCK", Map.of("ua", userAgent != null ? userAgent : "N/A"));
-                response.setStatus(level == ThreatLevel.CRITICAL ? 403 : 429);
+            if (analysis.getLevel() != ThreatLevel.LOW) {
+                auditLogger.logSecurityEvent(analysis.getReason(), clientIP, endpoint, "BLOCK", Map.of("ua", userAgent != null ? userAgent : "N/A"));
                 
-                // User-friendly message for device mismatch instead of technical threat level
-                String errorMessage = "You can't login multiple devices. Please use the same device or contact admin to reset your device.";
+                int status = (analysis.getLevel() == ThreatLevel.CRITICAL) ? 403 : 429;
+                response.setStatus(status);
+                response.setContentType("application/json");
+                
+                String errorMessage = analysis.getFriendlyMessage();
                 response.getWriter().write("{\"error\":\"" + errorMessage + "\"}");
                 return;
             }
 
-            threatAnalysisCache.put(cacheKey, level.ordinal());
+            threatAnalysisCache.put(cacheKey, analysis.getLevel().ordinal());
         } catch (Exception e) {
             logger.error("🚨 Sentinel crash: {}", e.getMessage());
         }
@@ -107,14 +109,26 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private ThreatLevel analyzeThreat(HttpServletRequest request, String ip, String ua) {
-        if ("127.0.0.1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip)) return ThreatLevel.LOW;
+    private ThreatAnalysisResult analyzeThreat(HttpServletRequest request, String ip, String ua) {
+        String endpoint = request.getRequestURI();
+        if ("127.0.0.1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip)) 
+            return new ThreatAnalysisResult(ThreatLevel.LOW, "LOCAL_BYPASS", "");
         
-        if (isSuspiciousRate(ip)) return ThreatLevel.HIGH;
-        if (isSuspiciousBehavior(request, ip)) return ThreatLevel.HIGH;
-        if (isSuspiciousPattern(request)) return ThreatLevel.HIGH;
+        if (isSuspiciousRate(ip)) 
+            return new ThreatAnalysisResult(ThreatLevel.HIGH, "RATE_LIMIT_EXCEEDED", "Too many requests. Please wait a moment.");
+            
+        String behaviorReason = checkSuspiciousBehavior(request, ip, endpoint);
+        if (behaviorReason != null) {
+            String friendlyMsg = behaviorReason.contains("DEVICE_MISMATCH") ? 
+                "You can't login multiple devices. Please use the same device or contact admin." : 
+                "Security check failed. Please ensure you are using a registered device.";
+            return new ThreatAnalysisResult(ThreatLevel.HIGH, behaviorReason, friendlyMsg);
+        }
+
+        if (isSuspiciousPattern(request)) 
+            return new ThreatAnalysisResult(ThreatLevel.HIGH, "MALICIOUS_PATTERN", "Request blocked due to security policies.");
         
-        return ThreatLevel.LOW;
+        return new ThreatAnalysisResult(ThreatLevel.LOW, "NORMAL", "");
     }
 
     private boolean isSuspiciousRate(String ip) {
@@ -122,7 +136,7 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
         return count.incrementAndGet() > 150;
     }
 
-    private boolean isSuspiciousBehavior(HttpServletRequest request, String ip) {
+    private String checkSuspiciousBehavior(HttpServletRequest request, String ip, String endpoint) {
         try {
             // Extract JWT token from Authorization header
             String authHeader = request.getHeader("Authorization");
@@ -143,24 +157,27 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
             Integer fails = failureCountCache.getIfPresent(ip);
             if (fails != null && fails > 5) {
                 logger.warn("Too many failed attempts from IP: {}", ip);
-                return true;
+                return "TOO_MANY_FAILED_LOGINS";
             }
             
             // STRICT checks for STUDENT role only
             if ("ROLE_STUDENT".equals(userRole) || "STUDENT".equals(userRole)) {
-                // Students MUST have valid device fingerprint
+                // 🛡️ EXEMPTION: Allow setup and password change without header during first-time setup
+                boolean isSetupFlow = endpoint.endsWith("/complete-setup") || endpoint.endsWith("/change-password");
+                
+                // Students MUST have valid device fingerprint (except during setup)
                 String requestDeviceFingerprint = request.getHeader("X-Device-Fingerprint");
-                if (requestDeviceFingerprint == null) {
-                    logger.warn("Student request without device fingerprint from IP: {}", ip);
-                    return true; // Block - suspicious
+                if (requestDeviceFingerprint == null && !isSetupFlow) {
+                    logger.warn("Student request without device fingerprint from IP: {} at {}", ip, endpoint);
+                    return "STUDENT_MISSING_FINGERPRINT"; 
                 }
                 
                 // Verify device fingerprint matches token binding
-                if (deviceFingerprint != null && !deviceFingerprint.equals(requestDeviceFingerprint)) {
-                    logger.warn("Device fingerprint mismatch for student from IP: {}", ip);
-                    auditLogger.logSecurityEvent("DEVICE_MISMATCH_ATTEMPT", ip, request.getRequestURI(), "BLOCK", 
+                if (deviceFingerprint != null && requestDeviceFingerprint != null && !deviceFingerprint.equals(requestDeviceFingerprint)) {
+                    logger.warn("Device fingerprint mismatch for student from IP: {} at {}", ip, endpoint);
+                    auditLogger.logSecurityEvent("DEVICE_MISMATCH_ATTEMPT", ip, endpoint, "BLOCK", 
                         Map.of("role", "STUDENT"));
-                    return true; // Block - possible stolen token
+                    return "DEVICE_MISMATCH_STUDENT"; 
                 }
             }
             
@@ -173,17 +190,17 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
                 requestCounts.put(ip, count);
                 if (count > 30) { // Higher threshold for trusted roles
                     logger.warn("Rate limit exceeded for IP: {}", ip);
-                    return true;
+                    return "RAPID_REQUESTS_BURST";
                 }
             } else {
                 requestCounts.put(ip, 1);
             }
             lastRequestTime.put(ip, now);
             
-            return false;
+            return null;
         } catch (Exception e) {
             logger.error("Error analyzing suspicious behavior: {}", e.getMessage());
-            return false; // Don't block on error
+            return null; 
         }
     }
 
@@ -207,4 +224,20 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
     }
 
     private enum ThreatLevel { LOW, HIGH, CRITICAL }
+
+    private static class ThreatAnalysisResult {
+        private final ThreatLevel level;
+        private final String reason;
+        private final String friendlyMessage;
+
+        public ThreatAnalysisResult(ThreatLevel level, String reason, String friendlyMessage) {
+            this.level = level;
+            this.reason = reason;
+            this.friendlyMessage = friendlyMessage;
+        }
+
+        public ThreatLevel getLevel() { return level; }
+        public String getReason() { return reason; }
+        public String getFriendlyMessage() { return friendlyMessage; }
+    }
 }
