@@ -42,10 +42,16 @@ USER appuser
 
 # =========================================================
 # PERFORMANCE TUNING (Render Free Tier 512MB)
-# - UseSerialGC: Minimal memory overhead for small containers
-# - MaxMetaspaceSize: Constrain class metadata memory
-# - Xmx: Hard cap on heap to prevent OS OOM kills
-# NOTE: If upgrading to a paid tier (2GB+), remove these flags to use G1GC/ZGC.
+# - UseSerialGC: Minimal memory overhead
+# - TieredStopAtLevel=1: Fast start, low CodeCache usage
+# - SharedArchiveFile: CDS for ~50MB RAM savings
+# - Xmx200m: Safe heap ceiling
 # =========================================================
-ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8080} -Djava.security.egd=file:/dev/./urandom -XX:+UseSerialGC -XX:MaxRAMPercentage=50.0 -XX:MaxMetaspaceSize=128m -Xmx200m -Xss512k -jar app.jar"]
+
+# Generate CDS Archive for fast, low-memory startup
+RUN java -Dspring.context.exit=onRefresh -XX:ArchiveClassesAtExit=app.jsa -jar app.jar || true
+
+USER appuser
+
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8080} -Djava.security.egd=file:/dev/./urandom -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:SharedArchiveFile=app.jsa -XX:MaxRAMPercentage=40.0 -XX:MaxMetaspaceSize=128m -Xmx200m -Xss512k -jar app.jar"]
 
