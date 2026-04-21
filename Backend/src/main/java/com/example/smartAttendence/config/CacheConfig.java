@@ -26,7 +26,7 @@ public class CacheConfig {
         return Caffeine.newBuilder()
                 .initialCapacity(100)
                 .maximumSize(500)
-                .expireAfterWrite(60, TimeUnit.SECONDS) // Dynamic cache for high speed
+                .expireAfterWrite(120, TimeUnit.SECONDS) // Increased to 120s for Free-Tier stability
                 .recordStats();
     }
 }

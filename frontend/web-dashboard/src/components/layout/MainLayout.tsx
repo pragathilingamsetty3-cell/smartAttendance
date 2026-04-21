@@ -158,13 +158,9 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 <Link
                   href={item.href}
                   onMouseEnter={() => {
-                    // 🏎️ ELITE PERFORMANCE: Pre-warm service cache on hover
-                    if (item.id === 'analytics') {
-                      import('@/services/aiAnalytics.service').then(s => {
-                        s.aiAnalyticsService.getAnalyticsDashboard().catch(() => {});
-                        s.aiAnalyticsService.getModelMetrics().catch(() => {});
-                      });
-                    } else if (item.id === 'departments' || item.id === 'users') {
+                    // 🏎️ PERFORMANCE: Pre-warm lightweight metadata only on hover
+                    // Avoid pre-warming heavy analytics on free tier to prevent CPU spikes
+                    if (item.id === 'departments' || item.id === 'users') {
                       import('@/services/userManagement.service').then(s => {
                         s.userManagementService.getDepartments().catch(() => {});
                       });

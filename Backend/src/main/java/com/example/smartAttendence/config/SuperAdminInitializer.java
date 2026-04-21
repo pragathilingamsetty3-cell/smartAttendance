@@ -66,9 +66,11 @@ public class SuperAdminInitializer implements CommandLineRunner {
                 logger.info("SuperAdmin account already exists.");
             }
             
-            // 🚀 DASHBOARD WARM-UP (Background)
-            new Thread(() -> {
+            // 🚀 DASHBOARD WARM-UP (Background - Deferred)
+            Thread.ofVirtual().start(() -> {
                 try {
+                    // Let the system breathe before hitting heavy counts
+                    Thread.sleep(10000); 
                     logger.info("🔥 [WARM-UP] Starting Dashboard background warming...");
                     long userCount = userRepository.count();
                     long sessionCount = sessionRepository.count();
@@ -79,7 +81,7 @@ public class SuperAdminInitializer implements CommandLineRunner {
                 } catch (Exception e) {
                     logger.warn("⚠️ [WARM-UP] Dashboard warming had a hiccups, but ignoring: {}", e.getMessage());
                 }
-            }).start();
+            });
             
         } catch (Exception e) {
             logger.error("❌ Critical Error during SuperAdmin initialization: {}", e.getMessage());

@@ -47,6 +47,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchStats = async () => {
+      // 🛡️ [RESILIENCY] Small stagger delay to prevent Thundering Herd on free tier
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
       try {
         const endpoint = user?.role === Role.FACULTY 
           ? '/api/v1/faculty/dashboard/stats' 

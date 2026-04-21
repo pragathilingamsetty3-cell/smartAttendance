@@ -340,8 +340,9 @@ public class AIAnalyticsV1Service {
     }
 
     /**
-     * Get AI Model performance metrics
+     * Get AI Model performance metrics - CACHED for 2 minutes to prevent CPU spikes
      */
+    @org.springframework.cache.annotation.Cacheable(value = "dashboardStats", key = "'modelMetrics'")
     public Map<String, Object> getModelMetrics() {
         java.time.Instant startOfToday = java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant();
         long total = attendanceRepository.countByAiDecisionTrueFiltered(startOfToday, null, null);

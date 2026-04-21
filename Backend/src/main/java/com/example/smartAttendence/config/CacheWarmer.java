@@ -23,21 +23,28 @@ public class CacheWarmer {
 
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {
-        log.info("🚀 ULTRA-PERFORMANCE: Starting Cache Warming... Warming up high-priority metadata...");
-        
-        try {
-            // Warm up Departments
-            adminV1Service.getAllDepartments();
-            log.info("✅ Cache Warmer: Departments Pre-loaded");
-            
-            // Warm up Rooms
-            adminV1Service.getAllRooms();
-            log.info("✅ Cache Warmer: Rooms Pre-loaded");
-            
-            // Warm up Section Details (Top 5 active ones if needed, but getAllDepartments is usually enough)
-            log.info("❄️ Cache Warmer: Critical paths are now WARM and ready for production load.");
-        } catch (Exception e) {
-            log.warn("⚠️ Cache Warmer: Problem pre-loading caches during startup: {}", e.getMessage());
-        }
+        // 🚀 Defer warming to prevent "Cold Boot" congestion
+        Thread.ofVirtual().start(() -> {
+            try {
+                log.info("⏳ [STANDBY] Delaying Cache Warmer for 5s to allow system stabilization...");
+                Thread.sleep(5000);
+                
+                log.info("🚀 ULTRA-PERFORMANCE: Starting Cache Warming... Warming up high-priority metadata...");
+                
+                // Warm up Departments
+                adminV1Service.getAllDepartments();
+                log.info("✅ Cache Warmer: Departments Pre-loaded");
+                
+                // Warm up Rooms
+                adminV1Service.getAllRooms();
+                log.info("✅ Cache Warmer: Rooms Pre-loaded");
+                
+                log.info("❄️ Cache Warmer: Critical paths are now WARM and ready for production load.");
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                log.warn("⚠️ Cache Warmer: Problem pre-loading caches during startup: {}", e.getMessage());
+            }
+        });
     }
 }
