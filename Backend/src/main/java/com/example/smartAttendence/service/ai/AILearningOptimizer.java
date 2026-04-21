@@ -22,9 +22,9 @@ public class AILearningOptimizer {
     private final TimetableRepository timetableRepository;
     private final ClassroomSessionV1Repository classroomSessionRepository;
     
-    // AI Learning Data Stores
-    private final Map<UUID, StudentBehaviorProfile> studentProfiles = new HashMap<>();
-    private final Map<UUID, List<SessionPattern>> sessionPatterns = new HashMap<>();
+    // AI Learning Data Stores - 🏎️ ELITE PERFORMANCE: Thread-safe and pre-sized for high concurrency
+    private final Map<UUID, StudentBehaviorProfile> studentProfiles = new java.util.concurrent.ConcurrentHashMap<>(2048);
+    private final Map<UUID, List<SessionPattern>> sessionPatterns = new java.util.concurrent.ConcurrentHashMap<>(512);
 
     public AILearningOptimizer(UserV1Repository userRepository, SensorReadingRepository sensorReadingRepository,
                                TimetableRepository timetableRepository, ClassroomSessionV1Repository classroomSessionRepository) {

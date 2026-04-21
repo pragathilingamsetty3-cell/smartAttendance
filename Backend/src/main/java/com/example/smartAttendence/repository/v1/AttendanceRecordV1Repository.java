@@ -78,17 +78,20 @@ public interface AttendanceRecordV1Repository extends JpaRepository<AttendanceRe
            "AND ar.status IN :statuses AND ar.recordedAt >= :since)")
     long countDistinctStudentByAiStatusInFiltered(@Param("statuses") List<String> statuses, @Param("since") Instant since, @Param("deptId") java.util.UUID deptId, @Param("sectId") java.util.UUID sectId);
 
-    @Query("SELECT COUNT(u) FROM V1User u " +
-           "WHERE u.role = com.example.smartAttendence.enums.Role.STUDENT " +
-           "AND (:deptId IS NULL OR (u.section IS NOT NULL AND u.section.department.id = :deptId)) " +
-           "AND (:sectId IS NULL OR (u.section IS NOT NULL AND u.section.id = :sectId)) " +
-           "AND EXISTS (SELECT 1 FROM AttendanceRecord ar " +
-           "  WHERE ar.student.id = u.id " +
-           "  AND ar.recordedAt >= :since " +
-           "  AND ar.status IN :statuses " +
-           "  AND ar.recordedAt = (SELECT MAX(ar2.recordedAt) " +
-           "                       FROM AttendanceRecord ar2 " +
-           "                       WHERE ar2.student.id = u.id AND ar2.recordedAt >= :since))")
+    @Query(value = "SELECT COUNT(u.id) FROM users u " +
+           "WHERE u.role = 'STUDENT' " +
+           "AND (:deptId IS NULL OR u.department = cast(:deptId as varchar)) " +
+           "AND (:sectId IS NULL OR u.section_id = cast(:sectId as uuid)) " +
+           "AND EXISTS (" +
+           "  SELECT 1 FROM attendance_records ar1 " +
+           "  WHERE ar1.student_id = u.id " +
+           "  AND ar1.recorded_at >= :since " +
+           "  AND ar1.status IN :statuses " +
+           "  AND ar1.recorded_at = (" +
+           "    SELECT MAX(ar2.recorded_at) FROM attendance_records ar2 " +
+           "    WHERE ar2.student_id = u.id AND ar2.recorded_at >= :since" +
+           "  )" +
+           ")", nativeQuery = true)
     long countByLatestStatusIn(@Param("statuses") List<String> statuses, @Param("since") Instant since, @Param("deptId") java.util.UUID deptId, @Param("sectId") java.util.UUID sectId);
 
     @Query("SELECT COUNT(u) FROM V1User u " +

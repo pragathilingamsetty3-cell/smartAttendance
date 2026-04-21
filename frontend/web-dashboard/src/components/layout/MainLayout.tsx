@@ -157,6 +157,19 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               >
                 <Link
                   href={item.href}
+                  onMouseEnter={() => {
+                    // 🏎️ ELITE PERFORMANCE: Pre-warm service cache on hover
+                    if (item.id === 'analytics') {
+                      import('@/services/aiAnalytics.service').then(s => {
+                        s.aiAnalyticsService.getAnalyticsDashboard().catch(() => {});
+                        s.aiAnalyticsService.getModelMetrics().catch(() => {});
+                      });
+                    } else if (item.id === 'departments' || item.id === 'users') {
+                      import('@/services/userManagement.service').then(s => {
+                        s.userManagementService.getDepartments().catch(() => {});
+                      });
+                    }
+                  }}
                   className={cn(
                     'flex items-center space-x-3 px-4 py-2.5 rounded-xl transition-all duration-300 w-full group',
                     'text-gray-400 hover:text-white hover:bg-white/5'
