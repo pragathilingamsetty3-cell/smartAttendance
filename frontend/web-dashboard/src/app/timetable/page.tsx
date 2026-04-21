@@ -216,7 +216,7 @@ export default function TimetablePage() {
 
           <div className="flex items-center justify-end text-xs text-gray-500 italic">
             <Building className="w-4 h-4 mr-1" />
-            Showing active 2025-2026 Academic Year
+            Displaying Weekly Schedule
           </div>
         </div>
       )}

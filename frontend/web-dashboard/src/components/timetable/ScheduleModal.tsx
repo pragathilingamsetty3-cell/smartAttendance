@@ -17,6 +17,17 @@ interface ScheduleModalProps {
 }
 
 export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, faculties, sections }: ScheduleModalProps) {
+  const getCurrentAcademicYear = () => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    // If today is July or later, year is currentYear - currentYear+1
+    // Otherwise it's currentYear-1 - currentYear
+    if (today.getMonth() >= 6) { // July is 6 (0-indexed)
+      return `${currentYear}-${currentYear + 1}`;
+    }
+    return `${currentYear - 1}-${currentYear}`;
+  };
+
   const [showHolidaySuccess, setShowHolidaySuccess] = useState(false);
   const [formData, setFormData] = useState({
     subject: '',
@@ -25,8 +36,8 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
     dayOfWeek: 'MONDAY',
     startTime: '09:00:00',
     endTime: '10:30:00',
-    academicYear: '2025-2026',
-    semester: 'Spring 2026',
+    academicYear: getCurrentAcademicYear(),
+    semester: 'Active Semester',
     sectionId: '',
     hasLunchBreak: false,
     lunchBreakStart: '13:00:00',
@@ -57,8 +68,8 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
         dayOfWeek: 'MONDAY',
         startTime: '09:00:00',
         endTime: '10:30:00',
-        academicYear: '2025-2026',
-        semester: 'Spring 2026',
+        academicYear: getCurrentAcademicYear(),
+        semester: 'Active Semester',
         sectionId: '',
         hasLunchBreak: false,
         lunchBreakStart: '13:00:00',
@@ -250,7 +261,7 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                       value={formData.academicYear}
                       onChange={e => setFormData({...formData, academicYear: e.target.value})}
                       className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                      placeholder="2025-2026"
+                      placeholder="e.g. 2026-2027"
                       required
                     />
                   </div>
@@ -261,7 +272,7 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                       value={formData.semester}
                       onChange={e => setFormData({...formData, semester: e.target.value})}
                       className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                      placeholder="Spring 2026"
+                      placeholder="e.g. Fall 2026"
                       required
                     />
                   </div>
