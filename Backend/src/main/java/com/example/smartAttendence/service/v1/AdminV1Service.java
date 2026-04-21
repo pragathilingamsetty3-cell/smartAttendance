@@ -12,6 +12,7 @@ import com.example.smartAttendence.dto.v1.DepartmentCreateRequest;
 import com.example.smartAttendence.dto.v1.SectionCreateRequest;
 import com.example.smartAttendence.dto.v1.BulkPromotionRequest;
 import com.example.smartAttendence.dto.v1.UpdateUserStatusRequest;
+import com.example.smartAttendence.dto.v1.UserSummaryDTO;
 import com.example.smartAttendence.entity.Room;
 import com.example.smartAttendence.entity.Department;
 import com.example.smartAttendence.entity.Section;
@@ -722,28 +723,19 @@ public class AdminV1Service {
         Map<String, String> departmentIdToNameMap = getAllDepartments().stream()
                 .collect(Collectors.toMap(d -> d.id().toString(), DropdownDTO::label, (a, b) -> a));
 
-        // Convert users to DTO format
-        List<Map<String, Object>> userDTOs = users.stream()
-                .map(user -> {
-                    Map<String, Object> userMap = new HashMap<>();
-                    userMap.put("id", user.getId());
-                    userMap.put("name", user.getName());
-                    userMap.put("email", user.getEmail());
-                    userMap.put("registrationNumber", user.getRegistrationNumber());
-                    userMap.put("role", user.getRole().toString());
-                    
-                    // Resolve department name if it's stored as UUID string
-                    String deptValue = user.getDepartment() != null ? user.getDepartment() : "";
-                    String resolvedName = departmentIdToNameMap.getOrDefault(deptValue, deptValue);
-                    userMap.put("department", resolvedName);
-                    
-                    userMap.put("sectionId", user.getSectionId() != null ? user.getSectionId().toString() : "");
-                    userMap.put("totalAcademicYears", user.getTotalAcademicYears() != null ? user.getTotalAcademicYears() : "");
-                    userMap.put("currentSemester", user.getSemester() != null ? user.getSemester() : 1);
-                    userMap.put("status", user.getStatus() != null ? user.getStatus().toString() : "ACTIVE");
-                    userMap.put("createdAt", user.getCreatedAt());
-                    return userMap;
-                })
+        // Convert users to lightweight DTO format for 🚀 ULTRA PERFORMANCE
+        List<UserSummaryDTO> userDTOs = users.stream()
+                .map(user -> new UserSummaryDTO(
+                    user.getId(),
+                    user.getName(),
+                    user.getEmail(),
+                    user.getRegistrationNumber(),
+                    user.getRole().toString(),
+                    departmentIdToNameMap.getOrDefault(user.getDepartment(), user.getDepartment()),
+                    user.getStatus().toString(),
+                    user.getSectionId(),
+                    user.getCreatedAt()
+                ))
                 .collect(Collectors.toList());
 
         // Get department statistics

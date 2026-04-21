@@ -5,7 +5,14 @@ import { useAuth } from '@/stores/authContext';
 import { timetableService } from '@/services/timetable.service';
 import { roomManagementService } from '@/services/roomManagement.service';
 import { userManagementService } from '@/services/userManagement.service';
-import { TimetableGrid } from '@/components/timetable/TimetableGrid';
+import dynamic from 'next/dynamic';
+const TimetableGrid = dynamic(
+  () => import('@/components/timetable/TimetableGrid').then(mod => mod.TimetableGrid),
+  { 
+    ssr: false, 
+    loading: () => <div className="h-[500px] w-full bg-white/5 animate-pulse rounded-xl flex items-center justify-center text-gray-500 italic">Formatting Timetable Architect...</div>
+  }
+);
 import { ScheduleModal } from '@/components/timetable/ScheduleModal';
 import { Button } from '@/components/ui/Button';
 import { Loading } from '@/components/ui/Loading';

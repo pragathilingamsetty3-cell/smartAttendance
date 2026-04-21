@@ -2,7 +2,14 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/stores/authContext';
-import { AIAnalyticsDashboard } from '@/components/ai/AIAnalyticsDashboard';
+import dynamic from 'next/dynamic';
+const AIAnalyticsDashboard = dynamic(
+  () => import('@/components/ai/AIAnalyticsDashboard').then(mod => mod.AIAnalyticsDashboard),
+  { 
+    ssr: false, 
+    loading: () => <div className="h-[400px] w-full bg-white/5 animate-pulse rounded-xl flex items-center justify-center text-gray-500">Loading AI Insights...</div>
+  }
+);
 import { aiAnalyticsService } from '@/services/aiAnalytics.service';
 import { userManagementService } from '@/services/userManagement.service';
 import { Card, CardContent } from '@/components/ui/Card';
