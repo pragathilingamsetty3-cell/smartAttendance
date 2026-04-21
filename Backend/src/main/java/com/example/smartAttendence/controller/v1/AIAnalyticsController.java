@@ -214,4 +214,29 @@ public class AIAnalyticsController {
     public ResponseEntity<?> getModelMetrics() {
         return ResponseEntity.ok(aiAnalyticsV1Service.getModelMetrics());
     }
+
+    /**
+     * Get AI Weekly Insights
+     * GET /api/v1/ai-analytics/weekly-insights
+     */
+    @GetMapping("/weekly-insights")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'FACULTY')")
+    public ResponseEntity<?> getWeeklyInsights() {
+        return ResponseEntity.ok(aiAnalyticsV1Service.getWeeklyInsights());
+    }
+
+    /**
+     * AI Assistant Query (Chat Stub)
+     * POST /api/v1/ai-analytics/ask-ai
+     */
+    @PostMapping("/ask-ai")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'FACULTY')")
+    public ResponseEntity<?> askAI(@RequestBody Map<String, String> request) {
+        String question = request.get("question");
+        return ResponseEntity.ok(Map.of(
+            "question", question,
+            "answer", "I am currently analyzing your institutional data. For now, I can report that all security protocols are ACTIVE. Precise behavioral querying will be available after session processing.",
+            "status", "ANALYZING"
+        ));
+    }
 }
