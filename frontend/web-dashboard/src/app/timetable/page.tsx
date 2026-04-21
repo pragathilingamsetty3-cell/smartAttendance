@@ -124,11 +124,12 @@ export default function TimetablePage() {
       }
       setIsModalOpen(false);
       setEditingEntry(null);
-      fetchTimetable();
-      
       // ✨ Trigger Success Animation
       setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      setTimeout(() => {
+        setShowSuccess(false);
+        fetchTimetable();
+      }, 500);
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || error.message || 'Failed to save timetable entry.';
       alert(errorMessage);
@@ -159,9 +160,13 @@ export default function TimetablePage() {
                 ? 'Your assigned weekly class sessions and room allocations.' 
                 : 'Manage recurring class schedules and smart breaks.'}
             </p>
-            {entries.length > 0 && (
+            {entries.length > 0 ? (
               <span className="ml-3 px-2 py-0.5 rounded-full bg-[#7C3AED]/20 text-[#7C3AED] text-xs font-bold border border-[#7C3AED]/30">
                 {entries.length} Slots Loaded
+              </span>
+            ) : (
+              <span className="ml-3 px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/30">
+                0 Slots Found {selectedSection ? `[Section: ${selectedSection.substring(0,8)}...]` : '[Select Section]'}
               </span>
             )}
           </div>
@@ -256,14 +261,23 @@ export default function TimetablePage() {
               <p className="font-bold text-lg leading-none">Schedule Secured!</p>
               <p className="text-sm text-white/80 mt-1">Timetable has been updated successfully.</p>
             </div>
-            <motion.div 
-              className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full"
-              animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-            />
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 🔍 DIAGNOSTIC PANEL (Always useful for debugging) */}
+      <div className="mt-10 p-4 rounded-xl border border-white/5 bg-black/20">
+        <details className="cursor-pointer">
+          <summary className="text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-[#7C3AED] transition-colors">
+            Data Architect Diagnostics
+          </summary>
+          <div className="mt-4 p-4 rounded-lg bg-black/40 font-mono text-[10px] text-gray-500 overflow-auto max-h-60">
+            <p className="mb-2 text-[#7C3AED]">Selected Section ID: {selectedSection || 'NONE'}</p>
+            <p className="mb-2 text-[#7C3AED]">Total Entries Received: {entries.length}</p>
+            <pre>{JSON.stringify(entries, null, 2)}</pre>
+          </div>
+        </details>
+      </div>
     </div>
   );
 }

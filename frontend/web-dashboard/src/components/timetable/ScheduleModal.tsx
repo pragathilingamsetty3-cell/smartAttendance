@@ -36,8 +36,8 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
     dayOfWeek: 'MONDAY',
     startTime: '09:00:00',
     endTime: '10:30:00',
-    academicYear: getCurrentAcademicYear(),
-    semester: 'Active Semester',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString().split('T')[0],
     sectionId: '',
     hasLunchBreak: false,
     lunchBreakStart: '13:00:00',
@@ -68,8 +68,8 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
         dayOfWeek: 'MONDAY',
         startTime: '09:00:00',
         endTime: '10:30:00',
-        academicYear: getCurrentAcademicYear(),
-        semester: 'Active Semester',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(new Date().setMonth(new Date().getMonth() + 6)).toISOString().split('T')[0],
         sectionId: '',
         hasLunchBreak: false,
         lunchBreakStart: '13:00:00',
@@ -255,24 +255,22 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Academic Year</label>
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Timeline Start</label>
                     <input 
-                      type="text" 
-                      value={formData.academicYear}
-                      onChange={e => setFormData({...formData, academicYear: e.target.value})}
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                      placeholder="e.g. 2026-2027"
+                      type="date" 
+                      value={formData.startDate}
+                      onChange={e => setFormData({...formData, startDate: e.target.value})}
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none ring-1 ring-white/5"
                       required
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Semester</label>
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Timeline End</label>
                     <input 
-                      type="text" 
-                      value={formData.semester}
-                      onChange={e => setFormData({...formData, semester: e.target.value})}
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none"
-                      placeholder="e.g. Fall 2026"
+                      type="date" 
+                      value={formData.endDate}
+                      onChange={e => setFormData({...formData, endDate: e.target.value})}
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none ring-1 ring-white/5"
                       required
                     />
                   </div>

@@ -1980,7 +1980,7 @@ public class AdminV1Service {
         Section section = sectionRepository.findById(sectionId)
                 .orElseThrow(() -> new IllegalArgumentException("Section not found: " + sectionId));
         List<com.example.smartAttendence.entity.Timetable> results = timetableRepository.findBySectionId(sectionId);
-        System.out.println("🔍 TIMETABLE FETCH: Section=" + section.getName() + ", Count=" + results.size());
+        log.info("🔍 [DATABASE CHECK] Found {} timetable entries for Section ID: {}", results.size(), sectionId);
         return results;
     }
 
@@ -1993,8 +1993,8 @@ public class AdminV1Service {
         timetable.setDayOfWeek(request.dayOfWeek());
         timetable.setStartTime(request.startTime());
         timetable.setEndTime(request.endTime());
-        timetable.setAcademicYear(request.academicYear());
-        timetable.setSemester(request.semester());
+        timetable.setStartDate(request.startDate());
+        timetable.setEndDate(request.endDate());
         timetable.setSection(section);
         timetable.setIsExamDay(request.isExamDay() != null ? request.isExamDay() : false);
         timetable.setIsHoliday(request.isHoliday() != null ? request.isHoliday() : false);

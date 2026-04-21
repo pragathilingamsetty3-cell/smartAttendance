@@ -26,11 +26,11 @@ public record TimetableRequestDTO(
     @NotNull(message = "End time is required")
     LocalTime endTime,
 
-    @NotBlank(message = "Academic year is required")
-    String academicYear,
+    @NotNull(message = "Start date is required")
+    java.time.LocalDate startDate,
 
-    @NotBlank(message = "Semester is required")
-    String semester,
+    @NotNull(message = "End date is required")
+    java.time.LocalDate endDate,
 
     UUID sectionId,
     Boolean hasLunchBreak,

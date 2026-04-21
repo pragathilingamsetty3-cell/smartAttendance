@@ -149,5 +149,9 @@ public interface TimetableRepository extends JpaRepository<Timetable, UUID> {
     long countByDayOfWeek(DayOfWeek dayOfWeek);
 
     long countByDayOfWeekAndSection_Department_Id(DayOfWeek dayOfWeek, UUID departmentId);
-    
+
+    /**
+     * Delete all timetable entries where the end date is before the given date
+     */
+    int deleteByEndDateBefore(java.time.LocalDate date);
 }

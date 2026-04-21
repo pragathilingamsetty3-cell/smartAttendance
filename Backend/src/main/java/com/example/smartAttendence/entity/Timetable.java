@@ -59,11 +59,11 @@ public class Timetable {
     @Column(name = "holiday_date")
     private java.time.LocalDate holidayDate;
 
-    @Column(name = "academic_year", nullable = false)
-    private String academicYear;
+    @Column(name = "start_date", nullable = false)
+    private java.time.LocalDate startDate;
 
-    @Column(name = "semester", nullable = false)
-    private String semester;
+    @Column(name = "end_date", nullable = false)
+    private java.time.LocalDate endDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "section_id")
@@ -130,11 +130,11 @@ public class Timetable {
     public java.time.LocalDate getHolidayDate() { return holidayDate; }
     public void setHolidayDate(java.time.LocalDate holidayDate) { this.holidayDate = holidayDate; }
     
-    public String getAcademicYear() { return academicYear; }
-    public void setAcademicYear(String academicYear) { this.academicYear = academicYear; }
+    public java.time.LocalDate getStartDate() { return startDate; }
+    public void setStartDate(java.time.LocalDate startDate) { this.startDate = startDate; }
     
-    public String getSemester() { return semester; }
-    public void setSemester(String semester) { this.semester = semester; }
+    public java.time.LocalDate getEndDate() { return endDate; }
+    public void setEndDate(java.time.LocalDate endDate) { this.endDate = endDate; }
     
     public Section getSection() { return section; }
     public void setSection(Section section) { this.section = section; }

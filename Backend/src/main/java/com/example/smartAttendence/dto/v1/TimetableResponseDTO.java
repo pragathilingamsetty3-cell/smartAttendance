@@ -25,8 +25,8 @@ public class TimetableResponseDTO {
     private Boolean isHoliday;
     private String holidayDate;
     private Boolean isAdhoc;
-    private String academicYear;
-    private String semester;
+    private String startDate;
+    private String endDate;
     private String description;
 
     // Simplified relations

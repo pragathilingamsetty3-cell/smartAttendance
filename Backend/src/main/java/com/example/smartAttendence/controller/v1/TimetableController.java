@@ -108,6 +108,7 @@ public class TimetableController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
+            log.error("❌ FAILED TO FETCH SECTION TIMETABLE for section {}: {}", sectionId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to retrieve section timetable: " + e.getMessage()));
         }
@@ -129,8 +130,8 @@ public class TimetableController {
                 .isHoliday(t.getIsHoliday())
                 .holidayDate(t.getHolidayDate() != null ? t.getHolidayDate().toString() : null)
                 .isAdhoc(t.getIsAdhoc())
-                .academicYear(t.getAcademicYear())
-                .semester(t.getSemester())
+                .startDate(t.getStartDate() != null ? t.getStartDate().toString() : null)
+                .endDate(t.getEndDate() != null ? t.getEndDate().toString() : null)
                 .description(t.getDescription())
                 // Relation Info
                 .room(t.getRoom() != null ? TimetableResponseDTO.RoomInfo.builder()
