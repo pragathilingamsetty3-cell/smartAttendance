@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -78,6 +79,7 @@ public class TimetableController {
      */
     @GetMapping("/faculty/{facultyId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'FACULTY')")
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getTimetablesForFaculty(@PathVariable UUID facultyId) {
         try {
             List<Timetable> timetables = adminV1Service.getTimetablesForFaculty(facultyId);
@@ -98,6 +100,7 @@ public class TimetableController {
      */
     @GetMapping("/section/{sectionId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'FACULTY', 'STUDENT')")
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getTimetablesForSection(@PathVariable UUID sectionId) {
         try {
             List<Timetable> timetables = adminV1Service.getTimetablesForSection(sectionId);

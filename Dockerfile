@@ -40,4 +40,12 @@ EXPOSE 8080
 
 USER appuser
 
-ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8080} -Djava.security.egd=file:/dev/./urandom -XX:+UseContainerSupport -XX:MaxRAMPercentage=60.0 -Xss512k -jar app.jar"]
+# =========================================================
+# PERFORMANCE TUNING (Render Free Tier 512MB)
+# - UseSerialGC: Minimal memory overhead for small containers
+# - MaxMetaspaceSize: Constrain class metadata memory
+# - Xmx: Hard cap on heap to prevent OS OOM kills
+# NOTE: If upgrading to a paid tier (2GB+), remove these flags to use G1GC/ZGC.
+# =========================================================
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8080} -Djava.security.egd=file:/dev/./urandom -XX:+UseSerialGC -XX:MaxRAMPercentage=50.0 -XX:MaxMetaspaceSize=128m -Xmx200m -Xss512k -jar app.jar"]
+
