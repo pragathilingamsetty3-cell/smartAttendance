@@ -228,7 +228,8 @@ class AttendanceV1ServiceTest {
         EnhancedHeartbeatPing outsidePing = new EnhancedHeartbeatPing(
                 testStudentId, testSessionId,
                 13.0, 78.0, 100, 0.1, 0.2, 0.3, true, Instant.now(),
-                "device-fingerprint-123", null, 85, false, true, "MOVING", null, 30L
+                "device-fingerprint-123", null, 85, false, true, "MOVING", null, 30L, 
+                null, 1L // 🔐 signature, 📈 sequence
         );
 
         when(firestore.collection(anyString())).thenReturn(collectionReference);
@@ -366,7 +367,9 @@ class AttendanceV1ServiceTest {
                 true,       // isScreenOn
                 "STATIONARY", // deviceState
                 null,         // gpsAccuracy
-                30L         // nextHeartbeatInterval
+                30L,        // nextHeartbeatInterval
+                null,       // requestSignature
+                1L          // sequenceId
         );
     }
 

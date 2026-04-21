@@ -334,7 +334,9 @@ public class AttendanceV1Controller {
                             null, // isScreenOn
                             null, // deviceState
                             null, // gpsAccuracy
-                            null  // nextHeartbeatInterval
+                            null, // nextHeartbeatInterval
+                            null, // 🔐 requestSignature
+                            1L    // 📈 sequenceId
                         )
                     )
             ));

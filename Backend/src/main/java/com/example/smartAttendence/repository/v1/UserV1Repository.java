@@ -103,5 +103,8 @@ public interface UserV1Repository extends JpaRepository<User, UUID> {
     @Transactional
     @Query("DELETE FROM V1User u WHERE u.email = :email")
     void deleteByEmail(@Param("email") String email);
+
+    @Query("SELECT u.sectionId, COUNT(u) FROM V1User u WHERE u.role = :role AND u.status = 'ACTIVE' GROUP BY u.sectionId")
+    List<Object[]> countActiveUsersPerSection(@Param("role") Role role);
 }
 

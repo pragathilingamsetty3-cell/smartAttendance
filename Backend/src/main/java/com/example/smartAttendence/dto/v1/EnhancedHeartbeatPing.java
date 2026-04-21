@@ -43,5 +43,7 @@ public record EnhancedHeartbeatPing(
     Boolean isScreenOn,          // true/false
     String deviceState,          // "STATIONARY", "MOVING", "WALKING"
     Double gpsAccuracy,          // 🛰️ GPS Precision Data
-    Long nextHeartbeatInterval    // Dynamic interval in seconds
+    Long nextHeartbeatInterval,   // Dynamic interval in seconds
+    String requestSignature,     // 🔐 HMAC-SHA256 Signature
+    Long sequenceId              // 📈 Reliability: Packet Sequence ID
 ) {}

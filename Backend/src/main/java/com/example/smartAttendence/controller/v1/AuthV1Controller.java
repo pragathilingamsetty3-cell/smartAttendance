@@ -31,18 +31,21 @@ public class AuthV1Controller {
     private final RefreshTokenService refreshTokenService;
     private final SecurityUtils securityUtils;
     private final AdvancedInputValidator advancedInputValidator;
+    private final AuthenticationService authenticationService;
 
     public AuthV1Controller(
             UnifiedAuthService unifiedAuthService,
             JwtUtil jwtUtil,
             RefreshTokenService refreshTokenService,
             SecurityUtils securityUtils,
-            AdvancedInputValidator advancedInputValidator) {
+            AdvancedInputValidator advancedInputValidator,
+            AuthenticationService authenticationService) {
         this.unifiedAuthService = unifiedAuthService;
         this.jwtUtil = jwtUtil;
         this.refreshTokenService = refreshTokenService;
         this.securityUtils = securityUtils;
         this.advancedInputValidator = advancedInputValidator;
+        this.authenticationService = authenticationService;
     }
 
     /**
@@ -167,6 +170,7 @@ public class AuthV1Controller {
                 role == com.example.smartAttendence.enums.Role.CR || 
                 role == com.example.smartAttendence.enums.Role.LR) {
                 userData.put("biometricSignature", result.user().getBiometricSignature() != null ? "REGISTERED" : "NOT_REGISTERED");
+                userData.put("secretKey", result.user().getSecretKey()); // 🔐 For HMAC signing
             }
 
             response.put("user", userData);
@@ -233,10 +237,11 @@ public class AuthV1Controller {
             }
 
             String email = auth.getName();
-            unifiedAuthService.completeFirstLoginSetup(email, request);
-
+            User user = authenticationService.getUserByEmail(email).orElseThrow();
+            
             return ResponseEntity.ok(Map.of(
-                "message", "Biometric setup completed successfully"
+                "message", "Biometric setup completed successfully",
+                "secretKey", user.getSecretKey() // 🔐 Return for HMAC signing
             ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()

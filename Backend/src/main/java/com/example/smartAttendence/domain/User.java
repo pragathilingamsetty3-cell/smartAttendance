@@ -62,6 +62,10 @@ public class User implements Serializable {
     @Column(nullable = false)
     private boolean firstLogin = true;
 
+    @Column(name = "secret_key")
+    private String secretKey;
+
+
     @Column(name = "reset_token")
     private String resetToken;
 
@@ -330,6 +334,14 @@ public class User implements Serializable {
 
     public void setSection(com.example.smartAttendence.entity.Section section) {
         this.section = section;
+    }
+
+    public String getSecretKey() {
+        return secretKey;
+    }
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
     }
 }
 

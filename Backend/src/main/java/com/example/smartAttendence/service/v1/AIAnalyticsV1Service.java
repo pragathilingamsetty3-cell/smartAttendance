@@ -164,17 +164,35 @@ public class AIAnalyticsV1Service {
             // 🤖 TOTAL PREDICTIONS: Raw count of all AI decisions today (Volume metric)
             long totalAI = attendanceRepository.countByAiDecisionTrueFiltered(startOfToday, finalDeptId, finalSectId);
 
-            // ⚡ BULK STATS REFACTOR: Instead of looping through each session and hitting the DB 5 times per session (N+1 bottleneck),
-            // we calculate the totals for all active departments/sections in bulk.
+            // ⚡ BULK STATS REFACTOR: Instead of looping through each session (N+1 bottleneck),
+            // we calculate the totals for all active sections in two efficient queries.
             
-            // 1. Get total expected students across active sections
+            // 1. Get total expected students across ALL active sections once
+            Map<UUID, Long> sectionStudentCounts = userRepository.countActiveUsersPerSection(com.example.smartAttendence.enums.Role.STUDENT)
+                    .stream()
+                    .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> ((Number) row[1]).longValue()
+                    ));
+            
+            // 2. Get aggregated verification/walkout counts per section once
+            Map<UUID, Map<String, Long>> sectionAggregates = attendanceRepository.getAggregatedStatusPerSection(startOfToday)
+                    .stream()
+                    .collect(Collectors.toMap(
+                        row -> row[0] != null ? (UUID) row[0] : UUID.randomUUID(), // Handle null section_id
+                        row -> {
+                            Map<String, Long> counts = new HashMap<>();
+                            counts.put("verified", ((Number) row[1]).longValue());
+                            counts.put("walkouts", ((Number) row[2]).longValue());
+                            counts.put("withSignal", ((Number) row[3]).longValue());
+                            return counts;
+                        }
+                    ));
+            
             long totalAbsences = 0;
             long totalPendingArrivals = 0;
             
             List<com.example.smartAttendence.domain.ClassroomSession> currentSessions = sessionRepository.findByActiveTrue();
-            
-            // Map to store counts per section to avoid repeated queries
-            Map<UUID, Long> sectionStudentCounts = new HashMap<>();
             
             for (com.example.smartAttendence.domain.ClassroomSession session : currentSessions) {
                 if (session.getSection() == null) continue;
@@ -184,20 +202,17 @@ public class AIAnalyticsV1Service {
                 if (finalSectId != null && !session.getSection().getId().equals(finalSectId)) continue;
 
                 UUID sessSectId = session.getSection().getId();
-                
-                // ⚡ HIGH SPEED SEED: Cache student count for the section
-                long sectionStudentCount = sectionStudentCounts.computeIfAbsent(sessSectId, 
-                    id -> userRepository.countBySectionIdAndRole(id, com.example.smartAttendence.enums.Role.STUDENT));
+                long sectionStudentCount = sectionStudentCounts.getOrDefault(sessSectId, 0L);
                 
                 if (sectionStudentCount == 0) continue;
 
-                // For granular dashboard accuracy, we still use filters but they are now hitting Indexed columns
-                long sectionVerified = attendanceRepository.countByLatestStatusIn(List.of("PRESENT", "LATE"), startOfToday, null, sessSectId);
-                long sectionWalkouts = attendanceRepository.countByLatestStatusIn(List.of("WALK_OUT"), startOfToday, null, sessSectId);
+                Map<String, Long> aggregates = sectionAggregates.getOrDefault(sessSectId, 
+                    Map.of("verified", 0L, "walkouts", 0L, "withSignal", 0L));
 
-                // Students who have ever interacted today (Signal Integrity check)
-                // This determines if this is a "Ghost Section" (no one showed up yet) or a "Real Session"
-                long studentsWithSignal = attendanceRepository.countDistinctStudentByAiDecisionTrueFiltered(startOfToday, null, sessSectId);
+                long sectionVerified = aggregates.get("verified");
+                long sectionWalkouts = aggregates.get("walkouts");
+                long studentsWithSignal = aggregates.get("withSignal");
+
                 double signalPercentage = (double) studentsWithSignal / sectionStudentCount;
                 
                 if (signalPercentage < 0.05) {

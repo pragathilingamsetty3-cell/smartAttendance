@@ -78,20 +78,16 @@ public interface AttendanceRecordV1Repository extends JpaRepository<AttendanceRe
            "AND ar.status IN :statuses AND ar.recordedAt >= :since)")
     long countDistinctStudentByAiStatusInFiltered(@Param("statuses") List<String> statuses, @Param("since") Instant since, @Param("deptId") java.util.UUID deptId, @Param("sectId") java.util.UUID sectId);
 
-    @Query(value = "SELECT COUNT(u.id) FROM users u " +
-           "WHERE u.role = 'STUDENT' " +
-           "AND (:deptId IS NULL OR u.department = cast(:deptId as varchar)) " +
-           "AND (:sectId IS NULL OR u.section_id = cast(:sectId as uuid)) " +
-           "AND EXISTS (" +
-           "  SELECT 1 FROM attendance_records ar1 " +
-           "  WHERE ar1.student_id = u.id " +
-           "  AND ar1.recorded_at >= :since " +
-           "  AND ar1.status IN :statuses " +
-           "  AND ar1.recorded_at = (" +
-           "    SELECT MAX(ar2.recorded_at) FROM attendance_records ar2 " +
-           "    WHERE ar2.student_id = u.id AND ar2.recorded_at >= :since" +
-           "  )" +
-           ")", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM (" +
+           "  SELECT DISTINCT ON (ar.student_id) ar.status " +
+           "  FROM attendance_records ar " +
+           "  JOIN users u ON ar.student_id = u.id " +
+           "  WHERE u.role = 'STUDENT' " +
+           "  AND (:deptId IS NULL OR u.department = cast(:deptId as varchar)) " +
+           "  AND (:sectId IS NULL OR u.section_id = cast(:sectId as uuid)) " +
+           "  AND ar.recorded_at >= :since " +
+           "  ORDER BY ar.student_id, ar.recorded_at DESC " +
+           ") sub WHERE sub.status IN :statuses", nativeQuery = true)
     long countByLatestStatusIn(@Param("statuses") List<String> statuses, @Param("since") Instant since, @Param("deptId") java.util.UUID deptId, @Param("sectId") java.util.UUID sectId);
 
     @Query("SELECT COUNT(u) FROM V1User u " +
@@ -136,5 +132,19 @@ public interface AttendanceRecordV1Repository extends JpaRepository<AttendanceRe
     @org.springframework.transaction.annotation.Transactional
     @Query("DELETE FROM AttendanceRecord ar WHERE ar.session.id = :sessionId")
     void deleteBySessionId(@Param("sessionId") UUID sessionId);
+
+    @Query(value = "SELECT sub.section_id, " +
+           "COUNT(CASE WHEN sub.status IN ('PRESENT', 'LATE') THEN 1 END) as verified, " +
+           "COUNT(CASE WHEN sub.status = 'WALK_OUT' THEN 1 END) as walkouts, " +
+           "COUNT(*) as total_with_signal " +
+           "FROM (" +
+           "  SELECT DISTINCT ON (ar.student_id) u.section_id, ar.status " +
+           "  FROM attendance_records ar " +
+           "  JOIN users u ON ar.student_id = u.id " +
+           "  WHERE u.role = 'STUDENT' " +
+           "  AND ar.recorded_at >= :since " +
+           "  ORDER BY ar.student_id, ar.recorded_at DESC " +
+           ") sub GROUP BY sub.section_id", nativeQuery = true)
+    List<Object[]> getAggregatedStatusPerSection(@Param("since") java.time.Instant since);
 }
 

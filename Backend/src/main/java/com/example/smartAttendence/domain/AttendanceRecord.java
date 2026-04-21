@@ -46,6 +46,12 @@ public class AttendanceRecord {
     @Column(name = "ip_address")
     private String ipAddress;
 
+    @Column(name = "recorded_at")
+    private Instant recordedAt = Instant.now();
+
+    @Column(name = "sequence_id")
+    private Long sequenceId;
+
     @Column(name = "is_mocked", nullable = false)
     private boolean mocked = false;
 
@@ -98,10 +104,6 @@ public class AttendanceRecord {
 
     @Column(name = "gps_accuracy")
     private Double gpsAccuracy;
-
-    @CreationTimestamp
-    @Column(name = "recorded_at", nullable = false, updatable = false)
-    private Instant recordedAt;
 
     public UUID getId() {
         return id;
@@ -293,6 +295,14 @@ public class AttendanceRecord {
 
     public void setGpsAccuracy(Double gpsAccuracy) {
         this.gpsAccuracy = gpsAccuracy;
+    }
+
+    public Long getSequenceId() {
+        return sequenceId;
+    }
+
+    public void setSequenceId(Long sequenceId) {
+        this.sequenceId = sequenceId;
     }
 }
 

@@ -231,7 +231,9 @@ class AttendanceV1ControllerTest {
                 true,              // isScreenOn
                 "STATIONARY",      // deviceState
                 null,              // gpsAccuracy
-                30L                // nextHeartbeatInterval
+                30L,               // nextHeartbeatInterval
+                null,              // 🔐 requestSignature
+                1L                 // 📈 sequenceId
         );
     }
 

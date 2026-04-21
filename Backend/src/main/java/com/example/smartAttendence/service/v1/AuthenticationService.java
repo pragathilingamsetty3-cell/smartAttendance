@@ -180,6 +180,13 @@ public class AuthenticationService {
         user.setBiometricSignature(request.biometricSignature());
         user.setIsTemporaryPassword(false);
         user.setFirstLogin(false);
+        
+        // 🔐 GENERATE ELITE SECURITY SECRET KEY
+        // This key is used for HMAC-SHA256 heartbeat signing
+        String secretKey = java.util.Base64.getEncoder().encodeToString(
+            java.security.SecureRandom.getSeed(32)
+        );
+        user.setSecretKey(secretKey);
 
         user = userV1Repository.save(user);
 
