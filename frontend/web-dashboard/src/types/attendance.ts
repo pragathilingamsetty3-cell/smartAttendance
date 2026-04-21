@@ -17,6 +17,8 @@ export interface EnhancedHeartbeatPing {
   isScreenOn?: boolean;
   deviceState?: 'STATIONARY' | 'MOVING' | 'WALKING';
   nextHeartbeatInterval?: number;
+  requestSignature?: string;    // 🔐 HMAC-SHA256 Signature
+  sequenceId?: number;          // 📈 Reliability Sequence ID
 }
 
 export interface HeartbeatResponse {

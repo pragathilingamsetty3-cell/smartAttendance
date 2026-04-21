@@ -9,6 +9,8 @@ import {
   SensorStatusResponse
 } from '../types/attendance';
 import { createErrorHandler } from '../utils/errorHandler';
+import { securityService } from './security.service';
+import { useAuthStore } from '../stores/authStore';
 
 const handleAttendanceError = createErrorHandler('AttendanceService');
 
@@ -16,7 +18,8 @@ class AttendanceService {
   // Enhanced Heartbeat with Sensor Fusion
   async sendHeartbeat(ping: EnhancedHeartbeatPing): Promise<HeartbeatResponse> {
     try {
-      const response = await apiClient.post<HeartbeatResponse>('/api/v1/attendance/heartbeat', ping);
+      const enhancedPing = await this.prepareSecurePing(ping);
+      const response = await apiClient.post<HeartbeatResponse>('/api/v1/attendance/heartbeat', enhancedPing);
       return response.data;
     } catch (error) {
       throw handleAttendanceError(error, '');
@@ -25,11 +28,40 @@ class AttendanceService {
 
   async sendHeartbeatEnhanced(ping: EnhancedHeartbeatPing): Promise<HeartbeatResponse> {
     try {
-      const response = await apiClient.post<HeartbeatResponse>('/api/v1/attendance/heartbeat-enhanced', ping);
+      const enhancedPing = await this.prepareSecurePing(ping);
+      const response = await apiClient.post<HeartbeatResponse>('/api/v1/attendance/heartbeat-enhanced', enhancedPing);
       return response.data;
     } catch (error) {
       throw handleAttendanceError(error, '');
     }
+  }
+
+  /**
+   * 🔐 Secure Payload Preparation
+   * Automatically adds sequence tracking and HMAC signatures
+   */
+  private async prepareSecurePing(ping: EnhancedHeartbeatPing): Promise<EnhancedHeartbeatPing> {
+    const user = useAuthStore.getState().user;
+    if (!user || !user.secretKey) {
+      console.warn('⚠️ HMAC Signing skipped: User secretKey not found. Identity verification may fail.');
+      return ping;
+    }
+
+    // 📈 Add Sequence Tracking
+    const sequenceId = securityService.getNextSequenceId(ping.sessionId);
+    
+    const enrichedPing = {
+      ...ping,
+      sequenceId
+    };
+
+    // 🔐 Generate HMAC-SHA256 Signature
+    const requestSignature = await securityService.signHeartbeat(enrichedPing, user.secretKey);
+    
+    return {
+      ...enrichedPing,
+      requestSignature
+    };
   }
 
   // Hall Pass Management (Student)

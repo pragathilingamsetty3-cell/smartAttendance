@@ -45,6 +45,7 @@ export interface EnhancedUserDTO {
   phoneNumber?: string;
   studentEmail?: string;
   parentEmail?: string;
+  secretKey?: string; // 🔐 For HMAC Heartbeat Signing
 }
 
 export interface TokenResponse { accessToken: string; refreshToken: string; user: EnhancedUserDTO; }
