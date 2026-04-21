@@ -17,5 +17,5 @@ CREATE INDEX IF NOT EXISTS idx_perf_timetable_dates ON timetables(start_date, en
 CREATE INDEX IF NOT EXISTS idx_perf_sessions_active_times ON classroom_sessions(active, start_time, end_time);
 
 -- 4. User/Section Counts
-CREATE INDEX IF NOT EXISTS idx_perf_users_role_section ON users(role, section_id) WHERE is_active = true;
-CREATE INDEX IF NOT EXISTS idx_perf_users_role_dept ON users(role, department_id) WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_perf_users_role_section ON users(role, section_id) WHERE status = 'ACTIVE';
+CREATE INDEX IF NOT EXISTS idx_perf_users_role_dept ON users(role, department) WHERE status = 'ACTIVE';
