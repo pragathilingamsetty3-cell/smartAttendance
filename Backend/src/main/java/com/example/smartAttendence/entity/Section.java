@@ -17,7 +17,8 @@ import java.io.Serializable;
        indexes = {
            @Index(name = "idx_section_department", columnList = "department_id"),
            @Index(name = "idx_section_program", columnList = "program"),
-           @Index(name = "idx_section_year_semester", columnList = "academic_year, semester")
+           @Index(name = "idx_section_year_semester", columnList = "academic_year, semester"),
+           @Index(name = "idx_section_active", columnList = "is_active")
        })
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor

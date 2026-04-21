@@ -606,10 +606,15 @@ public class AdminV1Service {
             // RESTRICTED COUNTS for Regular Admin
             totalUsers = userV1Repository.countByDepartments(adminDeptIdentifiers);
             
-            // Count all student-type roles for admin's department
-            totalStudents = userV1Repository.countByDepartmentsAndRole(adminDeptIdentifiers, com.example.smartAttendence.enums.Role.STUDENT) +
-                           userV1Repository.countByDepartmentsAndRole(adminDeptIdentifiers, com.example.smartAttendence.enums.Role.CR) +
-                           userV1Repository.countByDepartmentsAndRole(adminDeptIdentifiers, com.example.smartAttendence.enums.Role.LR);
+            // Count all student-type roles for admin's department in ONE query
+            totalStudents = userV1Repository.countByDepartmentsAndRoles(
+                adminDeptIdentifiers, 
+                Arrays.asList(
+                    com.example.smartAttendence.enums.Role.STUDENT, 
+                    com.example.smartAttendence.enums.Role.CR, 
+                    com.example.smartAttendence.enums.Role.LR
+                )
+            );
             
             activeSessions = classroomSessionV1Repository.countByActiveTrueAndDepartmentId(adminDeptId);
             activeToday = activeSessions; // Align card with live count
@@ -627,10 +632,14 @@ public class AdminV1Service {
             // GLOBAL COUNTS for Super Admin or Unrestricted
             totalUsers = userV1Repository.count();
             
-            // Count all student-type roles (STUDENT, CR, LR)
-            totalStudents = userV1Repository.countByRole(com.example.smartAttendence.enums.Role.STUDENT) +
-                           userV1Repository.countByRole(com.example.smartAttendence.enums.Role.CR) +
-                           userV1Repository.countByRole(com.example.smartAttendence.enums.Role.LR);
+            // Count all student-type roles (STUDENT, CR, LR) in ONE query
+            totalStudents = userV1Repository.countByRoles(
+                Arrays.asList(
+                    com.example.smartAttendence.enums.Role.STUDENT, 
+                    com.example.smartAttendence.enums.Role.CR, 
+                    com.example.smartAttendence.enums.Role.LR
+                )
+            );
             
             activeSessions = classroomSessionV1Repository.countByActiveTrue();
             activeToday = activeSessions; // Align card with live count
@@ -1865,6 +1874,11 @@ public class AdminV1Service {
      */
 
     public com.example.smartAttendence.entity.Timetable createTimetable(com.example.smartAttendence.dto.v1.TimetableRequestDTO request) {
+        // ⏱️ Validation: Ensure start time is before end time
+        if (request.startTime().isAfter(request.endTime()) || request.startTime().equals(request.endTime())) {
+            throw new IllegalArgumentException("⏱️ Invalid Time Range: End time (" + request.endTime() + ") must be after start time (" + request.startTime() + ").");
+        }
+
         // Validation: If it's a holiday, Room and Faculty are optional
         Room room = null;
         if (request.roomId() != null) {
@@ -1905,6 +1919,11 @@ public class AdminV1Service {
     }
 
     public com.example.smartAttendence.entity.Timetable updateTimetable(UUID id, com.example.smartAttendence.dto.v1.TimetableRequestDTO request) {
+        // ⏱️ Validation: Ensure start time is before end time
+        if (request.startTime().isAfter(request.endTime()) || request.startTime().equals(request.endTime())) {
+            throw new IllegalArgumentException("⏱️ Invalid Time Range: End time (" + request.endTime() + ") must be after start time (" + request.startTime() + ").");
+        }
+
         com.example.smartAttendence.entity.Timetable timetable = timetableRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Timetable entry not found: " + id));
 
@@ -2048,6 +2067,11 @@ public class AdminV1Service {
      * Efficiently resolves department names using an in-memory cache
      */
     private Map<String, String> getDepartmentNameMap() {
+        // Check if cache is substantially populated
+        if (departmentCache.estimatedSize() > 0) {
+            return new HashMap<>(departmentCache.asMap());
+        }
+        
         List<Department> depts = departmentRepository.findAll();
         Map<String, String> map = new HashMap<>();
         for (Department d : depts) {

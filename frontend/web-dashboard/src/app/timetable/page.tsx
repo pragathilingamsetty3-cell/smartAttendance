@@ -9,8 +9,9 @@ import { TimetableGrid } from '@/components/timetable/TimetableGrid';
 import { ScheduleModal } from '@/components/timetable/ScheduleModal';
 import { Button } from '@/components/ui/Button';
 import { Loading } from '@/components/ui/Loading';
-import { Plus, Calendar, Filter, User, Building } from 'lucide-react';
+import { Plus, Calendar, Filter, User, Building, CheckCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function TimetablePage() {
   const { user, getUserRole } = useAuth();
@@ -19,6 +20,7 @@ export default function TimetablePage() {
   const [entries, setEntries] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<any>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
   
   // Selection state for filtering
   const [selectedSection, setSelectedSection] = useState('');
@@ -123,6 +125,10 @@ export default function TimetablePage() {
       setIsModalOpen(false);
       setEditingEntry(null);
       fetchTimetable();
+      
+      // ✨ Trigger Success Animation
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || error.message || 'Failed to save timetable entry.';
       alert(errorMessage);
@@ -233,6 +239,31 @@ export default function TimetablePage() {
         faculties={facultyList}
         sections={sections}
       />
+
+      {/* ✨ Success Animation Notification */}
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-10 right-10 z-[100] flex items-center bg-[#10B981] text-white px-6 py-4 rounded-2xl shadow-[0_20px_50px_rgba(16,185,129,0.3)] border border-white/20"
+          >
+            <div className="bg-white/20 p-2 rounded-full mr-4">
+              <CheckCircle className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <p className="font-bold text-lg leading-none">Schedule Secured!</p>
+              <p className="text-sm text-white/80 mt-1">Timetable has been updated successfully.</p>
+            </div>
+            <motion.div 
+              className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full"
+              animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

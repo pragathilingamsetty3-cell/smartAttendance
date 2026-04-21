@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -13,7 +14,13 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UuidGenerator;
 
 @Entity
-@Table(name = "attendance_records")
+@Table(name = "attendance_records",
+       indexes = {
+           @Index(name = "idx_attendance_student", columnList = "student_id"),
+           @Index(name = "idx_attendance_session", columnList = "session_id"),
+           @Index(name = "idx_attendance_status", columnList = "status"),
+           @Index(name = "idx_attendance_recorded", columnList = "recorded_at")
+       })
 public class AttendanceRecord {
 
     @Id

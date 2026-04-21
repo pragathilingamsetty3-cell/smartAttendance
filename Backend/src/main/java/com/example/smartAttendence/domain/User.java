@@ -9,6 +9,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -18,8 +19,13 @@ import org.hibernate.annotations.UuidGenerator;
 import java.io.Serializable;
 
 @Entity(name = "V1User")
-@Table(name = "users")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Table(name = "users",
+       indexes = {
+           @Index(name = "idx_user_department", columnList = "department"),
+           @Index(name = "idx_user_role", columnList = "role"),
+           @Index(name = "idx_user_status", columnList = "status"),
+           @Index(name = "idx_user_section", columnList = "section_id")
+       })
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;

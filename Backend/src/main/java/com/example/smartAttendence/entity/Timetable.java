@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.UUID;
@@ -15,10 +16,12 @@ import java.util.UUID;
        indexes = {
            @Index(name = "idx_timetable_faculty", columnList = "faculty_id"),
            @Index(name = "idx_timetable_room", columnList = "room_id"),
-           @Index(name = "idx_timetable_schedule", columnList = "day_of_week, start_time")
+           @Index(name = "idx_timetable_section", columnList = "section_id"),
+           @Index(name = "idx_timetable_schedule", columnList = "day_of_week, start_time, end_time")
        })
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Timetable {
 
     @Id

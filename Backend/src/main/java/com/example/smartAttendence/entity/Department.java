@@ -15,7 +15,8 @@ import java.io.Serializable;
 @Entity
 @Table(name = "departments",
        indexes = {
-           @Index(name = "idx_department_code", columnList = "code", unique = true)
+           @Index(name = "idx_department_code", columnList = "code", unique = true),
+           @Index(name = "idx_department_active", columnList = "is_active")
        })
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor

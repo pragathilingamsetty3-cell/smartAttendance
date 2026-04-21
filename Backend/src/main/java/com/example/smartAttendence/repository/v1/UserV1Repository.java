@@ -32,8 +32,11 @@ public interface UserV1Repository extends JpaRepository<User, UUID> {
     @Query("SELECT COUNT(u) FROM V1User u WHERE u.department IN :departments")
     long countByDepartments(@Param("departments") List<String> departments);
 
-    @Query("SELECT COUNT(u) FROM V1User u WHERE u.department IN :departments AND u.role = :role")
-    long countByDepartmentsAndRole(@Param("departments") List<String> departments, @Param("role") Role role);
+    @Query("SELECT COUNT(u) FROM V1User u WHERE u.department IN :departments AND u.role IN :roles")
+    long countByDepartmentsAndRoles(@Param("departments") List<String> departments, @Param("roles") List<Role> roles);
+
+    @Query("SELECT COUNT(u) FROM V1User u WHERE u.role IN :roles")
+    long countByRoles(@Param("roles") List<Role> roles);
 
     // AI and Autonomous System Support
     List<User> findBySectionAndRole(com.example.smartAttendence.entity.Section section, Role role);
