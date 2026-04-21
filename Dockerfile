@@ -53,5 +53,6 @@ RUN java -Dspring.context.exit=onRefresh -XX:ArchiveClassesAtExit=app.jsa -jar a
 
 USER appuser
 
-ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8080} -Djava.security.egd=file:/dev/./urandom -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:SharedArchiveFile=app.jsa -XX:MaxRAMPercentage=40.0 -XX:MaxMetaspaceSize=128m -Xmx200m -Xss512k -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-8080} -Djava.security.egd=file:/dev/./urandom -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:SharedArchiveFile=app.jsa -XX:MaxRAMPercentage=45.0 -XX:MaxMetaspaceSize=128m -Xmx220m -Xss256k -jar app.jar"]
+
 
