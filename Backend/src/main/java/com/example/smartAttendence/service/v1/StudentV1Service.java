@@ -39,6 +39,10 @@ public class StudentV1Service {
     private final FacultyHallPassService facultyHallPassService;
     private final com.example.smartAttendence.service.ai.AILearningOptimizer learningOptimizer;
 
+    /**
+     * Get student dashboard statistics - CACHED for high speed
+     */
+    @org.springframework.cache.annotation.Cacheable(value = "dashboardStats", key = "#studentId")
     public StudentDashboardStatsDTO getStudentDashboardStats(UUID studentId) {
         User student = userV1Repository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found: " + studentId));

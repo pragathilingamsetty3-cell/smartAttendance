@@ -5,6 +5,8 @@ import com.example.smartAttendence.dto.v1.TimetableResponseDTO;
 import com.example.smartAttendence.entity.Timetable;
 import com.example.smartAttendence.service.v1.AdminV1Service;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,13 +18,11 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/admin/timetables")
+@RequiredArgsConstructor
+@Slf4j
 public class TimetableController {
 
     private final AdminV1Service adminV1Service;
-
-    public TimetableController(AdminV1Service adminV1Service) {
-        this.adminV1Service = adminV1Service;
-    }
 
     /**
      * Create a new timetable slot

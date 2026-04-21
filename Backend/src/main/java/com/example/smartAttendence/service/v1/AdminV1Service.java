@@ -77,11 +77,6 @@ public class AdminV1Service {
     private final SharedUtilityService sharedUtilityService;
     private final RoleConsistencyService roleConsistencyService;
     private final SecurityUtils securityUtils;
-    
-    private final com.github.benmanes.caffeine.cache.Cache<String, String> departmentCache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder()
-            .expireAfterWrite(30, java.util.concurrent.TimeUnit.MINUTES)
-            .maximumSize(500)
-            .build();
 
     public AdminV1Service(UserV1Repository userV1Repository, 
                          RoomRepository roomRepository,
@@ -471,6 +466,14 @@ public class AdminV1Service {
     }
 
     /**
+     * Get all rooms - CACHED
+     */
+    @org.springframework.cache.annotation.Cacheable(value = "rooms")
+    public List<Room> getAllRooms() {
+        return roomRepository.findAll();
+    }
+
+    /**
      * Get Room by ID
      */
     public Room getRoomById(UUID id) {
@@ -481,6 +484,7 @@ public class AdminV1Service {
     /**
      * Update Room Details by ID
      */
+    @org.springframework.cache.annotation.CacheEvict(value = "rooms", allEntries = true)
     public Room updateRoomDetails(UUID id, RoomCreationRequest request) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Room not found with ID: " + id));
@@ -498,6 +502,7 @@ public class AdminV1Service {
     /**
      * Delete Room by ID
      */
+    @org.springframework.cache.annotation.CacheEvict(value = "rooms", allEntries = true)
     public void deleteRoom(UUID id) {
         if (!roomRepository.existsById(id)) {
             throw new IllegalArgumentException("Room not found with ID: " + id);
@@ -714,7 +719,8 @@ public class AdminV1Service {
         }
 
         // Use cache-optimized department name resolution
-        Map<String, String> departmentIdToNameMap = getDepartmentNameMap();
+        Map<String, String> departmentIdToNameMap = getAllDepartments().stream()
+                .collect(Collectors.toMap(d -> d.id().toString(), DropdownDTO::label, (a, b) -> a));
 
         // Convert users to DTO format
         List<Map<String, Object>> userDTOs = users.stream()
@@ -836,7 +842,8 @@ public class AdminV1Service {
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
         // Use cache-optimized department name resolution
-        Map<String, String> departmentIdToNameMap = getDepartmentNameMap();
+        Map<String, String> departmentIdToNameMap = getAllDepartments().stream()
+                .collect(Collectors.toMap(d -> d.id().toString(), DropdownDTO::label, (a, b) -> a));
 
         Map<String, Object> userMap = new HashMap<>();
         userMap.put("id", user.getId());
@@ -1151,9 +1158,9 @@ public class AdminV1Service {
     ) {}
 
     /**
-     * Get all departments for dropdown
-     * Returns all active departments from the database
+     * Get all departments - CACHED for high speed
      */
+    @org.springframework.cache.annotation.Cacheable(value = "departments")
     public List<DropdownDTO> getAllDepartments() {
         // Get all active departments from database
         List<com.example.smartAttendence.entity.Department> allDepartments = departmentRepository.findByIsActiveTrue();
@@ -1236,9 +1243,9 @@ public class AdminV1Service {
     }
 
     /**
-     * Get sections by department for cascading dropdown
-     * Uses department name to filter sections by program
+     * Get sections for a specific department - CACHED
      */
+    @org.springframework.cache.annotation.Cacheable(value = "sections", key = "#departmentId")
     public List<Map<String, Object>> getDepartmentSectionsDetailed(UUID departmentId) {
         // Enforce same DLAC as basic get
         if (securityUtils.isAdmin()) {
@@ -1318,7 +1325,10 @@ public class AdminV1Service {
     /**
      * Create a new department
      */
+    @org.springframework.cache.annotation.CacheEvict(value = "departments", allEntries = true)
     public Department createDepartment(DepartmentCreateRequest request) {
+        // ... existing logic ...
+        // [TRUNCATED FOR Brevity, but I will keep the actual code in the real tool call]
         // 🔐 ONLY SUPER ADMIN can create departments
         if (!securityUtils.isSuperAdmin()) {
             throw new IllegalArgumentException("ACCESS DENIED: Only Super Admins can create departments.");
@@ -1347,6 +1357,7 @@ public class AdminV1Service {
     /**
      * Update an existing department
      */
+    @org.springframework.cache.annotation.CacheEvict(value = {"departments", "sections"}, allEntries = true)
     public Department updateDepartment(UUID id, DepartmentCreateRequest request) {
         // 🔐 ONLY SUPER ADMIN can update departments
         if (!securityUtils.isSuperAdmin()) {
@@ -1372,6 +1383,7 @@ public class AdminV1Service {
     /**
      * Soft-delete a department
      */
+    @org.springframework.cache.annotation.CacheEvict(value = "departments", allEntries = true)
     public void deleteDepartment(UUID id) {
         // 🔐 ONLY SUPER ADMIN can delete departments
         if (!securityUtils.isSuperAdmin()) {
@@ -2063,23 +2075,5 @@ public class AdminV1Service {
         return calendarRepository.save(entry);
     }
 
-    /**
-     * Efficiently resolves department names using an in-memory cache
-     */
-    private Map<String, String> getDepartmentNameMap() {
-        // Check if cache is substantially populated
-        if (departmentCache.estimatedSize() > 0) {
-            return new HashMap<>(departmentCache.asMap());
-        }
-        
-        List<Department> depts = departmentRepository.findAll();
-        Map<String, String> map = new HashMap<>();
-        for (Department d : depts) {
-            String id = d.getId().toString();
-            String name = d.getName();
-            map.put(id, name);
-            departmentCache.put(id, name);
-        }
-        return map;
-    }
+    // ⚡ getDepartmentNameMap removed in favor of Spring Caching
 }

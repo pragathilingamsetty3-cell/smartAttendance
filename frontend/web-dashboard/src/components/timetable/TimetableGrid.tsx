@@ -31,6 +31,34 @@ const HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8 AM to 8 PM
 
 export function TimetableGrid({ entries, onEdit, onDelete, userRole }: TimetableGridProps) {
   const isFaculty = String(userRole || '').includes('FACULTY');
+  
+  // ⚡ PERFORMANCE OPTIMIZATION: Pre-calculate a grouped Map of entries by Day and Hour
+  // This avoids running .filter() 84 times (12 hours * 7 days) on every render.
+  const groupedEntries = React.useMemo(() => {
+    const map: Record<string, Record<number, TimetableEntry[]>> = {};
+    const safeEntries = Array.isArray(entries) ? entries : [];
+    
+    // Initialize empty maps for each day
+    DAYS.forEach(day => {
+      map[day.toUpperCase()] = {};
+    });
+
+    safeEntries.forEach(entry => {
+      if (!entry.startTime || !entry.dayOfWeek) return;
+      
+      const day = entry.dayOfWeek.toUpperCase();
+      const timePart = entry.startTime.split(' ')[0];
+      const entryHour = parseInt(timePart.split(':')[0], 10);
+      
+      if (map[day]) {
+        if (!map[day][entryHour]) map[day][entryHour] = [];
+        map[day][entryHour].push(entry);
+      }
+    });
+    
+    return map;
+  }, [entries]);
+
   return (
     <div className="overflow-x-auto rounded-xl border border-white/5 bg-[#0F0F16]/50 backdrop-blur-md">
       {entries.length === 0 ? (
@@ -66,14 +94,7 @@ export function TimetableGrid({ entries, onEdit, onDelete, userRole }: Timetable
                 {hour}:00
               </td>
               {DAYS.map(day => {
-                const safeEntries = Array.isArray(entries) ? entries : [];
-                const dayEntries = safeEntries.filter(e => {
-                  if (!e.startTime) return false;
-                  // Handle "HH:mm:ss", "HH:mm", or "H:mm AM"
-                  const timePart = e.startTime.split(' ')[0];
-                  const entryHour = parseInt(timePart.split(':')[0], 10);
-                  return (e.dayOfWeek || '').toUpperCase() === day.toUpperCase() && entryHour === hour;
-                });
+                const dayEntries = groupedEntries[day.toUpperCase()]?.[hour] || [];
 
                 return (
                   <td key={day} className="p-2 border-r border-white/5 min-h-[100px] align-top relative">
