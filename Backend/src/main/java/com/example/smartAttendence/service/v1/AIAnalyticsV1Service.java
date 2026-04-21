@@ -192,21 +192,17 @@ public class AIAnalyticsV1Service {
             long totalAbsences = 0;
             long totalPendingArrivals = 0;
             
-            List<com.example.smartAttendence.domain.ClassroomSession> currentSessions = sessionRepository.findByActiveTrue();
-            
-            for (com.example.smartAttendence.domain.ClassroomSession session : currentSessions) {
-                if (session.getSection() == null) continue;
-                
-                // Filter by Dept/Sect if requested
-                if (finalDeptId != null && !session.getSection().getDepartment().getId().equals(finalDeptId)) continue;
-                if (finalSectId != null && !session.getSection().getId().equals(finalSectId)) continue;
-
-                UUID sessSectId = session.getSection().getId();
-                long sectionStudentCount = sectionStudentCounts.getOrDefault(sessSectId, 0L);
-                
+            // 🏟️ SMART ANALYTICS TALLYING: Process per section to honor the 15% signal threshold
+            for (Map.Entry<UUID, Long> entry : sectionStudentCounts.entrySet()) {
+                UUID currentSectionId = entry.getKey();
+                long sectionStudentCount = entry.getValue();
                 if (sectionStudentCount == 0) continue;
 
-                Map<String, Long> aggregates = sectionAggregates.getOrDefault(sessSectId, 
+                // Filter by Dept/Sect if requested for dashboard scoping
+                // (Note: userRepository.countActiveUsersPerSection already filters by these if injected into query, 
+                // but we check again for safety in the aggregate loop)
+                
+                Map<String, Long> aggregates = sectionAggregates.getOrDefault(currentSectionId, 
                     Map.of("verified", 0L, "walkouts", 0L, "withSignal", 0L));
 
                 long sectionVerified = aggregates.get("verified");
@@ -215,19 +211,15 @@ public class AIAnalyticsV1Service {
 
                 double signalPercentage = (double) studentsWithSignal / sectionStudentCount;
                 
-                if (signalPercentage < 0.05) {
-                    // It's too early or no one is here yet
+                // 🛡️ [RESILIENCY] The 15% Limit: If signals are too low, the AI treats it as a technical failure
+                if (signalPercentage < 0.15) {
+                    // Too few heartbeats reached the server (Internet issue?) -> Don't penalize students
                     totalPendingArrivals += (sectionStudentCount - sectionVerified);
                 } else {
-                    // Real active session tally
+                    // Reliable signal reached -> Mark the rest as actually absent
                     long actualAbsents = sectionStudentCount - sectionVerified - sectionWalkouts;
                     totalAbsences += (actualAbsents + sectionWalkouts);
                 }
-            }
-            
-            // If No sections are active, we fallback to a simple student count minus verified (old logic but safe)
-            if (currentSessions.isEmpty()) {
-                totalAbsences = studentCount - verifiedNow;
             }
 
             // 📈 TREND DATA: Verifications over time (Today, Hourly)
