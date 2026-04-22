@@ -40,7 +40,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.time.Instant;
+import java.time.*;
 import java.util.List;
 import com.example.smartAttendence.dto.v1.UserUpdateRequest;
 import com.example.smartAttendence.dto.v1.UserActivityDTO;
@@ -606,7 +606,10 @@ public class AdminV1Service {
         long totalToday;
         long totalScheduledToday;
 
-        Instant todayMidnight = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.DAYS);
+        ZoneId ist = ZoneId.of("Asia/Kolkata");
+        ZonedDateTime now = ZonedDateTime.now(ist);
+        Instant todayMidnight = now.toLocalDate().atStartOfDay(ist).toInstant();
+        DayOfWeek todayDayOfWeek = now.getDayOfWeek();
 
         if (isAdmin && adminDeptId != null && !adminDeptIdentifiers.isEmpty()) {
             // RESTRICTED COUNTS for Regular Admin
@@ -627,7 +630,7 @@ public class AdminV1Service {
             
             // Fix: Count total planned slots for specific department from Timetable
             totalScheduledToday = timetableRepository.countByDayOfWeekAndSection_Department_Id(
-                    java.time.LocalDate.now().getDayOfWeek(), 
+                    todayDayOfWeek, 
                     adminDeptId
             );
             
@@ -651,7 +654,7 @@ public class AdminV1Service {
             activeToday = activeSessions; // Align card with live count
             
             // Fix: Count total planned slots from Timetable (60), not just started ones
-            totalScheduledToday = timetableRepository.countByDayOfWeek(java.time.LocalDate.now().getDayOfWeek());
+            totalScheduledToday = timetableRepository.countByDayOfWeek(todayDayOfWeek);
             
             anomalies = attendanceRecordV1Repository.countByStatus("WALK_OUT");
             verifiedCount = attendanceRecordV1Repository.countByStatus("PRESENT") + 

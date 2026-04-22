@@ -29,6 +29,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AIAttendanceMonitorService {
 
+    private static final ZoneId IST = ZoneId.of("Asia/Kolkata");
     private final TimetableRepository timetableRepository;
     private final ClassroomSessionV1Repository sessionRepository;
     private final AttendanceRecordV1Repository attendanceRepository;
@@ -48,7 +49,7 @@ public class AIAttendanceMonitorService {
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void monitorActiveSessions() {
-        LocalDateTime now = LocalDateTime.now();
+        ZonedDateTime now = ZonedDateTime.now(IST);
         LocalDate today = now.toLocalDate();
         DayOfWeek day = now.getDayOfWeek();
         LocalTime time = now.toLocalTime();
@@ -60,11 +61,12 @@ public class AIAttendanceMonitorService {
 
         log.debug("🤖 AI MONITOR: Starting autonomous scan at {} {}", day, time);
 
+        // 1. PROCESS ACTIVE SESSIONS
         List<Timetable> activeSlots = timetableRepository.findByDayOfWeekAndStartTimeBeforeAndEndTimeAfter(day, time, time);
 
         for (Timetable slot : activeSlots) {
             if (Boolean.TRUE.equals(slot.getIsHoliday())) {
-                if (slot.getHolidayDate() != null && !slot.getHolidayDate().equals(now.toLocalDate())) {
+                if (slot.getHolidayDate() != null && !slot.getHolidayDate().equals(today)) {
                     log.debug("🤖 AI MONITOR: Session '{}' - Holiday mismatch date. Proceeding.", slot.getSubject());
                 } else {
                     log.info("🤖 AI MONITOR [RESTING MODE]: Session '{}' is holiday. Skipping.", slot.getSubject());
@@ -73,11 +75,17 @@ public class AIAttendanceMonitorService {
             }
             processActiveSlot(slot, now);
         }
+
+        // 2. SEND REMINDERS (Consolidated from AutonomousSessionScheduler)
+        sendClassReminders(now);
+
+        // 3. AUTO-END SESSIONS (Consolidated from AutonomousSessionScheduler)
+        autoEndExpiredSessions(now.toInstant());
     }
 
-    private void processActiveSlot(Timetable slot, LocalDateTime now) {
-        Instant startOfDay = now.toLocalDate().atStartOfDay(ZoneId.systemDefault()).toInstant();
-        Instant endOfDay = now.toLocalDate().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+    private void processActiveSlot(Timetable slot, ZonedDateTime now) {
+        Instant startOfDay = now.toLocalDate().atStartOfDay(IST).toInstant();
+        Instant endOfDay = now.toLocalDate().plusDays(1).atStartOfDay(IST).toInstant();
         
         ClassroomSession session = sessionRepository.findByTimetableIdAndDateRange(slot.getId(), startOfDay, endOfDay)
                 .orElse(null);
@@ -89,7 +97,7 @@ public class AIAttendanceMonitorService {
             session = sessionRepository.save(session);
         }
 
-        if (timeIsAfterThreshold(slot.getStartTime(), now, 10)) {
+        if (timeIsAfterThreshold(slot.getStartTime(), now.toLocalDateTime(), 10)) {
             enforceAttendance(session, slot);
         }
 
@@ -97,7 +105,7 @@ public class AIAttendanceMonitorService {
         monitorStudentBehavior(session);
     }
 
-    private ClassroomSession createAutomaticSession(Timetable slot, LocalDateTime now) {
+    private ClassroomSession createAutomaticSession(Timetable slot, ZonedDateTime now) {
         ClassroomSession session = new ClassroomSession();
         session.setTimetable(slot);
         session.setRoom(slot.getRoom());
@@ -109,10 +117,9 @@ public class AIAttendanceMonitorService {
         session.setIsExamDay(Boolean.TRUE.equals(slot.getIsExamDay()));
         session.setIsHoliday(Boolean.TRUE.equals(slot.getIsHoliday()));
         
-        ZoneId zone = ZoneId.systemDefault();
-        Instant start = now.toLocalDate().atTime(slot.getStartTime()).atZone(zone).toInstant();
-        Instant end = now.toLocalDate().atTime(slot.getEndTime()).atZone(zone).toInstant();
-        if (end.isBefore(start)) end = now.toLocalDate().plusDays(1).atTime(slot.getEndTime()).atZone(zone).toInstant();
+        Instant start = now.toLocalDate().atTime(slot.getStartTime()).atZone(IST).toInstant();
+        Instant end = now.toLocalDate().atTime(slot.getEndTime()).atZone(IST).toInstant();
+        if (end.isBefore(start)) end = now.toLocalDate().plusDays(1).atTime(slot.getEndTime()).atZone(IST).toInstant();
         
         session.setStartTime(start);
         session.setEndTime(end);
@@ -125,8 +132,49 @@ public class AIAttendanceMonitorService {
 
     private void notifySectionOnSessionStart(ClassroomSession session) {
         List<User> students = userRepository.findBySectionId(session.getSection().getId());
+        log.info("📢 NOTIFY: Sending 'Mark Attendance' prompts to {} students in Section: {}", 
+                students.size(), session.getSection().getName());
         for (User student : students) {
             notificationService.sendSessionStartPrompt(student, session);
+            // Also send the Class Start notification for redundancy/clarity
+            notificationService.sendClassStartNotification(
+                student.getId(), session.getSubject(), session.getRoom().getName(),
+                LocalDateTime.ofInstant(session.getStartTime(), IST)
+            );
+        }
+    }
+
+    private void sendClassReminders(ZonedDateTime now) {
+        ZonedDateTime reminderTime = now.plusMinutes(5);
+        List<Timetable> reminders = timetableRepository.findByDayOfWeekAndStartTime(
+                reminderTime.getDayOfWeek(), reminderTime.toLocalTime().truncatedTo(java.time.temporal.ChronoUnit.MINUTES)
+        );
+
+        for (Timetable slot : reminders) {
+            if (Boolean.TRUE.equals(slot.getIsExamDay())) continue;
+            
+            List<User> students = userRepository.findBySectionId(slot.getSection().getId());
+            for (User student : students) {
+                try {
+                    notificationService.sendClassReminderNotification(
+                        student.getId(), slot.getSubject(), slot.getRoom().getName(), slot.getStartTime()
+                    );
+                } catch (Exception e) {
+                    log.error("Failed reminder to student {}: {}", student.getId(), e.getMessage());
+                }
+            }
+        }
+    }
+
+    private void autoEndExpiredSessions(Instant now) {
+        // End sessions that logically timed out by 1 minute buffer
+        Instant cutoffTime = now.minus(1, java.time.temporal.ChronoUnit.MINUTES);
+        List<ClassroomSession> expired = sessionRepository.findByEndTimeBeforeAndActiveTrue(cutoffTime);
+        
+        for (ClassroomSession session : expired) {
+            session.setActive(false);
+            sessionRepository.save(session);
+            log.info("🏁 AI CLEANUP: Auto-ended expired session: {} for {}", session.getId(), session.getSubject());
         }
     }
 
@@ -167,7 +215,7 @@ public class AIAttendanceMonitorService {
         // A. Digital Hall Pass Bypass (Firestore Persistent)
         try {
             String docId = session.getId() + "_" + student.getId();
-            if (firestore.collection("hall_passes").document(docId).get().get().exists()) return true;
+            if (firestore != null && firestore.collection("hall_passes").document(docId).get().get().exists()) return true;
         } catch (Exception e) { log.error("Hall pass check fail: {}", e.getMessage()); }
 
         // B. Transition Bypass
@@ -207,28 +255,30 @@ public class AIAttendanceMonitorService {
             String docId = session.getId() + "_" + student.getId();
 
             try {
-                var timerDoc = firestore.collection("walkout_timers").document(docId).get().get();
-                if (!timerDoc.exists()) continue;
+                if (firestore != null) {
+                    var timerDoc = firestore.collection("walkout_timers").document(docId).get().get();
+                    if (!timerDoc.exists()) continue;
 
-                Instant walkoutStart = Instant.parse(timerDoc.getString("startTime"));
-                if (Duration.between(walkoutStart, Instant.now()).toMinutes() >= 5) {
-                    // Check Hall Pass
-                    if (!firestore.collection("hall_passes").document(docId).get().get().exists()) {
-                        log.warn("🤖 AI MONITOR [WALKOUT_EXPIRED]: Student {} - No return/pass. Revoking.", student.getName());
-                        record.setStatus("ABSENT");
-                        record.setAiDecision(true);
-                        record.setNote("AI Automated Absence: Unauthorized Walkout > 5m");
-                        attendanceRepository.save(record);
+                    Instant walkoutStart = Instant.parse(timerDoc.getString("startTime"));
+                    if (Duration.between(walkoutStart, Instant.now()).toMinutes() >= 5) {
+                        // Check Hall Pass
+                        if (!firestore.collection("hall_passes").document(docId).get().get().exists()) {
+                            log.warn("🤖 AI MONITOR [WALKOUT_EXPIRED]: Student {} - No return/pass. Revoking.", student.getName());
+                            record.setStatus("ABSENT");
+                            record.setAiDecision(true);
+                            record.setNote("AI Automated Absence: Unauthorized Walkout > 5m");
+                            attendanceRepository.save(record);
 
-                        notificationService.sendAttendanceAlert(student, slot, "UNAUTHORIZED_WALKOUT");
-                        
-                        SecurityAlert alert = new SecurityAlert();
-                        alert.setUser(student);
-                        alert.setAlertType("WALKOUT_ABSENCE");
-                        alert.setSeverity("HIGH");
-                        alertRepository.save(alert);
+                            notificationService.sendAttendanceAlert(student, slot, "UNAUTHORIZED_WALKOUT");
+                            
+                            SecurityAlert alert = new SecurityAlert();
+                            alert.setUser(student);
+                            alert.setAlertType("WALKOUT_ABSENCE");
+                            alert.setSeverity("HIGH");
+                            alertRepository.save(alert);
 
-                        firestore.collection("walkout_timers").document(docId).delete();
+                            firestore.collection("walkout_timers").document(docId).delete();
+                        }
                     }
                 }
             } catch (Exception e) { log.error("Walkout enforcement fail: {}", e.getMessage()); }
