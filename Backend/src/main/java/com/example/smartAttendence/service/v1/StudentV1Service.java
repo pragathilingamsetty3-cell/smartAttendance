@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class StudentV1Service {
 
+    private static final java.time.ZoneId IST = java.time.ZoneId.of("Asia/Kolkata");
     private final UserV1Repository userV1Repository;
     private final AttendanceRecordV1Repository attendanceRecordRepository;
     private final TimetableRepository timetableRepository;
@@ -47,8 +48,10 @@ public class StudentV1Service {
         User student = userV1Repository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found: " + studentId));
 
+        java.time.ZonedDateTime now = java.time.ZonedDateTime.now(IST);
+        
         // 1. Calculate Attendance Metrics
-        Instant thirtyDaysAgo = Instant.now().minus(java.time.Duration.ofDays(30));
+        Instant thirtyDaysAgo = now.minusDays(30).toInstant();
         List<AttendanceRecord> recentRecords = attendanceRecordRepository.findByStudentIdAndRecordedAtAfter(studentId, thirtyDaysAgo);
         
         long verifiedCount = recentRecords.stream()
@@ -65,7 +68,7 @@ public class StudentV1Service {
         }
 
         // 2. Fetch Today's Classes
-        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        DayOfWeek today = now.getDayOfWeek();
         List<Timetable> todayTimetable = new ArrayList<>();
         if (student.getSection() != null) {
             todayTimetable = timetableRepository.findBySectionAndDayOfWeek(student.getSection().getId(), today);
@@ -76,11 +79,11 @@ public class StudentV1Service {
                 .collect(Collectors.toList());
 
         // 3. Find Active Session
-        LocalTime nowTime = LocalTime.now();
+        LocalTime nowTime = now.toLocalTime();
         Timetable activeSessionEntity = todayTimetable.stream()
                 .filter(t -> {
-                    LocalTime start = LocalTime.parse(t.getStartTime().toString());
-                    LocalTime end = LocalTime.parse(t.getEndTime().toString());
+                    LocalTime start = t.getStartTime();
+                    LocalTime end = t.getEndTime();
                     return !nowTime.isBefore(start) && !nowTime.isAfter(end);
                 })
                 .findFirst()
@@ -89,7 +92,7 @@ public class StudentV1Service {
         TimetableResponseDTO activeSession = mapToTimetableResponse(activeSessionEntity);
 
         // 4. Attendance Trend (Last 7 Days)
-        Map<String, Double> attendanceTrend = calculateAttendanceTrend(studentId);
+        Map<String, Double> attendanceTrend = calculateAttendanceTrend(studentId, now);
 
         // 5. Recent Hall Pass (Latest status)
         var recentHallPass = facultyHallPassService.getLatestHallPassForStudent(studentId);
@@ -125,16 +128,16 @@ public class StudentV1Service {
                 .build();
     }
 
-    private Map<String, Double> calculateAttendanceTrend(UUID studentId) {
+    private Map<String, Double> calculateAttendanceTrend(UUID studentId, java.time.ZonedDateTime now) {
         Map<String, Double> trend = new LinkedHashMap<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         
         for (int i = 6; i >= 0; i--) {
-            LocalDate date = LocalDate.now().minusDays(i);
+            LocalDate date = now.toLocalDate().minusDays(i);
             String dateStr = date.format(formatter);
             
-            Instant startOfDay = date.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant();
-            Instant endOfDay = date.plusDays(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant();
+            Instant startOfDay = date.atStartOfDay(IST).toInstant();
+            Instant endOfDay = date.plusDays(1).atStartOfDay(IST).toInstant();
             
             // This is a simplified calculation for the trend
             // In a real system, you'd have a more optimized query
