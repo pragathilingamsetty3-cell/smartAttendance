@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AIAnalyticsV1Service {
 
+    private static final java.time.ZoneId IST = java.time.ZoneId.of("Asia/Kolkata");
     private final AttendanceRecordV1Repository attendanceRepository;
     private final SecurityAlertV1Repository alertRepository;
     private final ClassroomSessionV1Repository sessionRepository;
@@ -33,11 +34,12 @@ public class AIAnalyticsV1Service {
     /**
      * Aggregate data for the AI Analytics Dashboard - CACHED for extreme speed (30s TTL)
      */
-    @org.springframework.cache.annotation.Cacheable(value = "dashboardStats", key = "{#departmentId, #sectionId}")
+    @org.springframework.cache.annotation.Cacheable(value = "aiAnalyticsStats", key = "{#departmentId, #sectionId}")
     public Map<String, Object> getAIDashboardStats(UUID departmentId, UUID sectionId) {
         try {
-            java.time.LocalDateTime startOfTodayLocal = java.time.LocalDateTime.now().with(java.time.LocalTime.MIN);
-            java.time.Instant startOfToday = startOfTodayLocal.atZone(java.time.ZoneId.systemDefault()).toInstant();
+            java.time.ZonedDateTime nowIST = java.time.ZonedDateTime.now(IST);
+            java.time.LocalDateTime startOfTodayLocal = nowIST.toLocalDate().atStartOfDay();
+            java.time.Instant startOfToday = nowIST.toLocalDate().atStartOfDay(IST).toInstant();
             
             // 🛡️ Ensure null safety for campus-wide overview
             UUID finalDeptId = (departmentId != null) ? departmentId : null;
@@ -67,15 +69,15 @@ public class AIAnalyticsV1Service {
                     .filter(session -> {
                         try {
                             // 🏁 FLEXIBLE TIME FILTER: Show sessions from TODAY with a 30min grace buffer
-                            java.time.Instant nowTime = java.time.Instant.now();
+                            java.time.Instant nowTime = nowIST.toInstant();
                             java.time.Instant bufferPast = nowTime.plus(java.time.Duration.ofMinutes(30));
                             java.time.Instant bufferFuture = nowTime.minus(java.time.Duration.ofMinutes(30));
                             
                             // Session must be happening today and within the expanded window
                             if (bufferFuture.isAfter(session.getEndTime()) || bufferPast.isBefore(session.getStartTime())) return false;
                             
-                            java.time.LocalDate today = java.time.LocalDate.now();
-                            java.time.LocalDate sessionDate = session.getStartTime().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+                            java.time.LocalDate today = nowIST.toLocalDate();
+                            java.time.LocalDate sessionDate = session.getStartTime().atZone(IST).toLocalDate();
                             if (!sessionDate.equals(today)) return false;
 
                             if (departmentId == null) return true;
@@ -144,6 +146,10 @@ public class AIAnalyticsV1Service {
                     studentCount = userRepository.countBySectionIdAndRole(sectionId, com.example.smartAttendence.enums.Role.STUDENT);
                 } else if (departmentId != null) {
                     studentCount = userRepository.countBySection_Department_IdAndRole(departmentId, com.example.smartAttendence.enums.Role.STUDENT);
+                    // Fallback to role-based filtering if section assignments are pending
+                    if (studentCount == 0) {
+                        studentCount = userRepository.countByRole(com.example.smartAttendence.enums.Role.STUDENT);
+                    }
                 } else {
                     studentCount = userRepository.countByRole(com.example.smartAttendence.enums.Role.STUDENT);
                 }
@@ -198,10 +204,6 @@ public class AIAnalyticsV1Service {
                 long sectionStudentCount = entry.getValue();
                 if (sectionStudentCount == 0) continue;
 
-                // Filter by Dept/Sect if requested for dashboard scoping
-                // (Note: userRepository.countActiveUsersPerSection already filters by these if injected into query, 
-                // but we check again for safety in the aggregate loop)
-                
                 Map<String, Long> aggregates = sectionAggregates.getOrDefault(currentSectionId, 
                     Map.of("verified", 0L, "walkouts", 0L, "withSignal", 0L));
 
@@ -261,7 +263,7 @@ public class AIAnalyticsV1Service {
             }
 
             response.put("totalStudents", studentCount);
-            response.put("activeStudents", attendanceRepository.countActiveFiltered(Instant.now().minusSeconds(3600), finalDeptId, finalSectId));
+            response.put("activeStudents", attendanceRepository.countActiveFiltered(nowIST.toInstant().minusSeconds(3600), finalDeptId, finalSectId));
             response.put("anomaliesDetected", distinctAnomalies);
             response.put("activeAlerts", filteredAlerts); 
             response.put("totalPredictions", totalAI);
@@ -270,7 +272,7 @@ public class AIAnalyticsV1Service {
             response.put("pendingArrivals", totalPendingArrivals);
             response.put("liveVerifications", verifiedNow);
             response.put("averageConfidence", avgConfidence != null ? (double) Math.round(avgConfidence * 1000) / 1000 : 0.965);
-            response.put("lastUpdated", Instant.now());
+            response.put("lastUpdated", nowIST.toInstant());
             response.put("activeSessions", activeSessions);
             response.put("velocityTrend", velocityTrend);
             response.put("anomalyBreakdown", anomalyBreakdown);
@@ -288,7 +290,7 @@ public class AIAnalyticsV1Service {
      */
     public List<Map<String, Object>> getActiveAlerts(UUID departmentId, UUID sectionId) {
         try {
-            java.time.LocalDateTime startOfToday = java.time.LocalDateTime.now().with(java.time.LocalTime.MIN);
+            java.time.LocalDateTime startOfToday = java.time.ZonedDateTime.now(IST).toLocalDate().atStartOfDay();
             return alertRepository.findActiveAlertsFiltered(departmentId, sectionId, startOfToday).stream()
                     .filter(a -> {
                         String type = a.getAlertType();
@@ -334,9 +336,9 @@ public class AIAnalyticsV1Service {
     /**
      * Get AI Model performance metrics - CACHED for 2 minutes to prevent CPU spikes
      */
-    @org.springframework.cache.annotation.Cacheable(value = "dashboardStats", key = "'modelMetrics'")
+    @org.springframework.cache.annotation.Cacheable(value = "aiAnalyticsStats", key = "'modelMetrics'")
     public Map<String, Object> getModelMetrics() {
-        java.time.Instant startOfToday = java.time.LocalDate.now().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant();
+        java.time.Instant startOfToday = java.time.LocalDate.now(IST).atStartOfDay(IST).toInstant();
         long total = attendanceRepository.countByAiDecisionTrueFiltered(startOfToday, null, null);
         Double avgConf = attendanceRepository.getAverageAiConfidenceFiltered(startOfToday, null, null);
         if (avgConf == null) avgConf = 0.965;
@@ -350,7 +352,7 @@ public class AIAnalyticsV1Service {
             "f1Score", avgConf * 0.978,
             "totalPredictions", total,
             "correctPredictions", (long)(total * avgConf),
-            "lastTrained", Instant.now().minusSeconds(3600)
+            "lastTrained", java.time.ZonedDateTime.now(IST).toInstant().minusSeconds(3600)
         );
     }
 
@@ -462,14 +464,14 @@ public class AIAnalyticsV1Service {
      * 🧠 Strategic Insight Engine - Generates human-readable AI Executive Summaries
      */
     public Map<String, Object> getWeeklyInsights() {
-        java.time.Instant sevenDaysAgo = java.time.Instant.now().minus(java.time.Duration.ofDays(7));
+        java.time.Instant sevenDaysAgo = java.time.ZonedDateTime.now(IST).minusDays(7).toInstant();
         
         long totalRecords = attendanceRepository.countByRecordedAtAfter(sevenDaysAgo);
         
         if (totalRecords == 0) {
             return Map.of(
                 "insights", "• System is ONLINE and healthy.\n• AI Engine is in standby mode awaiting first session data.\n• Ready to monitor live classroom boundaries and device security signatures.",
-                "generatedAt", java.time.Instant.now().toString(),
+                "generatedAt", java.time.ZonedDateTime.now(IST).toInstant().toString(),
                 "status", "STANDBY"
             );
         }
@@ -497,7 +499,7 @@ public class AIAnalyticsV1Service {
 
         return Map.of(
             "insights", sb.toString(),
-            "generatedAt", java.time.Instant.now().toString(),
+            "generatedAt", java.time.ZonedDateTime.now(IST).toInstant().toString(),
             "status", "ACTIVE"
         );
     }
