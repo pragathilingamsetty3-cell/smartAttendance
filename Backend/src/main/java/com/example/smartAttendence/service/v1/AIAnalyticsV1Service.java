@@ -29,6 +29,7 @@ public class AIAnalyticsV1Service {
     private final SecurityAlertV1Repository alertRepository;
     private final ClassroomSessionV1Repository sessionRepository;
     private final UserV1Repository userRepository;
+    private final com.example.smartAttendence.repository.DepartmentRepository departmentRepository;
     private final AILearningOptimizer learningOptimizer;
 
     /**
@@ -41,11 +42,23 @@ public class AIAnalyticsV1Service {
             java.time.LocalDateTime startOfTodayLocal = nowIST.toLocalDate().atStartOfDay();
             java.time.Instant startOfToday = nowIST.toLocalDate().atStartOfDay(IST).toInstant();
             
+            // 🛡️ Resolve Department Identifiers (Robust Matching)
+            List<String> deptIdentifiers = new ArrayList<>();
+            if (departmentId != null) {
+                com.example.smartAttendence.entity.Department dept = departmentRepository.findById(departmentId).orElse(null);
+                if (dept != null) {
+                    deptIdentifiers.add(dept.getId().toString());
+                    deptIdentifiers.add(dept.getName());
+                    deptIdentifiers.add(dept.getCode());
+                } else {
+                    deptIdentifiers.add(departmentId.toString());
+                }
+            }
+
             // 🛡️ Ensure null safety for campus-wide overview
             UUID finalDeptId = (departmentId != null) ? departmentId : null;
             UUID finalSectId = (sectionId != null) ? sectionId : null;
 
-            
             // 🛡️ SECURITY FILTER: Only count actual FRAUD (Device/Biometric/SPOOFING)
             // Exclude all attendance-related behavior logs (Walkouts, No-Shows, Movement)
             List<SecurityAlert> activeAlerts = alertRepository.findActiveAlertsFiltered(finalDeptId, finalSectId, startOfTodayLocal);
@@ -141,21 +154,28 @@ public class AIAnalyticsV1Service {
                     .collect(Collectors.toList());
 
             long studentCount = 0;
+            List<com.example.smartAttendence.enums.Role> studentRoles = List.of(
+                com.example.smartAttendence.enums.Role.STUDENT, 
+                com.example.smartAttendence.enums.Role.CR, 
+                com.example.smartAttendence.enums.Role.LR
+            );
+            
             try {
                 if (sectionId != null) {
-                    studentCount = userRepository.countBySectionIdAndRole(sectionId, com.example.smartAttendence.enums.Role.STUDENT);
-                } else if (departmentId != null) {
-                    studentCount = userRepository.countBySection_Department_IdAndRole(departmentId, com.example.smartAttendence.enums.Role.STUDENT);
-                    // Fallback to role-based filtering if section assignments are pending
-                    if (studentCount == 0) {
-                        studentCount = userRepository.countByRole(com.example.smartAttendence.enums.Role.STUDENT);
-                    }
+                    studentCount = userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), com.example.smartAttendence.enums.Role.STUDENT, com.example.smartAttendence.domain.UserStatus.ACTIVE);
+                    // Also include CR/LR
+                    studentCount += userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), com.example.smartAttendence.enums.Role.CR, com.example.smartAttendence.domain.UserStatus.ACTIVE);
+                    studentCount += userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), com.example.smartAttendence.enums.Role.LR, com.example.smartAttendence.domain.UserStatus.ACTIVE);
+                } else if (!deptIdentifiers.isEmpty()) {
+                    // ROBUST MATCHING: Use identifiers (Name/Code) to find students not yet assigned to sections
+                    studentCount = userRepository.countByDepartmentsAndRoles(deptIdentifiers, studentRoles);
                 } else {
-                    studentCount = userRepository.countByRole(com.example.smartAttendence.enums.Role.STUDENT);
+                    studentCount = userRepository.countByRoles(studentRoles);
                 }
             } catch (Exception e) {
                 System.err.println("Dashboard: Student count error: " + e.getMessage());
             }
+
 
             // 🎬 LIVE counts: Strictly those whose LATEST status is PRESENT or LATE (Perfect Sync)
             List<String> verifiedStatuses = List.of("PRESENT", "LATE");
