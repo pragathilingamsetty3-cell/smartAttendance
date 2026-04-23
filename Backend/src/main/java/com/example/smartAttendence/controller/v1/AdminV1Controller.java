@@ -959,4 +959,21 @@ public class AdminV1Controller {
                     .body(Map.of("error", "Failed to update calendar: " + e.getMessage()));
         }
     }
+    @PostMapping("/test-email")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<?> testEmail(@RequestBody Map<String, String> request) {
+        String to = request.get("email");
+        if (to == null || to.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email is required"));
+        }
+        
+        try {
+            adminV1Service.sendTestEmail(to);
+            return ResponseEntity.ok(Map.of("message", "Test email sent to " + to));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to send test email: " + e.getMessage()));
+        }
+    }
 }
+

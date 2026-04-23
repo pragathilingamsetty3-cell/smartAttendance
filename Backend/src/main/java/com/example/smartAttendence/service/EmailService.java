@@ -25,9 +25,18 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
+    @Value("${spring.mail.username}")
+    private String fromEmail;
+
+    @PostConstruct
+    public void init() {
+        logger.info("📧 Email Service Initialized with sender: {}", fromEmail);
+    }
+
     public void sendPasswordResetOtp(String toEmail, String otp) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
             message.setTo(toEmail);
             message.setSubject("Password Reset OTP - Smart Attendance System");
             message.setText("Hello,\n\n" +
@@ -63,6 +72,7 @@ public class EmailService {
     public void sendSimpleEmail(String to, String subject, String body) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
             message.setTo(to);
             message.setSubject(subject);
             message.setText(body);
@@ -101,6 +111,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             
+            helper.setFrom(fromEmail);
             helper.setTo(toEmail);
             helper.setSubject("Weekly Attendance Report - " + facultyName);
             helper.setText("Dear " + facultyName + ",\n\n" +
@@ -136,6 +147,7 @@ public class EmailService {
     public void sendSessionStartNotification(String toEmail, String facultyName, String subject, java.time.Instant startTime, java.time.Instant endTime, String roomName) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
             message.setTo(toEmail);
             message.setSubject("🤖 Session Started Automatically: " + subject);
             message.setText("Dear " + facultyName + ",\n\n" +
@@ -173,7 +185,9 @@ public class EmailService {
                                          com.example.smartAttendence.entity.EmergencySessionChange change) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
             message.setTo(session.getFaculty().getEmail());
+
             message.setSubject("🚨 Emergency Session Change: " + session.getSubject());
             message.setText("Dear " + session.getFaculty().getName() + ",\n\n" +
                            "An emergency change has been made to your session.\n\n" +
@@ -201,7 +215,9 @@ public class EmailService {
                                           com.example.smartAttendence.entity.EmergencySessionChange change) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
             message.setTo(session.getFaculty().getEmail());
+
             message.setSubject("👨‍🏫 Substitute Faculty Assignment: " + session.getSubject());
             message.setText("Dear " + session.getFaculty().getName() + ",\n\n" +
                            "You have been assigned as substitute faculty for the following session.\n\n" +
@@ -238,6 +254,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             
+            helper.setFrom(fromEmail);
             helper.setTo(toEmail);
             helper.setSubject("Weekly Attendance Report - " + weekStart + " to " + weekEnd);
             helper.setText("Dear " + facultyName + ",\n\n" +

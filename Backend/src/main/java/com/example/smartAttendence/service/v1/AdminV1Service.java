@@ -2071,4 +2071,24 @@ public class AdminV1Service {
     }
 
     // ⚡ getDepartmentNameMap removed in favor of Spring Caching
+    /**
+     * Diagnostic: Send a test email to verify SMTP configuration
+     */
+    public void sendTestEmail(String toEmail) {
+        String subject = "🛠️ Smart Attendance - SMTP Diagnostic Test";
+        String body = String.format(
+            "Hello,%n%n" +
+            "This is a diagnostic email from your Smart Attendance System.%n%n" +
+            "✅ If you are reading this, your SMTP configuration (Host, Port, Credentials) is working correctly.%n%n" +
+            "Details:%n" +
+            "• Timestamp: %s%n" +
+            "• Sender: %s%n%n" +
+            "Best regards,%n" +
+            "System Diagnostic Tool",
+            java.time.Instant.now().toString(),
+            "Smart Attendance Engine"
+        );
+        
+        emailService.sendSimpleEmail(toEmail, subject, body);
+    }
 }
