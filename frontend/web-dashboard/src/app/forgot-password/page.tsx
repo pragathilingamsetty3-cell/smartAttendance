@@ -8,10 +8,15 @@ import { motion } from 'framer-motion';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const [email, setEmail] = useState('');
   const [step, setStep] = useState(1); // 1: Request, 2: Reset
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,7 +114,6 @@ export default function ForgotPasswordPage() {
           padding: '48px 40px',
         }}>
           
-          {/* Logo */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '40px' }}>
             <motion.div
               initial={{ scale: 0, rotate: 10 }}
@@ -286,7 +290,6 @@ export default function ForgotPasswordPage() {
             </button>
           </form>
 
-          {/* Footer */}
           <div style={{
             marginTop: '32px', paddingTop: '24px',
             borderTop: '1px solid rgba(255,255,255,0.05)',
