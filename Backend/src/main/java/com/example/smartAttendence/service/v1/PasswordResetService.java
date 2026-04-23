@@ -46,7 +46,7 @@ public class PasswordResetService {
 
         // Find user by email or phone
         if (emailOrPhone.contains("@")) {
-            userOpt = userV1Repository.findByEmail(emailOrPhone);
+            userOpt = userV1Repository.findByEmailIgnoreCase(emailOrPhone);
         } else {
             // Search by mobile number for all user types (students, faculty, admin)
             userOpt = userV1Repository.findAll().stream()
@@ -56,6 +56,7 @@ public class PasswordResetService {
 
         if (userOpt.isEmpty()) {
             // Don't reveal if user exists or not for security
+            logger.warn("Password reset requested for non-existent email/phone: {}", emailOrPhone);
             return;
         }
 
@@ -92,7 +93,7 @@ public class PasswordResetService {
         Optional<User> userOpt;
 
         if (emailOrPhone.contains("@")) {
-            userOpt = userV1Repository.findByEmail(emailOrPhone);
+            userOpt = userV1Repository.findByEmailIgnoreCase(emailOrPhone);
         } else {
             userOpt = userV1Repository.findAll().stream()
                     .filter(u -> emailOrPhone.equals(u.getStudentMobile()))
@@ -136,7 +137,7 @@ public class PasswordResetService {
         Optional<User> userOpt;
 
         // Try finding by email first
-        userOpt = userV1Repository.findByEmail(emailOrMobile);
+        userOpt = userV1Repository.findByEmailIgnoreCase(emailOrMobile);
         
         // If not found, try by mobile
         if (userOpt.isEmpty()) {
@@ -173,7 +174,7 @@ public class PasswordResetService {
      * Reset password with OTP
      */
     public void resetPassword(ResetPasswordRequest request) {
-        Optional<User> userOpt = userV1Repository.findByEmail(request.email());
+        Optional<User> userOpt = userV1Repository.findByEmailIgnoreCase(request.email());
         if (userOpt.isEmpty()) {
             throw new IllegalArgumentException("Invalid email or OTP");
         }
