@@ -23,8 +23,11 @@ public class AILearningOptimizer {
     private final ClassroomSessionV1Repository classroomSessionRepository;
     
     // AI Learning Data Stores - 🏎️ ELITE PERFORMANCE: Thread-safe and pre-sized for high concurrency
-    private final Map<UUID, StudentBehaviorProfile> studentProfiles = new java.util.concurrent.ConcurrentHashMap<>(2048);
-    private final Map<UUID, List<SessionPattern>> sessionPatterns = new java.util.concurrent.ConcurrentHashMap<>(512);
+    // AI Learning Data Stores - 🏎️ ELITE PERFORMANCE: Memory-capped Caffeine caches
+    private final com.github.benmanes.caffeine.cache.Cache<UUID, StudentBehaviorProfile> studentProfiles = 
+        com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(500).build();
+    private final com.github.benmanes.caffeine.cache.Cache<UUID, List<SessionPattern>> sessionPatterns = 
+        com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(100).build();
 
     public AILearningOptimizer(UserV1Repository userRepository, SensorReadingRepository sensorReadingRepository,
                                TimetableRepository timetableRepository, ClassroomSessionV1Repository classroomSessionRepository) {
@@ -70,7 +73,7 @@ public class AILearningOptimizer {
      * Get the AI verification confidence (accuracy score) for a specific student
      */
     public double getStudentAccuracy(UUID studentId) {
-        StudentBehaviorProfile profile = studentProfiles.get(studentId);
+        StudentBehaviorProfile profile = studentProfiles.getIfPresent(studentId);
         return profile != null ? profile.accuracyScore() : 0.5; // Default 50% for new users
     }
 
@@ -121,10 +124,11 @@ public class AILearningOptimizer {
      * Get or create student behavior profile
      */
     private StudentBehaviorProfile getOrCreateStudentProfile(UUID studentId) {
-        return studentProfiles.computeIfAbsent(studentId, id -> {
+        return studentProfiles.get(studentId, id -> {
             // Load historical data for new student
             var historicalData = sensorReadingRepository.findAll().stream()
                     .filter(reading -> id.equals(reading.getStudentId()))
+                    .limit(50) // Hard limit historical lookup to save RAM
                     .collect(Collectors.toList());
             
             return new StudentBehaviorProfile(
@@ -371,7 +375,7 @@ public class AILearningOptimizer {
     }
 
     private List<SessionPattern> getSessionPatterns(UUID studentId, UUID sessionId) {
-        return sessionPatterns.computeIfAbsent(sessionId, id -> new ArrayList<>());
+        return sessionPatterns.get(sessionId, id -> new ArrayList<>());
     }
 
     // Data structures for AI learning

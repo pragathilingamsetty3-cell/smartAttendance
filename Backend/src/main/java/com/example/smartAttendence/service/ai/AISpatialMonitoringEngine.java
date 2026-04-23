@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -23,6 +24,10 @@ public class AISpatialMonitoringEngine {
     private static final Logger logger = LoggerFactory.getLogger(AISpatialMonitoringEngine.class);
     private final UserV1Repository userRepository;
     private final Firestore firestore;
+
+    // 🚀 HIGH RAM FEATURE: In-memory buffer for real-time movement analysis
+    // Stores the last 5 coordinates for active students to detect spoofing/drift
+    private final Map<UUID, StudentMovementBuffer> movementHistory = new java.util.concurrent.ConcurrentHashMap<>();
 
     public AISpatialMonitoringEngine(UserV1Repository userRepository, @Nullable Firestore firestore) {
         this.userRepository = userRepository;
@@ -132,15 +137,64 @@ public class AISpatialMonitoringEngine {
     }
 
     private boolean detectGPSDrift(UUID studentId, UUID sessionId) {
-        return false;
+        StudentMovementBuffer buffer = movementHistory.get(studentId);
+        if (buffer == null || buffer.coords.size() < 2) return false;
+
+        // Calculate variance in coordinates (standard deviation of jumps)
+        double totalVariance = 0;
+        for (int i = 1; i < buffer.coords.size(); i++) {
+            double dist = calculateDistance(buffer.coords.get(i-1), buffer.coords.get(i));
+            totalVariance += dist;
+        }
+        
+        double avgJump = totalVariance / (buffer.coords.size() - 1);
+        // If average jump is > 15 meters while supposedly "sitting in class", it's a drift
+        return avgJump > 15.0;
     }
 
     private boolean detectSpoofing(UUID studentId) {
-        return false;
+        StudentMovementBuffer buffer = movementHistory.get(studentId);
+        if (buffer == null || buffer.coords.size() < 2) return false;
+
+        Coordinate last = buffer.coords.get(buffer.coords.size() - 1);
+        Coordinate prev = buffer.coords.get(buffer.coords.size() - 2);
+
+        double distance = calculateDistance(last, prev);
+        long timeDiffSeconds = Duration.between(prev.timestamp, last.timestamp).getSeconds();
+
+        if (timeDiffSeconds <= 0) return false;
+
+        double speedKmh = (distance / timeDiffSeconds) * 3.6;
+        
+        // 🛡️ ELITE SPOOF PROTECTION: Impossible speed check
+        // If student moves > 100km/h between pings while marking attendance, it's a spoof
+        return speedKmh > 100.0;
     }
 
+    private double calculateDistance(Coordinate c1, Coordinate c2) {
+        // Simple Euclidean distance for local classroom scale (meters approx)
+        double latDiff = (c1.lat - c2.lat) * 111320;
+        double lonDiff = (c1.lon - c2.lon) * 111320 * Math.cos(Math.toRadians(c1.lat));
+        return Math.sqrt(latDiff * latDiff + lonDiff * lonDiff);
+    }
+
+    public void updateStudentLocation(UUID studentId, double lat, double lon) {
+        movementHistory.computeIfAbsent(studentId, k -> new StudentMovementBuffer())
+            .addCoordinate(new Coordinate(lat, lon, Instant.now()));
+    }
+
+    private static class StudentMovementBuffer {
+        final List<Coordinate> coords = new java.util.ArrayList<>();
+        void addCoordinate(Coordinate c) {
+            coords.add(c);
+            if (coords.size() > 10) coords.remove(0); // Keep last 10 points
+        }
+    }
+
+    private record Coordinate(double lat, double lon, Instant timestamp) {}
+
     private String learnBehaviorPattern(UUID studentId, UUID sessionId) {
-        return "NORMAL_CLASSROOM_BEHAVIOR";
+        return "DYNAMIC_TRACKING_ACTIVE";
     }
 
     public boolean isRoomTransitionInProgress(UUID sectionId) {

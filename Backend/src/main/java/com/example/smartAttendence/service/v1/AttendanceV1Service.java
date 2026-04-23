@@ -96,9 +96,9 @@ public class AttendanceV1Service {
 
     /**
      * 🤖 AI AUTONOMOUS WATCHER
-     * Runs every minute to enforce security grace periods for students who have stopped heartbeating.
+     * Runs every 30 seconds (High RAM Unlock) to enforce security grace periods.
      */
-    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 60000)
+    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 30000)
     @Transactional
     public void monitorGracePeriods() {
         try {

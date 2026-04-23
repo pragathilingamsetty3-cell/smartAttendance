@@ -18,6 +18,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Smart Attendance System",
   description: "AI-powered attendance management system",
+  manifest: "/manifest.json",
+  themeColor: "#1e293b",
 };
 
 import { AppWrapper } from "@/components/layout/AppWrapper";

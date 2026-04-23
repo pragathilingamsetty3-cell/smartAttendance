@@ -15,7 +15,7 @@ The backend is an enterprise-grade, high-concurrency (targeting 50k+ users), zer
 *   **Event Streaming:** Apache Kafka (for asynchronous processing and event sourcing)
 *   **AI Integration:** Spring AI / Google Gemini (for spatial anomaly detection and learning)
 *   **Build System:** Maven
-*   **Containerization:** Docker & Docker Compose
+*   **Deployment:** Manual USB Deployment (Optimized for Local Servers)
 *   **Monitoring:** Micrometer, Prometheus, Spring Boot Actuator
 
 ---

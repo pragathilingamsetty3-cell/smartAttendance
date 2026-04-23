@@ -4,8 +4,8 @@
 
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'https://localhost:8443',
-  WS_URL: process.env.NEXT_PUBLIC_WS_URL || 'wss://localhost:8443/ws',
+  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:10000',
+  WS_URL: process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:10000/ws',
   TIMEOUT: 30000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,

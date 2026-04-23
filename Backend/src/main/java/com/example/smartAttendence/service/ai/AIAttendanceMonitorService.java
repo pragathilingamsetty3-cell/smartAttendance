@@ -44,9 +44,9 @@ public class AIAttendanceMonitorService {
 
     /**
      * 🤖 AI AUTONOMOUS MONITORING TASK
-     * Runs every minute to sync timetable with live presence
+     * Runs every 30 seconds (High RAM Unlock) to sync timetable with live presence
      */
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 30000)
     @Transactional
     public void monitorActiveSessions() {
         ZonedDateTime now = ZonedDateTime.now(IST);

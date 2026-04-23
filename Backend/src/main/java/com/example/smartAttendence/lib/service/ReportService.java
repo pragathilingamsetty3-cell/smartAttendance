@@ -10,6 +10,8 @@ import com.example.smartAttendence.repository.v1.UserV1Repository;
 import com.example.smartAttendence.repository.SectionRepository;
 import com.example.smartAttendence.service.EmailService;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,7 +97,7 @@ public class ReportService {
     private byte[] generateExcelReport(List<ClassroomSession> sessions, LocalDate weekStart, LocalDate weekEnd) 
             throws IOException {
         
-        try (Workbook workbook = new XSSFWorkbook();
+        try (SXSSFWorkbook workbook = new SXSSFWorkbook(100); // Stream rows to disk after 100 in-memory
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
             
             // Create summary sheet
@@ -110,12 +112,18 @@ public class ReportService {
                 createDetailSheet(detailSheet, session);
             }
             
-            // Auto-size columns for all sheets
+            // ⚠️ SXSSF Limitation: autoSizeColumn is expensive and requires all rows in track.
+            // For 512MB RAM, we only auto-size the most important columns to avoid OOM.
             for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-                autoSizeColumns(workbook.getSheetAt(i));
+                Sheet sheet = workbook.getSheetAt(i);
+                if (sheet instanceof SXSSFSheet sxSheet) {
+                    sxSheet.trackAllColumnsForAutoSizing();
+                    autoSizeColumns(sxSheet);
+                }
             }
             
             workbook.write(outputStream);
+            workbook.dispose(); // CRITICAL: Deletes temporary XML files from disk
             return outputStream.toByteArray();
         }
     }
@@ -387,10 +395,11 @@ public class ReportService {
         
         List<User> students = userRepository.findStudentsBySectionId(sectionId);
         
-        try (Workbook workbook = new XSSFWorkbook();
+        try (SXSSFWorkbook workbook = new SXSSFWorkbook(100);
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             
             Sheet sheet = workbook.createSheet("Student List");
+            if (sheet instanceof SXSSFSheet sxSheet) sxSheet.trackAllColumnsForAutoSizing();
             
             // Header Row
             Row headerRow = sheet.createRow(0);
@@ -416,6 +425,7 @@ public class ReportService {
             
             autoSizeColumns(sheet);
             workbook.write(bos);
+            workbook.dispose();
             return bos.toByteArray();
         }
     }
@@ -599,10 +609,11 @@ public class ReportService {
     }
 
     private byte[] generateMasterSummaryExcel(List<Map<String, Object>> summaryData, LocalDate start, LocalDate end) throws IOException {
-        try (Workbook workbook = new XSSFWorkbook();
+        try (SXSSFWorkbook workbook = new SXSSFWorkbook(100);
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             
             Sheet sheet = workbook.createSheet("Institution Summary");
+            if (sheet instanceof SXSSFSheet sxSheet) sxSheet.trackAllColumnsForAutoSizing();
             
             // Header
             Row headerRow = sheet.createRow(0);
@@ -636,16 +647,18 @@ public class ReportService {
             
             autoSizeColumns(sheet);
             workbook.write(bos);
+            workbook.dispose();
             return bos.toByteArray();
         }
     }
 
     private byte[] generateEmptyReport(String message) throws IOException {
-        try (Workbook workbook = new XSSFWorkbook();
+        try (SXSSFWorkbook workbook = new SXSSFWorkbook(5);
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Report");
             sheet.createRow(0).createCell(0).setCellValue(message);
             workbook.write(bos);
+            workbook.dispose();
             return bos.toByteArray();
         }
     }
@@ -653,10 +666,11 @@ public class ReportService {
     private byte[] generateExcelFromData(List<Map<String, Object>> rows, long totalSessions, LocalDate start, LocalDate end) 
             throws IOException {
         
-        try (Workbook workbook = new XSSFWorkbook();
+        try (SXSSFWorkbook workbook = new SXSSFWorkbook(100);
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             
             Sheet sheet = workbook.createSheet("Attendance Report");
+            if (sheet instanceof SXSSFSheet sxSheet) sxSheet.trackAllColumnsForAutoSizing();
             
             // Header Row
             Row headerRow = sheet.createRow(0);
@@ -683,11 +697,10 @@ public class ReportService {
             }
             
             // Auto-size columns
-            for (int i = 0; i < headers.length; i++) {
-                sheet.autoSizeColumn(i);
-            }
+            autoSizeColumns(sheet);
             
             workbook.write(bos);
+            workbook.dispose();
             return bos.toByteArray();
         }
     }

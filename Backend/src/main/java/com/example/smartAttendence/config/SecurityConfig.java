@@ -87,7 +87,7 @@ public class SecurityConfig {
                     "style-src 'self' 'unsafe-inline'; " +
                     "img-src 'self' data: https:; " +
                     "font-src 'self'; " +
-                    "connect-src 'self' https://localhost:8443 https://127.0.0.1:8443 http://localhost:3000 http://localhost:5173 https://*.render.com https://*.vercel.app; " +
+                    "connect-src 'self' https://localhost:8443 https://127.0.0.1:8443 http://localhost:3000 http://localhost:10000 http://localhost:5173 https://*.trycloudflare.com https://*.render.com https://*.vercel.app; " +
                     "frame-ancestors 'none'; " +
                     "base-uri 'self'; " +
                     "form-action 'self'"

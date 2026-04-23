@@ -584,6 +584,7 @@ export const AIAnalyticsDashboard: React.FC<AIAnalyticsDashboardProps> = ({
           Models
         </Button>
 
+        {/* 
         <Button
           variant={viewMode === 'assistant' ? 'primary' : 'glass'}
           size="sm"
@@ -593,6 +594,7 @@ export const AIAnalyticsDashboard: React.FC<AIAnalyticsDashboardProps> = ({
           <Bot className="h-4 w-4 mr-2" />
           AI Assistant
         </Button>
+        */}
       </div>
 
       {/* Content */}
