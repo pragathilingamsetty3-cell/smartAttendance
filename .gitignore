@@ -65,3 +65,6 @@ Backend/src/main/resources/**/*.jks
 frontend/web-dashboard/dist/
 frontend/web-dashboard/node_modules/
 frontend/mobile-sensor/node_modules/
+start-system-azure.sh
+*.pem
+*.zip

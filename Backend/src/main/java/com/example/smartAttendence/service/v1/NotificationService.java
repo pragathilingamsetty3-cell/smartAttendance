@@ -9,6 +9,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -21,7 +22,7 @@ public class NotificationService {
     private final EmailService emailService;
     private final FirebaseService firebaseService;
 
-    public NotificationService(UserV1Repository userV1Repository, EmailService emailService, FirebaseService firebaseService) {
+    public NotificationService(UserV1Repository userV1Repository, EmailService emailService, @Autowired(required = false) FirebaseService firebaseService) {
         this.userV1Repository = userV1Repository;
         this.emailService = emailService;
         this.firebaseService = firebaseService;
@@ -61,7 +62,7 @@ public class NotificationService {
             log.info("🚨 [AI SECURITY] Unauthorized Walkout: {}", user.getName());
             
             // Route to Firebase for real-time alert
-            if (firebaseService.isEnabled()) {
+            if (firebaseService != null && firebaseService.isEnabled()) {
                 Map<String, String> data = new HashMap<>();
                 data.put("studentId", studentId.toString());
                 data.put("event", "WALKOUT");
@@ -100,7 +101,7 @@ public class NotificationService {
             : String.format("You have been marked ABSENT for %s starting at %s.", subject, session.getStartTime());
 
         // Route to Firebase (Primary for daily alerts)
-        if (firebaseService.isEnabled()) {
+        if (firebaseService != null && firebaseService.isEnabled()) {
             Map<String, String> data = new HashMap<>();
             data.put("type", alertType);
             data.put("subject", subject);
@@ -139,7 +140,7 @@ public class NotificationService {
                 studentName, subject);
 
         // Route to Firebase (Engaging push notification)
-        if (firebaseService.isEnabled()) {
+        if (firebaseService != null && firebaseService.isEnabled()) {
             Map<String, String> data = new HashMap<>();
             data.put("subject", subject);
             data.put("room", roomName);
@@ -165,7 +166,7 @@ public class NotificationService {
                 String.format("Your hall pass for %d minutes has been approved. Please return promptly.", durationMinutes) :
                 "Your hall pass request has been denied by faculty.";
             
-            if (firebaseService.isEnabled()) {
+            if (firebaseService != null && firebaseService.isEnabled()) {
                 Map<String, String> data = new HashMap<>();
                 data.put("type", "HALL_PASS");
                 data.put("approved", String.valueOf(approved));
@@ -187,7 +188,7 @@ public class NotificationService {
         String title = "🔄 Room Change Alert";
         String body = String.format("Your %s class has been moved. Reason: %s", session.getSubject(), reason);
         
-        if (firebaseService.isEnabled()) {
+        if (firebaseService != null && firebaseService.isEnabled()) {
             Map<String, String> data = new HashMap<>();
             data.put("type", "ROOM_CHANGE");
             data.put("sessionId", session.getId().toString());
@@ -209,7 +210,7 @@ public class NotificationService {
         String body = String.format("An emergency change has been made to your %s class. Reason: %s", 
                 session.getSubject(), change.getReason());
         
-        if (firebaseService.isEnabled()) {
+        if (firebaseService != null && firebaseService.isEnabled()) {
             Map<String, String> data = new HashMap<>();
             data.put("type", "EMERGENCY_CHANGE");
             data.put("changeType", change.getChangeType().toString());
@@ -229,7 +230,7 @@ public class NotificationService {
         String body = String.format("A substitute faculty has been assigned for your %s class in %s.", 
                 session.getSubject(), session.getRoom().getName());
         
-        if (firebaseService.isEnabled()) {
+        if (firebaseService != null && firebaseService.isEnabled()) {
             Map<String, String> data = new HashMap<>();
             data.put("type", "SUBSTITUTION");
             data.put("sessionId", session.getId().toString());
@@ -244,7 +245,7 @@ public class NotificationService {
     public void sendClassStartNotification(UUID studentId, String subject, String roomName, java.time.LocalDateTime startTime) {
         log.info("🚀 [CLASS_START] Notifying student {} about {}", studentId, subject);
         
-        if (firebaseService.isEnabled()) {
+        if (firebaseService != null && firebaseService.isEnabled()) {
             Map<String, String> data = new HashMap<>();
             data.put("type", "CLASS_START");
             data.put("subject", subject);
@@ -264,7 +265,7 @@ public class NotificationService {
     public void sendClassReminderNotification(UUID studentId, String subject, String roomName, java.time.LocalTime startTime) {
         log.info("⏰ [REMINDER] Reminding student {} about {}", studentId, subject);
         
-        if (firebaseService.isEnabled()) {
+        if (firebaseService != null && firebaseService.isEnabled()) {
             Map<String, String> data = new HashMap<>();
             data.put("type", "REMINDER");
             data.put("subject", subject);
@@ -287,7 +288,7 @@ public class NotificationService {
         emailService.sendPasswordResetOtp(email, otp);
         
         // Also send a Firebase notification as a security redundancy
-        if (firebaseService.isEnabled()) {
+        if (firebaseService != null && firebaseService.isEnabled()) {
             firebaseService.sendCustomNotification(
                 "🔐 Security Alert: Password Reset",
                 "A password reset was requested. If this wasn't you, secure your account now.",
