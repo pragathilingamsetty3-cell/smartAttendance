@@ -285,7 +285,6 @@ export default function ForgotPasswordPage() {
               {step === 2 ? 'Go Back' : 'Back to Login'}
             </button>
           </form>
-          )}
 
           {/* Footer */}
           <div style={{
