@@ -220,7 +220,7 @@ public class AuthV1Controller {
             
             // Validate biometric signature
             if (request.biometricSignature() != null) {
-                AdvancedInputValidator.ValidationResult bioValidation = validator.validateBiometricSignature(request.biometricSignature());
+                AdvancedInputValidator.ValidationResult bioValidation = advancedInputValidator.validateBiometricSignature(request.biometricSignature());
                 if (!bioValidation.isValid()) {
                     return ResponseEntity.badRequest()
                             .body(Map.of("error", "Invalid biometric signature: " + bioValidation.getErrorMessage()));
@@ -229,20 +229,23 @@ public class AuthV1Controller {
             
             // Validate phone number
             if (request.phoneNumber() != null) {
-                AdvancedInputValidator.ValidationResult phoneValidation = validator.validatePhoneNumber(request.phoneNumber());
+                AdvancedInputValidator.ValidationResult phoneValidation = advancedInputValidator.validatePhoneNumber(request.phoneNumber());
                 if (!phoneValidation.isValid()) {
                     return ResponseEntity.badRequest()
                             .body(Map.of("error", "Invalid phone number: " + phoneValidation.getErrorMessage()));
                 }
             }
 
-            String email = auth.getName();
-            User user = authenticationService.getUserByEmail(email).orElseThrow();
+            // 🚀 THE FIX: Actually call the setup service to save data and generate secretKey
+            log.info("🔐 [DIAGNOSTIC] Calling authenticationService.completeSetup for user: {}", auth.getName());
+            User user = authenticationService.completeSetup(request);
             
-            return ResponseEntity.ok(Map.of(
-                "message", "Biometric setup completed successfully",
-                "secretKey", user.getSecretKey() // 🔐 Return for HMAC signing
-            ));
+            // 🛡️ SAFE RESPONSE: Using HashMap to prevent 500 crash if secretKey is missing
+            java.util.Map<String, Object> response = new java.util.HashMap<>();
+            response.put("message", "Biometric setup completed successfully");
+            response.put("secretKey", user.getSecretKey());
+            
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", e.getMessage()));
