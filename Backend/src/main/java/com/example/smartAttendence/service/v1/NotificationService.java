@@ -22,10 +22,10 @@ public class NotificationService {
     private final EmailService emailService;
     private final FirebaseService firebaseService;
 
-    public NotificationService(UserV1Repository userV1Repository, EmailService emailService, @Autowired(required = false) FirebaseService firebaseService) {
+    public NotificationService(UserV1Repository userV1Repository, EmailService emailService, java.util.Optional<com.example.smartAttendence.service.FirebaseService> firebaseService) {
         this.userV1Repository = userV1Repository;
         this.emailService = emailService;
-        this.firebaseService = firebaseService;
+        this.firebaseService = firebaseService.orElse(null);
     }
 
     @Async
