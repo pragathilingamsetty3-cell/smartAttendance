@@ -193,34 +193,45 @@ public class AuthV1Controller {
      */
     @PostMapping("/complete-setup")
     public ResponseEntity<?> completeSetup(@Valid @RequestBody CompleteSetupRequest request, Authentication auth) {
+        log.info("🎬 [DIAGNOSTIC] START: complete-setup request received");
         try {
-            // -----------------------------------------------------------------
-// NOTE: The user may be *unauthenticated* on the very first setup.
-// Guard against a NullPointerException before we try to log details.
-// -----------------------------------------------------------------
-if (auth == null || !auth.isAuthenticated()) {
-    log.warn("❌ [DIAGNOSTIC] Blocking setup attempt: User NOT properly authenticated in controller");
-    return ResponseEntity.status(401)
-            .body(Map.of("error", "Authentication required"));
-}
-
-// Safe to log now – we know `auth` is non‑null and authenticated.
-log.info("🔐 [DIAGNOSTIC] Authenticated user: {} (authorities: {})",
-        auth.getName(), auth.getAuthorities());
-
+            // 🛡️ AUTH CHECK - Ensure request is authenticated
             if (auth == null || !auth.isAuthenticated()) {
-                log.warn("❌ [DIAGNOSTIC] Blocking setup attempt: User NOT properly authenticated in controller");
+                log.warn("❌ [DIAGNOSTIC] Blocking setup attempt: User NOT properly authenticated");
                 return ResponseEntity.status(401)
-                        .body(Map.of("error", "Authentication required"));
+                        .body(Map.of("error", "Authentication required - please login first"));
+            }
+
+            log.info("🔐 [DIAGNOSTIC] User Identity: {} (Authorities: {})", 
+                auth.getName(), auth.getAuthorities());
+
+            // 🛡️ BEAN CHECK - Ensure vital services are injected
+            if (advancedInputValidator == null) {
+                log.error("❌ [DIAGNOSTIC] CRITICAL: advancedInputValidator BEAN IS NULL!");
+                return ResponseEntity.status(500)
+                        .body(Map.of("error", "Internal Server Error: Validator service unavailable"));
+            }
+
+            if (authenticationService == null) {
+                log.error("❌ [DIAGNOSTIC] CRITICAL: authenticationService BEAN IS NULL!");
+                return ResponseEntity.status(500)
+                        .body(Map.of("error", "Internal Server Error: Authentication service unavailable"));
+            }
+
+            // 🛡️ REQUEST CHECK
+            if (request == null) {
+                log.warn("❌ [DIAGNOSTIC] Null request body received");
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Request body is required"));
             }
 
             // 🔐 ENHANCED INPUT VALIDATION
-            AdvancedInputValidator validator = new AdvancedInputValidator();
+            log.info("🔍 [DIAGNOSTIC] Validating inputs for deviceId: {}", request.deviceId());
             
-            // Validate device ID - accept alphanumeric format (MOBILE + timestamp + random)
+            // Validate device ID format: alphanumeric, hyphens, underscores only
             if (request.deviceId() != null) {
-                // Allow flexible device ID format: alphanumeric, hyphens, underscores only
                 if (!request.deviceId().matches("^[A-Za-z0-9\\-_]+$")) {
+                    log.warn("❌ [DIAGNOSTIC] Invalid deviceId format: {}", request.deviceId());
                     return ResponseEntity.badRequest()
                             .body(Map.of("error", "Invalid device ID format"));
                 }
@@ -230,37 +241,52 @@ log.info("🔐 [DIAGNOSTIC] Authenticated user: {} (authorities: {})",
             if (request.biometricSignature() != null) {
                 AdvancedInputValidator.ValidationResult bioValidation = advancedInputValidator.validateBiometricSignature(request.biometricSignature());
                 if (!bioValidation.isValid()) {
+                    log.warn("❌ [DIAGNOSTIC] Biometric validation failed: {}", bioValidation.getErrorMessage());
                     return ResponseEntity.badRequest()
-                            .body(Map.of("error", "Invalid biometric signature: " + bioValidation.getErrorMessage()));
+                            .body(Map.of("error", "Invalid biometric: " + bioValidation.getErrorMessage()));
                 }
             }
             
-            // Validate phone number
-            if (request.phoneNumber() != null) {
+            // Validate phone number (optional)
+            if (request.phoneNumber() != null && !request.phoneNumber().isBlank()) {
                 AdvancedInputValidator.ValidationResult phoneValidation = advancedInputValidator.validatePhoneNumber(request.phoneNumber());
                 if (!phoneValidation.isValid()) {
+                    log.warn("❌ [DIAGNOSTIC] Phone validation failed: {}", phoneValidation.getErrorMessage());
                     return ResponseEntity.badRequest()
                             .body(Map.of("error", "Invalid phone number: " + phoneValidation.getErrorMessage()));
                 }
             }
 
-            // 🚀 THE FIX: Actually call the setup service to save data and generate secretKey
-            log.info("🔐 [DIAGNOSTIC] Calling authenticationService.completeSetup for user: {}", auth.getName());
+            // 🚀 CALL SERVICE - The actual business logic
+            log.info("🚀 [DIAGNOSTIC] Calling authenticationService.completeSetup for user: {}", auth.getName());
             User user = authenticationService.completeSetup(request);
             
-            // 🛡️ SAFE RESPONSE: Using HashMap to prevent 500 crash if secretKey is missing
-            java.util.Map<String, Object> response = new java.util.HashMap<>();
+            if (user == null) {
+                log.error("❌ [DIAGNOSTIC] Service returned NULL user after setup");
+                return ResponseEntity.status(500)
+                        .body(Map.of("error", "Setup failed: Service returned invalid user state"));
+            }
+
+            // 🛡️ SAFE RESPONSE CONSTRUCTION
+            Map<String, Object> response = new java.util.HashMap<>();
             response.put("message", "Biometric setup completed successfully");
-            response.put("secretKey", user.getSecretKey());
+            response.put("secretKey", user.getSecretKey() != null ? user.getSecretKey() : "NOT_GENERATED");
             
+            log.info("✅ [DIAGNOSTIC] SUCCESS: complete-setup finished for {}", auth.getName());
             return ResponseEntity.ok(response);
+
         } catch (IllegalArgumentException e) {
+            log.warn("⚠️ [DIAGNOSTIC] Validation/Business Error: {}", e.getMessage());
             return ResponseEntity.badRequest()
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("🚨 SETUP FATAL ERROR for user {}: {}", auth != null ? auth.getName() : "UNKNOWN", e.getMessage(), e);
+            log.error("🚨 [DIAGNOSTIC] FATAL ERROR during setup for user {}: {}", 
+                auth != null ? auth.getName() : "UNKNOWN", 
+                e.getMessage() != null ? e.getMessage() : "NullPointerException", e);
+            
             return ResponseEntity.status(500)
-                    .body(Map.of("error", "Setup completion failed: " + e.getMessage()));
+                    .body(Map.of("error", "Setup completion failed: " + 
+                        (e.getMessage() != null ? e.getMessage() : "Internal System Error")));
         }
     }
 

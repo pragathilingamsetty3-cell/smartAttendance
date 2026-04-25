@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -214,10 +215,11 @@ public class AuthenticationService {
 
         // 🛡️ Device Binding Management
         try {
-            logger.info("⛓️ Managing device binding for user...");
+            logger.info("⛓️ [DIAGNOSTIC] Managing device binding for user ID: {} with device: {}", user.getId(), request.deviceId());
+            
             DeviceBinding deviceBinding = deviceBindingRepository.findByUser(user)
                     .orElseGet(() -> {
-                        logger.info("🆕 Creating new device binding record.");
+                        logger.info("🆕 [DIAGNOSTIC] Creating new device binding record");
                         return new DeviceBinding();
                     });
             
@@ -229,9 +231,9 @@ public class AuthenticationService {
             deviceBinding.setLastUsedAt(Instant.now());
             
             deviceBindingRepository.save(deviceBinding);
-            logger.info("✅ Device binding saved successfully.");
+            logger.info("✅ [DIAGNOSTIC] Device binding saved successfully");
         } catch (Exception e) {
-            logger.error("🔥 CRITICAL ERROR during device binding save: {}", e.getMessage(), e);
+            logger.error("🔥 [DIAGNOSTIC] CRITICAL ERROR during device binding save: {}", e.getMessage(), e);
             throw new RuntimeException("Database error while binding device: " + e.getMessage());
         }
         

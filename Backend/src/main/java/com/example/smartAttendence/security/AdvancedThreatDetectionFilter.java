@@ -143,6 +143,9 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
             // 🔓 CRITICAL BYPASS: Never block authentication endpoints by behavior
             // Users need these to establish identity or register their device
             // -----------------------------------------------------------------
+            // Extract JWT token from Authorization header
+            String authHeader = request.getHeader("Authorization");
+
             // Bypass for the very first setup call (no JWT yet).
             // Allows unauthenticated students to register their device.
             // -----------------------------------------------------------------
@@ -154,8 +157,6 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
                 return null;
             }
 
-            // Extract JWT token from Authorization header
-            String authHeader = request.getHeader("Authorization");
             String userRole = null;
             String deviceFingerprint = null;
             
@@ -224,7 +225,7 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
     private boolean isSuspiciousPattern(HttpServletRequest request) {
         String query = request.getQueryString();
         if (query == null) return false;
-        var result = advancedInputValidator.validateInput(query, "query");
+        AdvancedInputValidator.ValidationResult result = this.advancedInputValidator.validateInput(query, "query");
         return !result.isValid();
     }
 
