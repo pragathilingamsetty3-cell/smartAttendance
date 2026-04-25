@@ -1,0 +1,12 @@
+name: Fetch Azure Logs
+on: workflow_dispatch
+jobs:
+  diagnose:
+    runs-on: self-hosted
+    steps:
+      - name: Read audit log
+        run: |
+          echo "==== TAIL OF SMART-ATTENDANCE-AUDIT.LOG ===="
+          cat /home/azureuser/smart-attendance-audit.log | tail -n 150
+          echo "==== CHECKING JAVA PROCESS STATE ===="
+          ps aux | grep java
