@@ -194,11 +194,19 @@ public class AuthV1Controller {
     @PostMapping("/complete-setup")
     public ResponseEntity<?> completeSetup(@Valid @RequestBody CompleteSetupRequest request, Authentication auth) {
         try {
-            log.info("🔍 [DIAGNOSTIC] completeSetup attempt - Auth populated: {}", auth != null);
-            if (auth != null) {
-                log.info("🔍 [DIAGNOSTIC] Auth Details: Name={}, Authenticated={}, authorities={}", 
-                    auth.getName(), auth.isAuthenticated(), auth.getAuthorities());
-            }
+            // -----------------------------------------------------------------
+// NOTE: The user may be *unauthenticated* on the very first setup.
+// Guard against a NullPointerException before we try to log details.
+// -----------------------------------------------------------------
+if (auth == null || !auth.isAuthenticated()) {
+    log.warn("❌ [DIAGNOSTIC] Blocking setup attempt: User NOT properly authenticated in controller");
+    return ResponseEntity.status(401)
+            .body(Map.of("error", "Authentication required"));
+}
+
+// Safe to log now – we know `auth` is non‑null and authenticated.
+log.info("🔐 [DIAGNOSTIC] Authenticated user: {} (authorities: {})",
+        auth.getName(), auth.getAuthorities());
 
             if (auth == null || !auth.isAuthenticated()) {
                 log.warn("❌ [DIAGNOSTIC] Blocking setup attempt: User NOT properly authenticated in controller");

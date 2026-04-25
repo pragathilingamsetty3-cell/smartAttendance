@@ -141,6 +141,14 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
         try {
             // 🔓 CRITICAL BYPASS: Never block authentication endpoints by behavior
             // Users need these to establish identity or register their device
+            // -----------------------------------------------------------------
+            // Bypass for the very first setup call (no JWT yet).
+            // Allows unauthenticated students to register their device.
+            // -----------------------------------------------------------------
+            if (endpoint.contains("/api/v1/auth/complete-setup") && (authHeader == null || !authHeader.startsWith("Bearer "))) {
+                return null;
+            }
+            // Existing bypass for all other auth endpoints (JWT‑protected).
             if (endpoint.contains("/api/v1/auth/")) {
                 return null;
             }
