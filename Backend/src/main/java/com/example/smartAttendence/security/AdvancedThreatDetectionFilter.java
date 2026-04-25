@@ -139,6 +139,12 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
 
     private String checkSuspiciousBehavior(HttpServletRequest request, String ip, String endpoint) {
         try {
+            // 🔓 CRITICAL BYPASS: Never block authentication endpoints by behavior
+            // Users need these to establish identity or register their device
+            if (endpoint.contains("/api/v1/auth/")) {
+                return null;
+            }
+
             // Extract JWT token from Authorization header
             String authHeader = request.getHeader("Authorization");
             String userRole = null;
