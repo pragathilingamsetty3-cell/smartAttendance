@@ -138,81 +138,104 @@ public class AuthenticationService {
      * Complete first login setup and bind device
      */
     public User completeSetup(CompleteSetupRequest request) {
+        logger.info("🎬 STARTING completeSetup walkthrough for request: {}", request);
+        
         // Extract user identity from JWT token
         org.springframework.security.core.Authentication auth = 
             org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         
         if (auth == null || !auth.isAuthenticated()) {
-            throw new IllegalArgumentException("Authentication required");
+            logger.error("❌ SETUP FAILED: Security context is null or unauthenticated");
+            throw new IllegalArgumentException("Authentication required - please login again.");
         }
         
         String email = auth.getName();
+        logger.info("🔍 Searching for student by email: {}", email);
+        
         Optional<User> userOpt = userV1Repository.findByEmailIgnoreCase(email);
         if (userOpt.isEmpty()) {
-            throw new IllegalArgumentException("User not found");
+            logger.error("❌ SETUP FAILED: User {} not found in database", email);
+            throw new IllegalArgumentException("Your user profile could not be found. Contact admin.");
         }
 
         User user = userOpt.get();
-        boolean isAlreadySetup = user.getBiometricSignature() != null && !user.getBiometricSignature().isEmpty();
-        
+        logger.info("👤 Found user: {} (ID: {}) with current biometric state: {}", 
+            email, user.getId(), (user.getBiometricSignature() != null ? "BOUND" : "UNBOUND"));
+
         // 🛡️ SECURITY LOCK: Block any biometric update if already registered. 
-        // Only an Admin can reset this via AdminV1Controller.resetStudentDevice()
-        if (isAlreadySetup) {
-            logger.warn("🚨 SECURITY VIOLATION: User {} attempted to update locked biometric data", email);
+        if (user.getBiometricSignature() != null && !user.getBiometricSignature().isEmpty()) {
+            logger.warn("🚨 SECURITY VIOLATION: User {} attempted to re-setup locked biometric", email);
             throw new IllegalArgumentException("Biometric already registered. Contact administrator to reset hardware binding.");
         }
 
-        // Validate device doesn't already belong to another user
-        if (request.deviceId() != null && (user.getDeviceId() == null || !user.getDeviceId().equals(request.deviceId()))) {
-            if (deviceBindingRepository.existsByDeviceId(request.deviceId())) {
-                Optional<DeviceBinding> existingBinding = deviceBindingRepository.findByDeviceId(request.deviceId());
-                if (existingBinding.isPresent() && !existingBinding.get().getUser().getId().equals(user.getId())) {
-                    logger.warn("🚨 SETUP VIOLATION: Device already registered to another user: {}", request.deviceId());
-                    throw new IllegalArgumentException("Device is already registered to another account.");
+        // Validate device ownership
+        if (request.deviceId() != null) {
+            logger.info("📱 Validating device ID ownership: {}", request.deviceId());
+            Optional<DeviceBinding> existingBinding = deviceBindingRepository.findByDeviceId(request.deviceId());
+            if (existingBinding.isPresent()) {
+                DeviceBinding binding = existingBinding.get();
+                if (binding.getUser() != null && !binding.getUser().getId().equals(user.getId())) {
+                    logger.error("🚨 SETUP FAILED: Device {} already belongs to another user (ID: {})", 
+                        request.deviceId(), binding.getUser().getId());
+                    throw new IllegalArgumentException("This device is already registered to another student.");
                 }
+                logger.info("✅ Device already belongs to this user, updating existing binding.");
             }
         }
 
-        // Update biometric and device data
-        if (request.deviceId() != null) {
+        // 📝 Update User Record
+        try {
+            logger.info("📝 Updating user biometric and device fields...");
             user.setDeviceId(request.deviceId());
+            user.setBiometricSignature(request.biometricSignature());
+            user.setIsTemporaryPassword(false);
+            user.setFirstLogin(false);
+            user.setDeviceRegisteredAt(Instant.now());
+            
+            // Generate Secret Key (Non-blocking)
+            java.security.SecureRandom sr = new java.security.SecureRandom();
+            byte[] secretKeyBytes = new byte[32];
+            sr.nextBytes(secretKeyBytes);
+            user.setSecretKey(java.util.Base64.getEncoder().encodeToString(secretKeyBytes));
+
+            // Truncate phone number to prevent VARCHAR(20) overflow
+            if (request.phoneNumber() != null && !request.phoneNumber().isBlank()) {
+                String mobile = request.phoneNumber().trim();
+                user.setStudentMobile(mobile.length() > 20 ? mobile.substring(0, 20) : mobile);
+                logger.info("📱 Mobile number saved (truncated to 20): {}", user.getStudentMobile());
+            }
+
+            user = userV1Repository.saveAndFlush(user);
+            logger.info("✅ User saved successfully.");
+        } catch (Exception e) {
+            logger.error("🔥 CRITICAL ERROR during user save: {}", e.getMessage(), e);
+            throw new RuntimeException("Database error while saving profile: " + e.getMessage());
         }
-        user.setBiometricSignature(request.biometricSignature());
-        user.setIsTemporaryPassword(false);
-        user.setFirstLogin(false);
-        user.setDeviceRegisteredAt(Instant.now());
-        
-        // 🔐 GENERATE ELITE SECURITY SECRET KEY
-        // Using non-blocking SecureRandom for maximum compatibility across Azure, Render, and Local environments
-        java.security.SecureRandom sr = new java.security.SecureRandom();
-        byte[] secretKeyBytes = new byte[32];
-        sr.nextBytes(secretKeyBytes);
-        String secretKey = java.util.Base64.getEncoder().encodeToString(secretKeyBytes);
-        user.setSecretKey(secretKey);
 
-        // Update mobile if provided
-        if (request.phoneNumber() != null && !request.phoneNumber().isBlank()) {
-            user.setStudentMobile(request.phoneNumber());
+        // 🛡️ Device Binding Management
+        try {
+            logger.info("⛓️ Managing device binding for user...");
+            DeviceBinding deviceBinding = deviceBindingRepository.findByUser(user)
+                    .orElseGet(() -> {
+                        logger.info("🆕 Creating new device binding record.");
+                        return new DeviceBinding();
+                    });
+            
+            deviceBinding.setUser(user);
+            deviceBinding.setDeviceId(request.deviceId());
+            deviceBinding.setDeviceFingerprint("BIND_" + UUID.randomUUID().toString().substring(0, 8));
+            deviceBinding.setIsActive(true);
+            deviceBinding.setRegisteredAt(Instant.now());
+            deviceBinding.setLastUsedAt(Instant.now());
+            
+            deviceBindingRepository.save(deviceBinding);
+            logger.info("✅ Device binding saved successfully.");
+        } catch (Exception e) {
+            logger.error("🔥 CRITICAL ERROR during device binding save: {}", e.getMessage(), e);
+            throw new RuntimeException("Database error while binding device: " + e.getMessage());
         }
-
-        user = userV1Repository.save(user);
-
-        // 🛡️ IDEMPOTENT DEVICE BINDING: Update existing or create new
-        DeviceBinding deviceBinding = deviceBindingRepository.findByUser(user)
-                .orElse(new DeviceBinding());
         
-        deviceBinding.setUser(user);
-        deviceBinding.setDeviceId(request.deviceId());
-        deviceBinding.setDeviceFingerprint("SECURE_HARDWARE_BINDING_" + user.getId().toString().substring(0, 8)); // Derived unique fingerprint
-        deviceBinding.setDeviceName("Mobile Device");
-        deviceBinding.setDeviceType("MOBILE");
-        deviceBinding.setIsActive(true);
-        deviceBinding.setRegisteredAt(Instant.now());
-        deviceBinding.setLastUsedAt(Instant.now());
-
-        deviceBindingRepository.save(deviceBinding);
-        
-        logger.info("✅ SUCCESS: Setup completed and hardware locked for user: {}", email);
+        logger.info("🎉 SUCCESS: completeSetup finished for user: {}", email);
         return user;
     }
 
