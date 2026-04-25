@@ -74,7 +74,8 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
         String userAgent = request.getHeader("User-Agent");
 
         try {
-            if (isStaticOrPublicAsset(endpoint) || endpoint.startsWith("/actuator/") || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            // 🔓 BULLETPROOF BYPASS: Auth endpoints must NEVER be restricted by threat analysis
+            if (endpoint.contains("/api/v1/auth/") || isStaticOrPublicAsset(endpoint) || endpoint.startsWith("/actuator/") || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
                 filterChain.doFilter(request, response);
                 return;
             }
