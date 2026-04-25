@@ -32,6 +32,7 @@ sudo fuser -k 10000/tcp 2>/dev/null || echo "No previous process on port 10000"
 
 # 6. Start Backend in Background (LEAN OPTIMIZED)
 echo "[+] Starting new JAR on port 10000"
+cd /home/azureuser
 nohup java -Xmx384M -Xms128M -XX:+UseG1GC -XX:G1PeriodicGCInterval=30000 -XX:+UseStringDeduplication -jar /home/azureuser/smartAttendence-latest.jar --spring.profiles.active=local --server.port=10000 > /home/azureuser/smart-attendance-audit.log 2>&1 &
 
 echo "--- Update Complete! System is initializing... ---"
