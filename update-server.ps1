@@ -14,15 +14,18 @@ foreach ($p in $processes) {
 
 
 # 2. Cleanup & Optimization
-Write-Host "[*] Cleaning up temporary files..." -ForegroundColor Green
-# cd Backend; ./mvnw.cmd clean # Optional: Uncomment if you want fresh builds every time (takes longer)
+Write-Host "[*] Building fresh Backend JAR (this may take 1-2 minutes)..." -ForegroundColor Yellow
+cd Backend
+./mvnw.cmd clean install -DskipTests
+cd ..
 
 # 3. Start Backend in Background
 Write-Host "[*] Restarting Backend (ELITE Local Profile)..." -ForegroundColor Green
-$jarPath = Get-ChildItem -Path "Backend\target\*.jar" | Select-Object -First 1
+$jarPath = Get-ChildItem -Path "Backend\target\smartAttendence-*.jar" | Select-Object -First 1
 if ($null -eq $jarPath) {
-    Write-Host "[!] Error: Backend JAR not found in Backend\target\. Please build the project first." -ForegroundColor Red
+    Write-Host "[!] Error: Backend JAR not found! Checking build logs..." -ForegroundColor Red
 } else {
+    Write-Host "[+] Found JAR: $($jarPath.Name). Starting now..." -ForegroundColor Cyan
     Start-Process powershell -WindowStyle Hidden -ArgumentList "-Command", "cd Backend; java -jar ""$($jarPath.FullName)"" --spring.profiles.active=local --server.port=10000"
 }
 
