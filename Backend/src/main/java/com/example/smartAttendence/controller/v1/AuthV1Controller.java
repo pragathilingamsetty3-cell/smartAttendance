@@ -250,6 +250,7 @@ public class AuthV1Controller {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
+            log.error("🚨 SETUP FATAL ERROR for user {}: {}", auth != null ? auth.getName() : "UNKNOWN", e.getMessage(), e);
             return ResponseEntity.status(500)
                     .body(Map.of("error", "Setup completion failed: " + e.getMessage()));
         }

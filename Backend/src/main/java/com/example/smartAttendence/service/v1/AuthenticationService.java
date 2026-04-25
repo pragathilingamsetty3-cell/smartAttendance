@@ -180,30 +180,39 @@ public class AuthenticationService {
         user.setBiometricSignature(request.biometricSignature());
         user.setIsTemporaryPassword(false);
         user.setFirstLogin(false);
+        user.setDeviceRegisteredAt(Instant.now());
         
         // 🔐 GENERATE ELITE SECURITY SECRET KEY
-        // This key is used for HMAC-SHA256 heartbeat signing
-        String secretKey = java.util.Base64.getEncoder().encodeToString(
-            java.security.SecureRandom.getSeed(32)
-        );
+        // Using non-blocking SecureRandom for maximum compatibility across Azure, Render, and Local environments
+        java.security.SecureRandom sr = new java.security.SecureRandom();
+        byte[] secretKeyBytes = new byte[32];
+        sr.nextBytes(secretKeyBytes);
+        String secretKey = java.util.Base64.getEncoder().encodeToString(secretKeyBytes);
         user.setSecretKey(secretKey);
+
+        // Update mobile if provided
+        if (request.phoneNumber() != null && !request.phoneNumber().isBlank()) {
+            user.setStudentMobile(request.phoneNumber());
+        }
 
         user = userV1Repository.save(user);
 
-        // Create DeviceBinding record for audit trail (No fingerprint duplicate storage here)
-        DeviceBinding deviceBinding = new DeviceBinding();
+        // 🛡️ IDEMPOTENT DEVICE BINDING: Update existing or create new
+        DeviceBinding deviceBinding = deviceBindingRepository.findByUser(user)
+                .orElse(new DeviceBinding());
+        
         deviceBinding.setUser(user);
         deviceBinding.setDeviceId(request.deviceId());
-        deviceBinding.setDeviceFingerprint("SECURE_HARDWARE_BINDING_" + user.getId().toString().substring(0, 8)); // Avoid duplicate PII storage
+        deviceBinding.setDeviceFingerprint("SECURE_HARDWARE_BINDING_" + user.getId().toString().substring(0, 8)); // Derived unique fingerprint
         deviceBinding.setDeviceName("Mobile Device");
         deviceBinding.setDeviceType("MOBILE");
-        deviceBinding.setRegisteredAt(Instant.now());
         deviceBinding.setIsActive(true);
+        deviceBinding.setRegisteredAt(Instant.now());
+        deviceBinding.setLastUsedAt(Instant.now());
 
         deviceBindingRepository.save(deviceBinding);
-
-        logger.info("✅ DEVICE LOCK ACTIVATED: Biometric setup completed and device locked for user: {}", email);
-        logger.info("📱 Device locked to: {} | Student can now only login from this device", request.deviceId());
+        
+        logger.info("✅ SUCCESS: Setup completed and hardware locked for user: {}", email);
         return user;
     }
 
