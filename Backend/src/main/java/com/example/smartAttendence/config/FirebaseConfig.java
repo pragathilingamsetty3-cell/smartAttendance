@@ -148,7 +148,7 @@ public class FirebaseConfig {
      */
     @Bean
     @ConditionalOnProperty(name = "firebase.enabled", havingValue = "true")
-    public Firestore firestore(FirebaseMessaging firebaseMessaging) {
+    public Firestore firestore(java.util.Optional<FirebaseMessaging> firebaseMessaging) {
         try {
             // Ensure Firebase is initialized (firebaseMessaging bean forces initialization)
             int appCount = FirebaseApp.getApps().size();
