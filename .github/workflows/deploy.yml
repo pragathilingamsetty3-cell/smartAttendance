@@ -45,9 +45,8 @@ jobs:
           host: ${{ secrets.VM_IP }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "Backend/target/*.jar"
+          source: "*.jar"
           target: "/home/azureuser/"
-          strip_components: 2
 
       - name: Restart Backend on VM
         uses: appleboy/ssh-action@v1.0.3
