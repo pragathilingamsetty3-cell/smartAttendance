@@ -9,6 +9,10 @@ public record CompleteSetupRequest(
     @NotBlank(message = "Biometric signature is required")
     String biometricSignature,
     
-    String phoneNumber
+    String phoneNumber,
+    String registrationNumber,
+    String section,
+    String department,
+    String academicYear
 ) {
 }
