@@ -53,7 +53,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AdvancedThreatDetectionFilter advancedThreatDetectionFilter;
 
-    @Value("${security.cors.allowed-origins:*}")
+    @Value("${security.cors.allowed-origins:https://smartattendance-b44.pages.dev}")
     private String allowedOrigins;
 
     public SecurityConfig(
@@ -86,8 +86,8 @@ public class SecurityConfig {
                     "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
                     "style-src 'self' 'unsafe-inline'; " +
                     "img-src 'self' data: https:; " +
-                    "font-src 'self'; " +
-                    "connect-src 'self' https://localhost:8443 https://127.0.0.1:8443 http://localhost:3000 http://localhost:10000 http://localhost:5173 https://*.trycloudflare.com https://*.nip.io https://*.pages.dev; " +
+                    "font-src 'self' https:; " +
+                    "connect-src 'self' https://4.188.248.38.nip.io https://localhost:8443 https://127.0.0.1:8443 http://localhost:3000 http://localhost:10000 http://localhost:5173 https://*.trycloudflare.com https://*.nip.io https://*.smartattendance-b44.pages.dev https://smartattendance-b44.pages.dev; " +
                     "frame-ancestors 'none'; " +
                     "base-uri 'self'; " +
                     "form-action 'self'"
@@ -185,19 +185,40 @@ public class SecurityConfig {
     }
 
     /**
-     * 🔐 ENHANCED CORS CONFIGURATION - HTTPS ONLY
+     * 🔐 ENHANCED CORS CONFIGURATION - PRODUCTION READY
+     * Explicitly allows Cloudflare Pages origins (production + preview deployments)
+     * NOTE: allowCredentials(true) requires explicit origins — wildcard "*" is REJECTED by browsers.
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        if (allowedOrigins.equals("*")) {
-            configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-        } else {
-            configuration.setAllowedOriginPatterns(Arrays.asList(allowedOrigins.split(",")));
+        
+        // Always add explicit Cloudflare Pages origins for production and preview deployments
+        List<String> origins = new java.util.ArrayList<>();
+        origins.add("https://smartattendance-b44.pages.dev");
+        origins.add("https://*.smartattendance-b44.pages.dev");
+        origins.add("http://localhost:3000");
+        origins.add("http://localhost:5173");
+        origins.add("https://*.trycloudflare.com");
+        origins.add("https://*.nip.io");
+        
+        // Add any additional configured origins
+        if (allowedOrigins != null && !allowedOrigins.equals("*") && !allowedOrigins.isBlank()) {
+            for (String origin : allowedOrigins.split(",")) {
+                String trimmed = origin.trim();
+                if (!trimmed.isEmpty() && !origins.contains(trimmed)) {
+                    origins.add(trimmed);
+                }
+            }
         }
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "X-Device-Fingerprint"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        
+        configuration.setAllowedOriginPatterns(origins);
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization", "Content-Type", "Accept", "X-Device-Fingerprint",
+            "Origin", "X-Requested-With", "Cache-Control", "Pragma"
+        ));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(Duration.ofHours(1));
         
