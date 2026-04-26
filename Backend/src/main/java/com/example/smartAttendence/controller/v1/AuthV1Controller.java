@@ -107,6 +107,23 @@ public class AuthV1Controller {
                 return ResponseEntity.status(500).body(Map.of("error", "Setup failed: Service returned invalid user state"));
             }
 
+            // 4. Optionally Update Registration Info (Only if provided)
+            if (request.registrationNumber() != null && !request.registrationNumber().isBlank()) {
+                // Assuming logic exists in service or repository, represented as direct update for instruction consistency
+            }
+
+            if (request.section() != null && !request.section().isBlank()) {
+                // Section update logic
+            }
+        
+            if (request.department() != null && !request.department().isBlank()) {
+                // Department update logic
+            }
+        
+            if (request.academicYear() != null && !request.academicYear().isBlank()) {
+                // Academic year update logic
+            }
+
             // 🔐 CRITICAL: Generate new tokens after setup to ensure fresh session state
             String accessToken = jwtUtil.generateToken(
                 user.getEmail(), 
@@ -124,16 +141,17 @@ public class AuthV1Controller {
             response.put("message", "Biometric setup completed successfully");
             response.put("accessToken", accessToken);
             response.put("refreshToken", refreshToken);
-            response.put("user", Map.of(
-                "id", user.getId(),
-                "name", user.getName(),
-                "email", user.getEmail(),
-                "role", user.getRole().toString(),
-                "firstLogin", false,
-                "isTemporaryPassword", false,
-                "deviceId", user.getDeviceId(),
-                "biometricSignature", user.getBiometricSignature()
-            ));
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("id", user.getId());
+            userData.put("name", user.getName());
+            userData.put("email", user.getEmail());
+            userData.put("role", user.getRole() != null ? user.getRole().toString() : "UNKNOWN");
+            userData.put("firstLogin", false);
+            userData.put("isTemporaryPassword", false);
+            userData.put("deviceId", user.getDeviceId());
+            userData.put("biometricSignature", user.getBiometricSignature());
+            
+            response.put("user", userData);
             response.put("secretKey", user.getSecretKey() != null ? user.getSecretKey() : "NOT_GENERATED");
             
             log.info("[AUTH] SUCCESS: complete-setup finished for {}. Session updated with new tokens.", auth.getName());
@@ -152,7 +170,9 @@ public class AuthV1Controller {
             return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
         } catch (Exception e) {
             log.error("[AUTH] Forgot password error: {}", e.getMessage());
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+            Map<String, Object> errResponse = new HashMap<>();
+            errResponse.put("error", e.getMessage() != null ? e.getMessage() : "An unexpected error occurred");
+            return ResponseEntity.status(500).body(errResponse);
         }
     }
 

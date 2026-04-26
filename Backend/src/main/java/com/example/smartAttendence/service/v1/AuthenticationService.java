@@ -5,6 +5,8 @@ import com.example.smartAttendence.dto.v1.CompleteSetupRequest;
 import com.example.smartAttendence.entity.DeviceBinding;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
 import com.example.smartAttendence.repository.DeviceBindingRepository;
+import com.example.smartAttendence.repository.v1.SectionV1Repository;
+import com.example.smartAttendence.entity.Section;
 import com.example.smartAttendence.service.EmailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,14 +27,17 @@ public class AuthenticationService {
     private final UserV1Repository userV1Repository;
     private final PasswordEncoder passwordEncoder;
     private final DeviceBindingRepository deviceBindingRepository;
+    private final SectionV1Repository sectionV1Repository;
 
     public AuthenticationService(
             UserV1Repository userV1Repository,
             PasswordEncoder passwordEncoder,
-            DeviceBindingRepository deviceBindingRepository) {
+            DeviceBindingRepository deviceBindingRepository,
+            SectionV1Repository sectionV1Repository) {
         this.userV1Repository = userV1Repository;
         this.passwordEncoder = passwordEncoder;
         this.deviceBindingRepository = deviceBindingRepository;
+        this.sectionV1Repository = sectionV1Repository;
     }
 
     /**
@@ -168,6 +173,25 @@ public class AuthenticationService {
                 logger.info("✅ Device already belongs to this user, updating existing binding.");
             }
         }
+
+        // 4. Optionally Update Registration Info (Only if provided)
+        if (request.registrationNumber() != null && !request.registrationNumber().isBlank()) {
+            user.setRegistrationNumber(request.registrationNumber());
+        }
+
+        if (request.section() != null && !request.section().isBlank()) {
+            Section section = sectionV1Repository.findByName(request.section())
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid section: " + request.section()));
+            user.setSection(section);
+        }
+        
+        if (request.department() != null && !request.department().isBlank()) {
+            user.setDepartment(request.department());
+        }
+        
+        if (request.academicYear() != null && !request.academicYear().isBlank()) {
+            user.setTotalAcademicYears(request.academicYear());
+        }    
 
         // 📝 Update User Record
         try {

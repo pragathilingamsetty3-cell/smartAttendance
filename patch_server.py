@@ -40,7 +40,9 @@ files_to_patch = [
     ("Backend/src/main/java/com/example/smartAttendence/service/v1/AuthenticationService.java", "/home/azureuser/Backend/src/main/java/com/example/smartAttendence/service/v1/AuthenticationService.java"),
     ("Backend/src/main/java/com/example/smartAttendence/repository/v1/AttendanceRecordV1Repository.java", "/home/azureuser/Backend/src/main/java/com/example/smartAttendence/repository/v1/AttendanceRecordV1Repository.java"),
     ("Backend/src/main/java/com/example/smartAttendence/service/v1/StudentV1Service.java", "/home/azureuser/Backend/src/main/java/com/example/smartAttendence/service/v1/StudentV1Service.java"),
-    ("Backend/src/main/java/com/example/smartAttendence/controller/v1/StudentV1Controller.java", "/home/azureuser/Backend/src/main/java/com/example/smartAttendence/controller/v1/StudentV1Controller.java")
+    ("Backend/src/main/java/com/example/smartAttendence/controller/v1/StudentV1Controller.java", "/home/azureuser/Backend/src/main/java/com/example/smartAttendence/controller/v1/StudentV1Controller.java"),
+    ("Backend/src/main/java/com/example/smartAttendence/util/SecurityUtils.java", "/home/azureuser/Backend/src/main/java/com/example/smartAttendence/util/SecurityUtils.java"),
+    ("Backend/src/main/java/com/example/smartAttendence/service/v1/UnifiedAuthService.java", "/home/azureuser/Backend/src/main/java/com/example/smartAttendence/service/v1/UnifiedAuthService.java")
 ]
 
 for local, remote in files_to_patch:
