@@ -95,21 +95,37 @@ public class SecurityUtils {
     }
 
     public String getClientIP() {
-        jakarta.servlet.http.HttpServletRequest request = 
-            ((org.springframework.web.context.request.ServletRequestAttributes) 
-            org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes()).getRequest();
-        
-        String xfHeader = request.getHeader("X-Forwarded-For");
-        if (xfHeader == null) {
-            return request.getRemoteAddr();
+        try {
+            org.springframework.web.context.request.ServletRequestAttributes attrs = 
+                (org.springframework.web.context.request.ServletRequestAttributes) 
+                org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+            
+            if (attrs == null) return "0.0.0.0";
+            
+            jakarta.servlet.http.HttpServletRequest request = attrs.getRequest();
+            String xfHeader = request.getHeader("X-Forwarded-For");
+            if (xfHeader == null || xfHeader.isBlank()) {
+                return request.getRemoteAddr();
+            }
+            return xfHeader.split(",")[0].trim();
+        } catch (Exception e) {
+            return "0.0.0.0";
         }
-        return xfHeader.split(",")[0];
     }
 
     public String getUserAgent() {
-        jakarta.servlet.http.HttpServletRequest request = 
-            ((org.springframework.web.context.request.ServletRequestAttributes) 
-            org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes()).getRequest();
-        return request.getHeader("User-Agent");
+        try {
+            org.springframework.web.context.request.ServletRequestAttributes attrs = 
+                (org.springframework.web.context.request.ServletRequestAttributes) 
+                org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+            
+            if (attrs == null) return "UNKNOWN";
+            
+            jakarta.servlet.http.HttpServletRequest request = attrs.getRequest();
+            String ua = request.getHeader("User-Agent");
+            return ua != null ? ua : "UNKNOWN";
+        } catch (Exception e) {
+            return "UNKNOWN";
+        }
     }
 }

@@ -96,26 +96,32 @@ public class AuthV1Controller {
 
     @PostMapping("/complete-setup")
     public ResponseEntity<?> completeSetup(@Valid @RequestBody CompleteSetupRequest request, Authentication auth) {
-        log.info("[AUTH] START: complete-setup request received");
+        log.info("[AUTH] START: complete-setup request received for: {}", auth != null ? auth.getName() : "UNAUTHENTICATED");
         try {
             if (auth == null || !auth.isAuthenticated()) {
+                log.warn("[AUTH] Setup attempt without authentication context");
                 return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
             }
+            
             log.info("[AUTH] Calling authenticationService.completeSetup for user: {}", auth.getName());
             User user = authenticationService.completeSetup(request, auth.getName());
             if (user == null) {
+                log.error("[AUTH] Service returned null user for setup: {}", auth.getName());
                 return ResponseEntity.status(500).body(Map.of("error", "Setup failed: Service returned invalid user state"));
             }
 
+            log.info("[AUTH] Biometric data saved for {}. Generating fresh session...", auth.getName());
+
             // 🔐 CRITICAL: Generate new tokens after setup to ensure fresh session state
+            String roleStr = user.getRole() != null ? user.getRole().toString() : "STUDENT";
             String accessToken = jwtUtil.generateToken(
                 user.getEmail(), 
-                user.getRole().toString(),
+                roleStr,
                 request.deviceId(),
                 java.util.UUID.randomUUID().toString(),
                 securityUtils.getClientIP(),
                 securityUtils.getUserAgent(),
-                "CAMPUS" // Default to campus for setup
+                "CAMPUS"
             );
             
             String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), request.deviceId());
@@ -124,24 +130,29 @@ public class AuthV1Controller {
             response.put("message", "Biometric setup completed successfully");
             response.put("accessToken", accessToken);
             response.put("refreshToken", refreshToken);
+            
             Map<String, Object> userData = new HashMap<>();
             userData.put("id", user.getId());
             userData.put("name", user.getName());
             userData.put("email", user.getEmail());
-            userData.put("role", user.getRole() != null ? user.getRole().toString() : "UNKNOWN");
+            userData.put("role", roleStr);
             userData.put("firstLogin", false);
             userData.put("isTemporaryPassword", false);
             userData.put("deviceId", user.getDeviceId());
             userData.put("biometricSignature", user.getBiometricSignature());
+            userData.put("needsSetup", false);
             
             response.put("user", userData);
             response.put("secretKey", user.getSecretKey() != null ? user.getSecretKey() : "NOT_GENERATED");
             
-            log.info("[AUTH] SUCCESS: complete-setup finished for {}. Session updated with new tokens.", auth.getName());
+            log.info("[AUTH] SUCCESS: complete-setup finished for {}. Session updated.", auth.getName());
             return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            log.warn("[AUTH] Setup validation failed for {}: {}", auth.getName(), e.getMessage());
+            return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            log.error("[AUTH] FATAL ERROR during setup: {}", e.getMessage());
-            return ResponseEntity.status(500).body(Map.of("error", "Setup completion failed: " + e.getMessage()));
+            log.error("[AUTH] FATAL ERROR during setup for {}: ", auth != null ? auth.getName() : "UNKNOWN", e);
+            return ResponseEntity.status(500).body(Map.of("error", "Setup completion failed: " + (e.getMessage() != null ? e.getMessage() : "Internal Error")));
         }
     }
     
