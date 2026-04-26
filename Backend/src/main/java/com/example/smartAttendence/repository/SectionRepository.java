@@ -12,6 +12,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SectionRepository extends JpaRepository<Section, UUID> {
 
+    java.util.Optional<Section> findByName(String name);
+
     List<Section> findByProgramAndTotalAcademicYearsAndCurrentSemester(String program, String totalAcademicYears, Integer currentSemester);
 
     List<Section> findByTotalAcademicYearsAndCurrentSemester(String totalAcademicYears, Integer currentSemester);
