@@ -9,6 +9,7 @@ import com.example.smartAttendence.security.JwtUtil;
 import com.example.smartAttendence.service.RefreshTokenService;
 import com.example.smartAttendence.service.v1.UnifiedAuthService;
 import com.example.smartAttendence.service.v1.AuthenticationService;
+import com.example.smartAttendence.service.v1.PasswordResetService;
 import com.example.smartAttendence.util.SecurityUtils;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,6 +34,7 @@ public class AuthV1Controller {
     private final SecurityUtils securityUtils;
     private final AdvancedInputValidator advancedInputValidator;
     private final AuthenticationService authenticationService;
+    private final PasswordResetService passwordResetService;
 
     public AuthV1Controller(
             UnifiedAuthService unifiedAuthService,
@@ -40,13 +42,15 @@ public class AuthV1Controller {
             RefreshTokenService refreshTokenService,
             SecurityUtils securityUtils,
             AdvancedInputValidator advancedInputValidator,
-            AuthenticationService authenticationService) {
+            AuthenticationService authenticationService,
+            PasswordResetService passwordResetService) {
         this.unifiedAuthService = unifiedAuthService;
         this.jwtUtil = jwtUtil;
         this.refreshTokenService = refreshTokenService;
         this.securityUtils = securityUtils;
         this.advancedInputValidator = advancedInputValidator;
         this.authenticationService = authenticationService;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping(value = "/login", consumes = "application/json")
@@ -107,6 +111,30 @@ public class AuthV1Controller {
         } catch (Exception e) {
             log.error("[AUTH] FATAL ERROR during setup: {}", e.getMessage());
             return ResponseEntity.status(500).body(Map.of("error", "Setup completion failed: " + e.getMessage()));
+        }
+    }
+    
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        log.info("[AUTH] Forgot password request for: {}", request.emailOrPhone());
+        try {
+            passwordResetService.forgotPassword(request);
+            return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
+        } catch (Exception e) {
+            log.error("[AUTH] Forgot password error: {}", e.getMessage());
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordWithOTPRequest request) {
+        log.info("[AUTH] Reset password request with OTP for: {}", request.emailOrPhone());
+        try {
+            passwordResetService.resetPasswordWithOTP(request);
+            return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
+        } catch (Exception e) {
+            log.error("[AUTH] Reset password error: {}", e.getMessage());
+            return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
         }
     }
 
