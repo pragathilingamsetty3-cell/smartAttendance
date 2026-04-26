@@ -18,7 +18,7 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
   // Define public routes that don't need the dashboard layout
-  const publicRoutes = ['/login', '/forgot-password', '/reset-password', '/'];
+  const publicRoutes = ['/login', '/forgot-password', '/reset-password', '/', '/setup'];
   const isPublicRoute = publicRoutes.includes(pathname || '');
 
   if (isPublicRoute) {

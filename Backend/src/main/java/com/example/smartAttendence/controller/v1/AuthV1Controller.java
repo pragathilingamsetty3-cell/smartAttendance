@@ -59,21 +59,24 @@ public class AuthV1Controller {
             log.info("[AUTH] Login attempt for email: {}", request.getEmail());
             AuthenticationService.LoginResult result = unifiedAuthService.login(request.getEmail(), request.getPassword(), extractDeviceId(httpRequest));
             
+            String tokenFingerprint = generateDeviceFingerprint(httpRequest);
+            String accessToken = jwtUtil.generateToken(result.user().getEmail(), result.user().getRole().toString(), tokenFingerprint, UUID.randomUUID().toString(), getClientIP(httpRequest), httpRequest.getHeader("User-Agent"), "EXTERNAL");
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(result.user());
+
             if (result.status() == AuthenticationService.LoginStatus.REQUIRE_SETUP) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("requiresFirstLoginSetup", true);
                 response.put("message", "First login detected. Setup required.");
+                response.put("accessToken", accessToken);
+                response.put("refreshToken", refreshToken.getToken());
                 Map<String, Object> userData = new HashMap<>();
                 userData.put("id", result.user().getId());
                 userData.put("email", result.user().getEmail());
                 userData.put("role", result.user().getRole());
+                userData.put("name", result.user().getName() != null ? result.user().getName() : "");
                 response.put("user", userData);
                 return ResponseEntity.status(202).body(response);
             }
-
-            String tokenFingerprint = generateDeviceFingerprint(httpRequest);
-            String accessToken = jwtUtil.generateToken(result.user().getEmail(), result.user().getRole().toString(), tokenFingerprint, UUID.randomUUID().toString(), getClientIP(httpRequest), httpRequest.getHeader("User-Agent"), "EXTERNAL");
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(result.user());
 
             Map<String, Object> response = new HashMap<>();
             response.put("accessToken", accessToken);

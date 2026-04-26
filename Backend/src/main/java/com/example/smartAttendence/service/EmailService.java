@@ -55,7 +55,6 @@ public class EmailService {
             logger.info("Password reset OTP sent to: {}", toEmail);
         } catch (Exception e) {
             logger.error("Failed to send password reset OTP to: {}", toEmail, e);
-            throw new RuntimeException("Failed to send password reset OTP", e);
         }
     }
 
@@ -140,7 +139,6 @@ public class EmailService {
             logger.info("Weekly report sent successfully to: {}", toEmail);
         } catch (MessagingException e) {
             logger.error("Failed to send weekly report to: {}", toEmail, e);
-            throw new RuntimeException("Failed to send weekly report", e);
         }
     }
     

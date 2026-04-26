@@ -72,10 +72,11 @@ public class PasswordResetService {
 
         // Send OTP via email or SMS - works for ALL user types
         try {
-            if (request.method().equals("EMAIL") && user.getEmail() != null) {
+            String method = request.method() != null ? request.method() : "EMAIL";
+            if ("EMAIL".equals(method) && user.getEmail() != null) {
                 emailService.sendPasswordResetOTP(user.getEmail(), user.getName(), otp);
                 logger.info("OTP sent via email to {} for user type: {}", user.getEmail(), user.getRole());
-            } else if (request.method().equals("PHONE") && user.getStudentMobile() != null) {
+            } else if ("PHONE".equals(method) && user.getStudentMobile() != null) {
                 // TODO: Implement SMS service
                 sendSMSOTP(user.getStudentMobile(), otp);
                 logger.info("OTP sent via SMS to {} for user type: {}", user.getStudentMobile(), user.getRole());
