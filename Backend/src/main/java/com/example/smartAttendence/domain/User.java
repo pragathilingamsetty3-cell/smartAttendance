@@ -78,7 +78,7 @@ public class User implements Serializable {
     @Column(name = "device_fingerprint")
     private String deviceFingerprint;
 
-    @Column(name = "biometric_signature")
+    @Column(name = "biometric_signature", columnDefinition = "TEXT")
     private String biometricSignature;
 
     @Column(name = "device_registered_at")
