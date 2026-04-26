@@ -49,24 +49,16 @@ public class StudentV1Service {
 
         java.time.ZonedDateTime now = java.time.ZonedDateTime.now(IST);
         
-        // 1. Calculate Attendance Metrics
-        Instant thirtyDaysAgo = now.minusDays(30).toInstant();
-        List<AttendanceRecord> recentRecords = attendanceRecordRepository.findByStudentIdAndRecordedAtAfter(studentId, thirtyDaysAgo);
+        // 1. Calculate Attendance Metrics (Overall)
+        List<AttendanceRecord> allRecords = attendanceRecordRepository.findByStudentIdAndRecordedAtAfter(studentId, Instant.EPOCH);
         
-        long verifiedCount = recentRecords.stream()
-                .filter(r -> "PRESENT".equalsIgnoreCase(r.getStatus()) || "LATE".equalsIgnoreCase(r.getStatus()))
+        long attendedCount = allRecords.stream()
+                .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()))
                 .count();
-        long walkOutCount = recentRecords.stream()
-                .filter(r -> "WALK_OUT".equalsIgnoreCase(r.getStatus()))
-                .count();
-        long totalCount = recentRecords.size();
-
-        double attendanceRate = 100.0;
-        if (totalCount > 0) {
-            attendanceRate = ((double) verifiedCount / totalCount) * 100.0;
-        }
-
-        // 2. Fetch Today's Classes
+        
+        double overallAttendance = allRecords.isEmpty() ? 0.0 : (double) attendedCount * 100.0 / allRecords.size();
+        
+        // 2. Fetch Today's Classes (IST)
         DayOfWeek today = now.getDayOfWeek();
         List<Timetable> todayTimetable = new ArrayList<>();
         if (student.getSection() != null) {
@@ -111,10 +103,17 @@ public class StudentV1Service {
         
         String sectionName = student.getSection() != null ? student.getSection().getName() : "N/A";
 
+        // 6. AI Insights for Student
+        double avgConfidence = allRecords.stream()
+                .filter(r -> r.getConfidence() != null)
+                .mapToDouble(AttendanceRecord::getConfidence)
+                .average()
+                .orElse(92.0); // Baseline confidence for new students
+
         return StudentDashboardStatsDTO.builder()
-                .overallAttendance(Math.round(attendanceRate * 10.0) / 10.0)
-                .attendedClasses((int) verifiedCount)
-                .totalClasses((int) totalCount)
+                .overallAttendance(Math.round(overallAttendance * 10.0) / 10.0)
+                .attendedClasses((int) attendedCount)
+                .totalClasses(allRecords.size())
                 .attendanceTrend(attendanceTrend)
                 .todayClasses(todayClasses)
                 .activeSession(activeSession)
@@ -123,7 +122,7 @@ public class StudentV1Service {
                 .sectionName(sectionName)
                 .semester(student.getSemester())
                 .registrationNumber(student.getRegistrationNumber())
-                .aiVerificationConfidence(98.5) // Placeholder for upcoming AI feature
+                .aiVerificationConfidence(Math.round(avgConfidence * 10.0) / 10.0)
                 .build();
     }
 
@@ -131,17 +130,23 @@ public class StudentV1Service {
         Map<String, Double> trend = new LinkedHashMap<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         
+        Instant since = now.minusDays(7).toInstant();
+        List<Object[]> results = attendanceRecordRepository.getAttendanceTrendForStudent(studentId, since);
+        
+        // Initialize with 0s for last 7 days
         for (int i = 6; i >= 0; i--) {
-            LocalDate date = now.toLocalDate().minusDays(i);
-            String dateStr = date.format(formatter);
-            
-            Instant startOfDay = date.atStartOfDay(IST).toInstant();
-            Instant endOfDay = date.plusDays(1).atStartOfDay(IST).toInstant();
-            
-            // This is a simplified calculation for the trend
-            // In a real system, you'd have a more optimized query
-            trend.put(dateStr, 100.0); // Placeholder for now to avoid heavy queries in demo
+            trend.put(now.minusDays(i).format(formatter), 0.0);
         }
+        
+        // Populate with real data
+        for (Object[] row : results) {
+            if (row[0] != null && row[1] != null) {
+                String day = row[0].toString();
+                Double rate = ((Number) row[1]).doubleValue();
+                trend.put(day, Math.round(rate * 10.0) / 10.0);
+            }
+        }
+        
         return trend;
     }
 

@@ -138,28 +138,13 @@ public class AuthenticationService {
     /**
      * Complete first login setup and bind device
      */
-    public User completeSetup(CompleteSetupRequest request) {
-        logger.info("🎬 STARTING completeSetup walkthrough for request: {}", request);
+    @Transactional
+    public User completeSetup(CompleteSetupRequest request, String email) {
+        logger.info("🔑 START: completeSetup process for email: {}", email);
         
-        // Extract user identity from JWT token
-        org.springframework.security.core.Authentication auth = 
-            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        User user = userV1Repository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new RuntimeException("User not found: " + email));
         
-        if (auth == null || !auth.isAuthenticated()) {
-            logger.error("❌ SETUP FAILED: Security context is null or unauthenticated");
-            throw new IllegalArgumentException("Authentication required - please login again.");
-        }
-        
-        String email = auth.getName();
-        logger.info("🔍 Searching for student by email: {}", email);
-        
-        Optional<User> userOpt = userV1Repository.findByEmailIgnoreCase(email);
-        if (userOpt.isEmpty()) {
-            logger.error("❌ SETUP FAILED: User {} not found in database", email);
-            throw new IllegalArgumentException("Your user profile could not be found. Contact admin.");
-        }
-
-        User user = userOpt.get();
         logger.info("👤 Found user: {} (ID: {}) with current biometric state: {}", 
             email, user.getId(), (user.getBiometricSignature() != null ? "BOUND" : "UNBOUND"));
 

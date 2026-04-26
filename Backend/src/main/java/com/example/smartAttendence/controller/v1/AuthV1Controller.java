@@ -102,14 +102,41 @@ public class AuthV1Controller {
                 return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
             }
             log.info("[AUTH] Calling authenticationService.completeSetup for user: {}", auth.getName());
-            User user = authenticationService.completeSetup(request);
+            User user = authenticationService.completeSetup(request, auth.getName());
             if (user == null) {
                 return ResponseEntity.status(500).body(Map.of("error", "Setup failed: Service returned invalid user state"));
             }
+
+            // 🔐 CRITICAL: Generate new tokens after setup to ensure fresh session state
+            String accessToken = jwtUtil.generateToken(
+                user.getEmail(), 
+                user.getRole().toString(),
+                request.deviceId(),
+                java.util.UUID.randomUUID().toString(),
+                securityUtils.getClientIP(),
+                securityUtils.getUserAgent(),
+                "CAMPUS" // Default to campus for setup
+            );
+            
+            String refreshToken = jwtUtil.generateRefreshToken(user.getEmail(), request.deviceId());
+
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Biometric setup completed successfully");
+            response.put("accessToken", accessToken);
+            response.put("refreshToken", refreshToken);
+            response.put("user", Map.of(
+                "id", user.getId(),
+                "name", user.getName(),
+                "email", user.getEmail(),
+                "role", user.getRole().toString(),
+                "firstLogin", false,
+                "isTemporaryPassword", false,
+                "deviceId", user.getDeviceId(),
+                "biometricSignature", user.getBiometricSignature()
+            ));
             response.put("secretKey", user.getSecretKey() != null ? user.getSecretKey() : "NOT_GENERATED");
-            log.info("[AUTH] SUCCESS: complete-setup finished for {}", auth.getName());
+            
+            log.info("[AUTH] SUCCESS: complete-setup finished for {}. Session updated with new tokens.", auth.getName());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("[AUTH] FATAL ERROR during setup: {}", e.getMessage());

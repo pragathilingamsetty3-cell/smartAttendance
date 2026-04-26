@@ -27,9 +27,10 @@ class AuthService {
     }
   }
 
-  async completeSetup(request: CompleteSetupRequest): Promise<void> {
+  async completeSetup(request: CompleteSetupRequest): Promise<any> {
     try {
-      await apiClient.post('/api/v1/auth/complete-setup', request);
+      const response = await apiClient.post('/api/v1/auth/complete-setup', request);
+      return response.data;
     } catch (error: unknown) {
       throw handleAuthError(error, '');
     }

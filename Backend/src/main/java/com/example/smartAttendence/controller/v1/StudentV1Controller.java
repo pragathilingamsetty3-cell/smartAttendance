@@ -32,11 +32,8 @@ public class StudentV1Controller {
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<?> getDashboardStats() {
         try {
-            // Get current user from security context
             var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
             String email = auth.getName();
-            
-            // Fetch student user details
             User student = adminV1Service.getUserByEmail(email);
             
             if (student == null) {
@@ -48,6 +45,39 @@ public class StudentV1Controller {
         } catch (Exception e) {
             log.error("Student dashboard sync failed", e);
             return ResponseEntity.status(500).body(Map.of("error", "Student dashboard sync failed: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Get complete student profile details
+     */
+    @GetMapping("/profile")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<?> getProfile() {
+        try {
+            var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            User student = adminV1Service.getUserByEmail(auth.getName());
+            
+            if (student == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Profile not found"));
+            }
+
+            return ResponseEntity.ok(Map.of(
+                "id", student.getId(),
+                "name", student.getName(),
+                "email", student.getEmail(),
+                "registrationNumber", student.getRegistrationNumber(),
+                "department", student.getDepartment(),
+                "section", student.getSection() != null ? student.getSection().getName() : "N/A",
+                "semester", student.getSemester() != null ? student.getSemester() : "N/A",
+                "status", student.getStatus(),
+                "joinedAt", student.getCreatedAt(),
+                "studentMobile", student.getStudentMobile() != null ? student.getStudentMobile() : "N/A",
+                "parentEmail", student.getParentEmail() != null ? student.getParentEmail() : "N/A",
+                "parentMobile", student.getParentMobile() != null ? student.getParentMobile() : "N/A"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to fetch profile: " + e.getMessage()));
         }
     }
 }

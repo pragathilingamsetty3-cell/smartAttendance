@@ -48,7 +48,7 @@ export default function SetupPage() {
       // 2. Obtain Consistent Device ID (Fingerprint)
       const deviceId = getDeviceFingerprint();
       
-      await authService.completeSetup({
+      const response = await authService.completeSetup({
         deviceId,
         biometricSignature,
         phoneNumber: user?.phoneNumber || '',
@@ -56,8 +56,12 @@ export default function SetupPage() {
 
       setMessage('✅ Setup completed! Device registered successfully.');
       
-      // Update local auth store so user state matches
-      if (user) {
+      // Update local auth store with new tokens and updated user state
+      if (response && response.accessToken) {
+        useAuthStore.getState().setToken(response.accessToken, response.refreshToken);
+        useAuthStore.getState().setUser(response.user);
+      } else if (user) {
+        // Fallback for older API versions
         useAuthStore.getState().setUser({
           ...user,
           deviceId,
