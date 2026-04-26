@@ -5,7 +5,7 @@ import com.example.smartAttendence.dto.v1.CompleteSetupRequest;
 import com.example.smartAttendence.entity.DeviceBinding;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
 import com.example.smartAttendence.repository.DeviceBindingRepository;
-import com.example.smartAttendence.repository.v1.SectionV1Repository;
+import com.example.smartAttendence.repository.SectionRepository;
 import com.example.smartAttendence.entity.Section;
 import com.example.smartAttendence.service.EmailService;
 import org.slf4j.Logger;
@@ -27,17 +27,17 @@ public class AuthenticationService {
     private final UserV1Repository userV1Repository;
     private final PasswordEncoder passwordEncoder;
     private final DeviceBindingRepository deviceBindingRepository;
-    private final SectionV1Repository sectionV1Repository;
+    private final SectionRepository sectionRepository;
 
     public AuthenticationService(
             UserV1Repository userV1Repository,
             PasswordEncoder passwordEncoder,
             DeviceBindingRepository deviceBindingRepository,
-            SectionV1Repository sectionV1Repository) {
+            SectionRepository sectionRepository) {
         this.userV1Repository = userV1Repository;
         this.passwordEncoder = passwordEncoder;
         this.deviceBindingRepository = deviceBindingRepository;
-        this.sectionV1Repository = sectionV1Repository;
+        this.sectionRepository = sectionRepository;
     }
 
     /**
@@ -180,7 +180,7 @@ public class AuthenticationService {
         }
 
         if (request.section() != null && !request.section().isBlank()) {
-            Section section = sectionV1Repository.findByName(request.section())
+            Section section = sectionRepository.findByName(request.section())
                     .orElseThrow(() -> new IllegalArgumentException("Invalid section: " + request.section()));
             user.setSection(section);
         }
