@@ -107,23 +107,6 @@ public class AuthV1Controller {
                 return ResponseEntity.status(500).body(Map.of("error", "Setup failed: Service returned invalid user state"));
             }
 
-            // 4. Optionally Update Registration Info (Only if provided)
-            if (request.registrationNumber() != null && !request.registrationNumber().isBlank()) {
-                // Assuming logic exists in service or repository, represented as direct update for instruction consistency
-            }
-
-            if (request.section() != null && !request.section().isBlank()) {
-                // Section update logic
-            }
-        
-            if (request.department() != null && !request.department().isBlank()) {
-                // Department update logic
-            }
-        
-            if (request.academicYear() != null && !request.academicYear().isBlank()) {
-                // Academic year update logic
-            }
-
             // 🔐 CRITICAL: Generate new tokens after setup to ensure fresh session state
             String accessToken = jwtUtil.generateToken(
                 user.getEmail(), 
