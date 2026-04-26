@@ -19,8 +19,8 @@ jobs:
           cache: maven
 
       - name: Build with Maven
+        working-directory: Backend
         run: |
-          cd Backend
           chmod +x mvnw
           ./mvnw clean package -DskipTests
 
