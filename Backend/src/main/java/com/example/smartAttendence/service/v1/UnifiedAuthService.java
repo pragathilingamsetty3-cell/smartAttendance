@@ -37,8 +37,8 @@ public class UnifiedAuthService {
         return authenticationService.getUserByEmail(email);
     }
 
-    public User completeSetup(CompleteSetupRequest request) {
-        return authenticationService.completeSetup(request);
+    public User completeSetup(CompleteSetupRequest request, String email) {
+        return authenticationService.completeSetup(request, email);
     }
 
     public void changePassword(String email, ChangePasswordRequest request) {
@@ -69,6 +69,6 @@ public class UnifiedAuthService {
      * Complete first login setup - delegated to AuthenticationService
      */
     public void completeFirstLoginSetup(String email, CompleteSetupRequest request) {
-        authenticationService.completeSetup(request);
+        authenticationService.completeSetup(request, email);
     }
 }

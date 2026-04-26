@@ -62,20 +62,21 @@ public class StudentV1Controller {
                 return ResponseEntity.status(404).body(Map.of("error", "Profile not found"));
             }
 
-            return ResponseEntity.ok(Map.of(
-                "id", student.getId(),
-                "name", student.getName(),
-                "email", student.getEmail(),
-                "registrationNumber", student.getRegistrationNumber(),
-                "department", student.getDepartment(),
-                "section", student.getSection() != null ? student.getSection().getName() : "N/A",
-                "semester", student.getSemester() != null ? student.getSemester() : "N/A",
-                "status", student.getStatus(),
-                "joinedAt", student.getCreatedAt(),
-                "studentMobile", student.getStudentMobile() != null ? student.getStudentMobile() : "N/A",
-                "parentEmail", student.getParentEmail() != null ? student.getParentEmail() : "N/A",
-                "parentMobile", student.getParentMobile() != null ? student.getParentMobile() : "N/A"
-            ));
+            java.util.Map<String, Object> profile = new java.util.HashMap<>();
+            profile.put("id", student.getId());
+            profile.put("name", student.getName());
+            profile.put("email", student.getEmail());
+            profile.put("registrationNumber", student.getRegistrationNumber());
+            profile.put("department", student.getDepartment());
+            profile.put("section", student.getSection() != null ? student.getSection().getName() : "N/A");
+            profile.put("semester", student.getSemester() != null ? student.getSemester() : "N/A");
+            profile.put("status", student.getStatus());
+            profile.put("joinedAt", student.getCreatedAt());
+            profile.put("studentMobile", student.getStudentMobile() != null ? student.getStudentMobile() : "N/A");
+            profile.put("parentEmail", student.getParentEmail() != null ? student.getParentEmail() : "N/A");
+            profile.put("parentMobile", student.getParentMobile() != null ? student.getParentMobile() : "N/A");
+
+            return ResponseEntity.ok(profile);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "Failed to fetch profile: " + e.getMessage()));
         }

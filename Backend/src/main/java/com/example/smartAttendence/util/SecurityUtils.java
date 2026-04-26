@@ -93,4 +93,23 @@ public class SecurityUtils {
                 .map(user -> Role.FACULTY.equals(user.getRole()))
                 .orElse(false);
     }
+
+    public String getClientIP() {
+        jakarta.servlet.http.HttpServletRequest request = 
+            ((org.springframework.web.context.request.ServletRequestAttributes) 
+            org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes()).getRequest();
+        
+        String xfHeader = request.getHeader("X-Forwarded-For");
+        if (xfHeader == null) {
+            return request.getRemoteAddr();
+        }
+        return xfHeader.split(",")[0];
+    }
+
+    public String getUserAgent() {
+        jakarta.servlet.http.HttpServletRequest request = 
+            ((org.springframework.web.context.request.ServletRequestAttributes) 
+            org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes()).getRequest();
+        return request.getHeader("User-Agent");
+    }
 }
