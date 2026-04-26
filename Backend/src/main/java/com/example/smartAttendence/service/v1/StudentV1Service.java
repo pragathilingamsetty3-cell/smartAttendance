@@ -43,7 +43,7 @@ public class StudentV1Service {
     /**
      * Get student dashboard statistics - CACHED for high speed
      */
-    @org.springframework.cache.annotation.Cacheable(value = "studentDashboardStats", key = "#studentId")
+    
     public StudentDashboardStatsDTO getStudentDashboardStats(UUID studentId) {
         User student = userV1Repository.findById(studentId)
                 .orElseThrow(() -> new IllegalArgumentException("Student not found: " + studentId));
