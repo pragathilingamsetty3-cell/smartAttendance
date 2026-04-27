@@ -47,13 +47,6 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
       icon: <Calendar className="text-amber-400" size={20} />,
       href: '/timetable',
       color: 'amber'
-    },
-    {
-      title: 'Attendance Log',
-      desc: 'Session-wise analytics',
-      icon: <BookOpen className="text-emerald-400" size={20} />,
-      href: '/attendance',
-      color: 'emerald'
     }
   ];
 

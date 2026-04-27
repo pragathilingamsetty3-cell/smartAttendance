@@ -87,13 +87,14 @@ export function Sidebar() {
   const user = useAuthStore((s) => s.user);
 
   const filteredNavigation = NAV_ITEMS.filter(item => {
-    if (!item.requiredRole) return true;
     if (!user) return false;
     
-    // Normalize user role by removing 'ROLE_' prefix if present
-    const userRole = user.role.replace('ROLE_', '');
+    // Safety: Always hide Attendance for students
+    if (user.role.includes('STUDENT') && item.name === 'Attendance') return false;
+
+    if (!item.requiredRole) return true;
     
-    // Check against normalized strings
+    const userRole = user.role.replace('ROLE_', '');
     return item.requiredRole.some(role => role.replace('ROLE_', '') === userRole);
   });
 

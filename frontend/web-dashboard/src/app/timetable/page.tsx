@@ -48,9 +48,16 @@ export default function TimetablePage() {
 
   useEffect(() => {
     if (user && userRole) {
-      // 🎓 FOR STUDENTS: Automatically set their assigned section
-      if (userRole === 'STUDENT' && user.sectionId) {
-        setSelectedSection(user.sectionId);
+      // 🎓 FOR STUDENTS: Automatically set their assigned section (Robust Detection)
+      if (userRole === 'STUDENT' || String(userRole).includes('STUDENT')) {
+        const detectedSectionId = user.sectionId || user.section_id || user.section?.id;
+        
+        if (detectedSectionId) {
+          console.log('🎓 DETECTED STUDENT SECTION:', detectedSectionId);
+          setSelectedSection(detectedSectionId);
+        } else {
+          console.warn('⚠️ WARNING: Student logged in but no Section ID found in user object!', user);
+        }
       }
       fetchTimetable();
     }
