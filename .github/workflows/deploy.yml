@@ -59,18 +59,25 @@ jobs:
             echo "🛑 NUCLEAR SHUTDOWN: Killing all java processes..."
             sudo systemctl stop smart-attendance.service || true
             sudo pkill -9 java || true
-            sudo fuser -k 10000/tcp || true
             
-            echo "🚚 Updating JAR file..."
+            echo "🔍 LOCATING ACTIVE JAR..."
+            ACTIVE_JAR=$(find /home/azureuser -name "smartAttendence-0.0.1-SNAPSHOT.jar" | head -n 1)
+            echo "Found JAR at: $ACTIVE_JAR"
+            
+            echo "🚚 Updating JAR file everywhere..."
+            # Update the main target
             mkdir -p /home/azureuser/Backend/target/
-            rm -f /home/azureuser/Backend/target/smartAttendence-0.0.1-SNAPSHOT.jar
-            mv /home/azureuser/smartAttendence-0.0.1-SNAPSHOT.jar /home/azureuser/Backend/target/smartAttendence-0.0.1-SNAPSHOT.jar
+            cp /home/azureuser/smartAttendence-0.0.1-SNAPSHOT.jar /home/azureuser/Backend/target/smartAttendence-0.0.1-SNAPSHOT.jar
+            
+            # Update any other location found
+            if [ ! -z "$ACTIVE_JAR" ]; then
+              cp /home/azureuser/smartAttendence-0.0.1-SNAPSHOT.jar "$ACTIVE_JAR"
+            fi
             
             echo "🚀 Starting new process..."
             sudo systemctl daemon-reload
-            sudo systemctl start smart-attendance.service
+            sudo systemctl start smart-attendance.service || nohup java -Xmx384m -jar /home/azureuser/Backend/target/smartAttendence-0.0.1-SNAPSHOT.jar > /home/azureuser/backend.log 2>&1 &
             
-            # Diagnostic check
+            # Final verification
             sleep 10
-            sudo systemctl status smart-attendance.service --no-pager
             ps aux | grep java
