@@ -12,6 +12,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.example.smartAttendence.repository.v1.UserV1Repository;
+import com.example.smartAttendence.repository.SectionRepository;
+import com.example.smartAttendence.entity.Section;
+import java.util.UUID;
 
 import java.util.Map;
 
@@ -24,6 +28,8 @@ public class StudentV1Controller {
     private final StudentV1Service studentV1Service;
     private final AdminV1Service adminV1Service;
     private final SecurityUtils securityUtils;
+    private final UserV1Repository userV1Repository;
+    private final SectionRepository sectionRepository;
 
     /**
      * Get real-time dashboard statistics for student
@@ -92,12 +98,36 @@ public class StudentV1Controller {
             var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
             User student = adminV1Service.getUserByEmail(auth.getName());
             
-            if (student == null || student.getSectionId() == null) {
+            if (student == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Student not found"));
+            }
+
+            UUID sectionId = student.getSectionId();
+            
+            // 🚨 RECOVERY: If ID is null, try to find by Name from the linked Section object
+            if (sectionId == null && student.getSection() != null) {
+                String sectionName = student.getSection().getName();
+                log.warn("⚠️ [RECOVERY] Student {} has null SectionID. Searching by name: {}", student.getId(), sectionName);
+                
+                var sectionOpt = sectionRepository.findByName(sectionName);
+                
+                if (sectionOpt.isPresent()) {
+                    Section s = sectionOpt.get();
+                    sectionId = s.getId();
+                    student.setSectionId(sectionId);
+                    student.setSection(s);
+                    userV1Repository.save(student);
+                    log.info("✅ [RECOVERY] Repaired student {} with section ID {}", student.getId(), sectionId);
+                }
+            }
+
+            if (sectionId == null) {
+                log.error("❌ [FAILURE] Student {} has no section ID or Name link.", student.getId());
                 return ResponseEntity.ok(java.util.Collections.emptyList());
             }
 
             java.util.List<com.example.smartAttendence.entity.Timetable> timetables = 
-                adminV1Service.getTimetablesForSection(student.getSectionId());
+                adminV1Service.getTimetablesForSection(sectionId);
             
             return ResponseEntity.ok()
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
