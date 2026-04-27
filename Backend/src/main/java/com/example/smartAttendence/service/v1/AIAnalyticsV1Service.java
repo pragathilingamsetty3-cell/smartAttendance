@@ -302,7 +302,7 @@ public class AIAnalyticsV1Service {
             
             response.put("systemDiagnostics", diagnostics);
             response.put("totalStudents", studentCount);
-            response.put("systemVersion", "v2.2.1-DIAGNOSTIC-FIX");
+            response.put("systemVersion", "v2.3.0-FINAL-ATTEMPT");
             response.put("activeStudents", attendanceRepository.countActiveFiltered(nowIST.toInstant().minusSeconds(3600), finalDeptId, finalSectId));
             response.put("anomaliesDetected", distinctAnomalies);
             response.put("activeAlerts", filteredAlerts); 
@@ -511,7 +511,7 @@ public class AIAnalyticsV1Service {
         if (totalRecords == 0) {
             return Map.of(
                 "insights", """
-                    ### AI Executive Summary (v2.1.0-FIX)
+                    ### AI Executive Summary (v2.3.0-FINAL-ATTEMPT)
                     **System Pulse:** System is ONLINE and healthy.
                     
                     **AI Engine Status:** AI Engine is in standby mode awaiting first session data.
