@@ -50,8 +50,8 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
     }
   ];
 
-  // Only show Biometric Setup if not already done
-  const needsSetup = !user?.biometricSignature;
+  // Only show Biometric Setup if not already done or profile is incomplete
+  const needsSetup = !user?.biometricSignature || !user?.sectionId;
   
   const activeQuickActions = needsSetup 
     ? [
@@ -75,6 +75,7 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
   }
 
   // needsSetup defined above inside component body
+  console.log("📊 Student Dashboard Stats:", stats);
 
   return (
     <div className="space-y-8">
@@ -90,9 +91,9 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
               <Fingerprint size={24} />
             </div>
             <div>
-              <p className="text-white font-bold">Biometric Setup Required</p>
+              <p className="text-white font-bold">Profile Setup Incomplete</p>
               <p className="text-slate-400 text-xs mt-1">
-                Your account is currently not bound to any device. You must register your device and fingerprint to mark attendance.
+                Your profile is missing a section assignment or biometric data. You must complete your profile to access all features.
               </p>
             </div>
           </div>
