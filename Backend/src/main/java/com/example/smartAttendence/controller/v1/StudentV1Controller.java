@@ -81,4 +81,67 @@ public class StudentV1Controller {
             return ResponseEntity.status(500).body(Map.of("error", "Failed to fetch profile: " + e.getMessage()));
         }
     }
+
+    /**
+     * Get timetable for the student's section (Bypassing /admin security)
+     */
+    @GetMapping("/timetable")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<?> getTimetable() {
+        try {
+            var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            User student = adminV1Service.getUserByEmail(auth.getName());
+            
+            if (student == null || student.getSectionId() == null) {
+                return ResponseEntity.ok(java.util.Collections.emptyList());
+            }
+
+            java.util.List<com.example.smartAttendence.entity.Timetable> timetables = 
+                adminV1Service.getTimetablesForSection(student.getSectionId());
+            
+            return ResponseEntity.ok()
+                .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                .body(timetables.stream().map(this::mapToDTO).toList());
+        } catch (Exception e) {
+            log.error("Failed to fetch student timetable", e);
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    private Map<String, Object> mapToDTO(com.example.smartAttendence.entity.Timetable t) {
+        Map<String, Object> dto = new java.util.HashMap<>();
+        dto.put("id", t.getId());
+        dto.put("subject", t.getSubject());
+        dto.put("dayOfWeek", t.getDayOfWeek() != null ? t.getDayOfWeek().name() : null);
+        dto.put("startTime", t.getStartTime() != null ? t.getStartTime().toString() : null);
+        dto.put("endTime", t.getEndTime() != null ? t.getEndTime().toString() : null);
+        dto.put("isExamDay", t.getIsExamDay());
+        dto.put("isHoliday", t.getIsHoliday());
+        dto.put("isAdhoc", t.getIsAdhoc());
+        
+        if (t.getRoom() != null) {
+            dto.put("room", Map.of(
+                "id", t.getRoom().getId(),
+                "name", t.getRoom().getName(),
+                "building", t.getRoom().getBuilding()
+            ));
+        }
+        
+        if (t.getFaculty() != null) {
+            dto.put("faculty", Map.of(
+                "id", t.getFaculty().getId(),
+                "name", t.getFaculty().getName(),
+                "email", t.getFaculty().getEmail()
+            ));
+        }
+
+        if (t.getSection() != null) {
+            dto.put("section", Map.of(
+                "id", t.getSection().getId(),
+                "name", t.getSection().getName()
+            ));
+        }
+        
+        return dto;
+    }
 }

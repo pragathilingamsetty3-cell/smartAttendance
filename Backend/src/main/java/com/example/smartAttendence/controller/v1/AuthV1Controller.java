@@ -242,7 +242,7 @@ public class AuthV1Controller {
     @PermitAll
     public ResponseEntity<Map<String, String>> getVersion() {
         return ResponseEntity.ok(Map.of(
-            "version", "VER-MASTER-FAIL-SAFE-100",
+            "version", "VER-STUDENT-SAFE-BYPASS-102",
             "status", "ACTIVE",
             "timestamp", String.valueOf(System.currentTimeMillis())
         ));

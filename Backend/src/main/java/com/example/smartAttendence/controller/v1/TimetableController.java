@@ -96,6 +96,15 @@ public class TimetableController {
     }
 
     /**
+     * Student-safe endpoint to bypass /admin/ security restrictions
+     */
+    @GetMapping("/student/timetable/{sectionId}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'FACULTY', 'ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<?> getStudentTimetable(@PathVariable UUID sectionId) {
+        return getTimetablesForSection(sectionId);
+    }
+
+    /**
      * Get timetable for a specific section
      */
     @GetMapping("/section/{sectionId}")
