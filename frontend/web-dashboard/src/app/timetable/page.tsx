@@ -48,15 +48,19 @@ export default function TimetablePage() {
 
   useEffect(() => {
     if (user && userRole) {
-      // 🎓 FOR STUDENTS: Automatically set their assigned section (Robust Detection)
-      if (userRole === 'STUDENT' || String(userRole).includes('STUDENT')) {
-        const detectedSectionId = user.sectionId || user.section_id || user.section?.id;
+      // 🎓 FOR STUDENTS: Automatically set their assigned section
+      const isStudent = userRole === 'STUDENT' || String(userRole).includes('STUDENT');
+      
+      if (isStudent) {
+        // Use type casting to check for variations without crashing the build
+        const u = user as any;
+        const detectedSectionId = u.sectionId || u.section_id || u.section?.id;
         
         if (detectedSectionId) {
           console.log('🎓 DETECTED STUDENT SECTION:', detectedSectionId);
           setSelectedSection(detectedSectionId);
         } else {
-          console.warn('⚠️ WARNING: Student logged in but no Section ID found in user object!', user);
+          console.warn('⚠️ WARNING: No Section ID found for student!', user);
         }
       }
       fetchTimetable();
