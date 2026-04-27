@@ -564,9 +564,9 @@ public class AdminV1Service {
      * Returns basic system stats for AI context
      */
     public String getSystemStats() {
-        long totalStudents = userV1Repository.countByRole(com.example.smartAttendence.enums.Role.STUDENT);
+        long totalStudents = userV1Repository.countByRole(java.util.List.of(com.example.smartAttendence.enums.Role.STUDENT));
         long totalRooms = roomRepository.count();
-        long totalAdmins = userV1Repository.countByRole(com.example.smartAttendence.enums.Role.ADMIN);
+        long totalAdmins = userV1Repository.countByRole(java.util.List.of(com.example.smartAttendence.enums.Role.ADMIN));
         
         return String.format("""
             System Statistics:
@@ -642,7 +642,7 @@ public class AdminV1Service {
             totalUsers = userV1Repository.count();
             
             // Count all student-type roles (STUDENT, CR, LR) in ONE query
-            totalStudents = userV1Repository.countByRoles(
+            totalStudents = userV1Repository.countByRole(
                 Arrays.asList(
                     com.example.smartAttendence.enums.Role.STUDENT, 
                     com.example.smartAttendence.enums.Role.CR, 
@@ -1188,7 +1188,7 @@ public class AdminV1Service {
                             .stream().map(com.example.smartAttendence.entity.Section::getId).collect(Collectors.toList());
                     
                     long studentCount = sectionIds.isEmpty() ? 0 : 
-                            userV1Repository.countBySectionIdInRoleAndStatus(sectionIds, com.example.smartAttendence.enums.Role.STUDENT, com.example.smartAttendence.domain.UserStatus.ACTIVE);
+                            userV1Repository.countBySectionIdInRoleAndStatus(sectionIds, java.util.List.of(com.example.smartAttendence.enums.Role.STUDENT), com.example.smartAttendence.domain.UserStatus.ACTIVE);
                     
                     // Diagnostic Student Discovery Log
                     if (studentCount > 0) {
@@ -1199,7 +1199,7 @@ public class AdminV1Service {
                     
                     // 2. Calculate faculty count using optimized identifier matching
                     List<String> identifiers = Arrays.asList(dept.getId().toString(), dept.getName(), dept.getCode());
-                    long facultyCount = userV1Repository.countByDepartmentsRoleAndStatus(identifiers, com.example.smartAttendence.enums.Role.FACULTY, com.example.smartAttendence.domain.UserStatus.ACTIVE);
+                    long facultyCount = userV1Repository.countByDepartmentsRoleAndStatus(identifiers, java.util.List.of(com.example.smartAttendence.enums.Role.FACULTY), com.example.smartAttendence.domain.UserStatus.ACTIVE);
                     
                     // 3. 🚀 AUTO-REMEDIATION: Migrate legacy Name/Code based records to UUIDs asynchronously
                     // (Moved to background to prevent blocking GET requests)

@@ -104,7 +104,7 @@ function AnalyticsContent() {
     fetchQuickStats();
     const interval = setInterval(fetchQuickStats, 60000); // Refresh every minute
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedDepartment, selectedSection]);
 
   if (isLoading) {
     return (

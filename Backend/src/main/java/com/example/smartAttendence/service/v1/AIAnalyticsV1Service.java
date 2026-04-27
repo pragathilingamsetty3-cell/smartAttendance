@@ -162,14 +162,10 @@ public class AIAnalyticsV1Service {
             try {
                 if (sectionId != null) {
                     // Include all student-type roles for the section
-                    studentCount = userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), com.example.smartAttendence.enums.Role.STUDENT, com.example.smartAttendence.domain.UserStatus.ACTIVE);
-                    studentCount += userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), com.example.smartAttendence.enums.Role.CR, com.example.smartAttendence.domain.UserStatus.ACTIVE);
-                    studentCount += userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), com.example.smartAttendence.enums.Role.LR, com.example.smartAttendence.domain.UserStatus.ACTIVE);
+                    studentCount = userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), studentRoles, com.example.smartAttendence.domain.UserStatus.ACTIVE);
                 } else if (!deptIdentifiers.isEmpty()) {
                     // ROBUST MATCHING: Use identifiers (Name/Code) to find students not yet assigned to sections
-                    studentCount = userRepository.countByDepartmentsRoleAndStatus(deptIdentifiers, com.example.smartAttendence.enums.Role.STUDENT, com.example.smartAttendence.domain.UserStatus.ACTIVE);
-                    studentCount += userRepository.countByDepartmentsRoleAndStatus(deptIdentifiers, com.example.smartAttendence.enums.Role.CR, com.example.smartAttendence.domain.UserStatus.ACTIVE);
-                    studentCount += userRepository.countByDepartmentsRoleAndStatus(deptIdentifiers, com.example.smartAttendence.enums.Role.LR, com.example.smartAttendence.domain.UserStatus.ACTIVE);
+                    studentCount = userRepository.countByDepartmentsRoleAndStatus(deptIdentifiers, studentRoles, com.example.smartAttendence.domain.UserStatus.ACTIVE);
                 } else {
                     // Global count: Use the new repository method to count all student roles with ACTIVE status
                     studentCount = userRepository.countByRoleInAndStatus(studentRoles, com.example.smartAttendence.domain.UserStatus.ACTIVE);

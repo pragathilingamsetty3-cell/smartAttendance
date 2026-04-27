@@ -36,7 +36,7 @@ public interface UserV1Repository extends JpaRepository<User, UUID> {
     long countByDepartmentsAndRoles(@Param("departments") List<String> departments, @Param("roles") List<Role> roles);
 
     @Query("SELECT COUNT(u) FROM V1User u WHERE u.role IN :roles")
-    long countByRoles(@Param("roles") List<Role> roles);
+    long countByRole(@Param("roles") List<Role> roles);
 
     // AI and Autonomous System Support
     List<User> findBySectionAndRole(com.example.smartAttendence.entity.Section section, Role role);
@@ -66,11 +66,11 @@ public interface UserV1Repository extends JpaRepository<User, UUID> {
     @Query("SELECT COUNT(u) FROM V1User u WHERE u.section.department.id = :deptId AND u.role = :role AND u.status = 'ACTIVE'")
     long countBySection_Department_IdAndRole(@Param("deptId") UUID deptId, @Param("role") Role role);
 
-    @Query("SELECT COUNT(u) FROM V1User u WHERE u.department IN :departments AND u.role = :role AND u.status = :status")
-    long countByDepartmentsRoleAndStatus(@Param("departments") List<String> departments, @Param("role") Role role, @Param("status") com.example.smartAttendence.domain.UserStatus status);
+    @Query("SELECT COUNT(u) FROM V1User u WHERE u.department IN :departments AND u.role IN :roles AND u.status = :status")
+    long countByDepartmentsRoleAndStatus(@Param("departments") List<String> departments, @Param("roles") List<Role> roles, @Param("status") com.example.smartAttendence.domain.UserStatus status);
 
-    @Query("SELECT COUNT(u) FROM V1User u WHERE u.sectionId IN :sectionIds AND u.role = :role AND u.status = :status")
-    long countBySectionIdInRoleAndStatus(@Param("sectionIds") List<UUID> sectionIds, @Param("role") Role role, @Param("status") com.example.smartAttendence.domain.UserStatus status);
+    @Query("SELECT COUNT(u) FROM V1User u WHERE u.sectionId IN :sectionIds AND u.role IN :roles AND u.status = :status")
+    long countBySectionIdInRoleAndStatus(@Param("sectionIds") List<UUID> sectionIds, @Param("roles") List<Role> roles, @Param("status") com.example.smartAttendence.domain.UserStatus status);
 
     @Query("SELECT u FROM V1User u WHERE u.sectionId IN :sectionIds AND u.role = 'STUDENT' AND u.status = 'ACTIVE'")
     List<User> findStudentsBySections(@Param("sectionIds") List<UUID> sectionIds);

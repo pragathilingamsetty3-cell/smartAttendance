@@ -63,7 +63,7 @@ public interface AttendanceRecordV1Repository extends JpaRepository<AttendanceRe
     long countActiveFiltered(@Param("since") Instant since, @Param("deptId") UUID deptId, @Param("sectId") UUID sectId);
 
     @Query("SELECT COUNT(u) FROM V1User u " +
-           "WHERE u.role = com.example.smartAttendence.enums.Role.STUDENT " +
+           "WHERE u.role IN (com.example.smartAttendence.enums.Role.STUDENT, com.example.smartAttendence.enums.Role.CR, com.example.smartAttendence.enums.Role.LR) " +
            "AND (:deptId IS NULL OR (u.section IS NOT NULL AND u.section.department.id = :deptId)) " +
            "AND (:sectId IS NULL OR (u.section IS NOT NULL AND u.section.id = :sectId)) " +
            "AND EXISTS (SELECT 1 FROM AttendanceRecord ar WHERE ar.student.id = u.id " +
@@ -71,7 +71,7 @@ public interface AttendanceRecordV1Repository extends JpaRepository<AttendanceRe
     long countDistinctStudentByAiStatusFiltered(@Param("status") String status, @Param("since") Instant since, @Param("deptId") java.util.UUID deptId, @Param("sectId") java.util.UUID sectId);
 
     @Query("SELECT COUNT(u) FROM V1User u " +
-           "WHERE u.role = com.example.smartAttendence.enums.Role.STUDENT " +
+           "WHERE u.role IN (com.example.smartAttendence.enums.Role.STUDENT, com.example.smartAttendence.enums.Role.CR, com.example.smartAttendence.enums.Role.LR) " +
            "AND (:deptId IS NULL OR (u.section IS NOT NULL AND u.section.department.id = :deptId)) " +
            "AND (:sectId IS NULL OR (u.section IS NOT NULL AND u.section.id = :sectId)) " +
            "AND EXISTS (SELECT 1 FROM AttendanceRecord ar WHERE ar.student.id = u.id " +
@@ -82,7 +82,7 @@ public interface AttendanceRecordV1Repository extends JpaRepository<AttendanceRe
            "  SELECT DISTINCT ON (ar.student_id) ar.status " +
            "  FROM attendance_records ar " +
            "  JOIN users u ON ar.student_id = u.id " +
-           "  WHERE u.role = 'STUDENT' " +
+           "  WHERE u.role IN ('STUDENT', 'CR', 'LR') " +
            "  AND (:deptId IS NULL OR u.department = cast(:deptId as varchar)) " +
            "  AND (:sectId IS NULL OR u.section_id = cast(:sectId as uuid)) " +
            "  AND ar.recorded_at >= :since " +
@@ -91,7 +91,7 @@ public interface AttendanceRecordV1Repository extends JpaRepository<AttendanceRe
     long countByLatestStatusIn(@Param("statuses") List<String> statuses, @Param("since") Instant since, @Param("deptId") java.util.UUID deptId, @Param("sectId") java.util.UUID sectId);
 
     @Query("SELECT COUNT(u) FROM V1User u " +
-           "WHERE u.role = com.example.smartAttendence.enums.Role.STUDENT " +
+           "WHERE u.role IN (com.example.smartAttendence.enums.Role.STUDENT, com.example.smartAttendence.enums.Role.CR, com.example.smartAttendence.enums.Role.LR) " +
            "AND (:deptId IS NULL OR (u.section IS NOT NULL AND u.section.department.id = :deptId)) " +
            "AND (:sectId IS NULL OR (u.section IS NOT NULL AND u.section.id = :sectId)) " +
            "AND EXISTS (SELECT 1 FROM AttendanceRecord ar WHERE ar.student.id = u.id " +
@@ -141,7 +141,7 @@ public interface AttendanceRecordV1Repository extends JpaRepository<AttendanceRe
            "  SELECT DISTINCT ON (ar.student_id) u.section_id, ar.status " +
            "  FROM attendance_records ar " +
            "  JOIN users u ON ar.student_id = u.id " +
-           "  WHERE u.role = 'STUDENT' " +
+           "  WHERE u.role IN ('STUDENT', 'CR', 'LR') " +
            "  AND ar.recorded_at >= :since " +
            "  ORDER BY ar.student_id, ar.recorded_at DESC " +
            ") sub GROUP BY sub.section_id", nativeQuery = true)
