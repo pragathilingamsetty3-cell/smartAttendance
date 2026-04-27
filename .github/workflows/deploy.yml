@@ -59,6 +59,14 @@ jobs:
             sudo systemctl stop smart-attendance.service || true
             sudo pkill -9 java || true
             
+            # Inject Environment Variables for Database
+            export DB_HOST=localhost
+            export DB_PORT=5432
+            export DB_NAME=smart_attendance
+            export DB_USERNAME=postgres
+            export DB_PASSWORD='Pragathi@2105'
+            export SPRING_PROFILES_ACTIVE=local
+            
             echo "🧹 CLEANING OLD DEPLOYMENTS..."
             rm -rf /home/azureuser/Backend/target/*
             
@@ -66,9 +74,16 @@ jobs:
             mkdir -p /home/azureuser/Backend/target/
             mv /home/azureuser/smartAttendence-0.0.1-SNAPSHOT.jar /home/azureuser/Backend/target/smartAttendence-0.0.1-SNAPSHOT.jar
             
-            echo "🚀 Starting new process..."
+            echo "🚀 Starting new process with explicit DB settings..."
             sudo systemctl daemon-reload
-            sudo systemctl start smart-attendance.service || nohup java -Xmx384m -jar /home/azureuser/Backend/target/smartAttendence-0.0.1-SNAPSHOT.jar --spring.profiles.active=local > /home/azureuser/backend.log 2>&1 &
+            
+            # Use nohup with explicit variables to guarantee connection
+            nohup java -Xmx384m -jar /home/azureuser/Backend/target/smartAttendence-0.0.1-SNAPSHOT.jar \
+              --spring.profiles.active=local \
+              --spring.datasource.url="jdbc:postgresql://localhost:5432/smart_attendance?prepareThreshold=0" \
+              --spring.datasource.username=postgres \
+              --spring.datasource.password='Pragathi@2105' \
+              --server.port=10000 > /home/azureuser/backend.log 2>&1 &
             
             # Final verification
             sleep 15
