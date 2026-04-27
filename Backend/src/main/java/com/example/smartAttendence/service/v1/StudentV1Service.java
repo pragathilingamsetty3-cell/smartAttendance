@@ -191,6 +191,7 @@ public class StudentV1Service {
         debugInfo.put("sectionId", student.getSectionId());
         debugInfo.put("hasSectionEntity", student.getSection() != null);
         debugInfo.put("todayClassesCount", todayClasses.size());
+        debugInfo.put("totalTimetablesInDB", timetableRepository.count());
         debugInfo.put("rawTodayTimetableSize", todayTimetable.size());
 
         return StudentDashboardStatsDTO.builder()
