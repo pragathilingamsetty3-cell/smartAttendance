@@ -153,8 +153,8 @@ public class AuthenticationService {
         logger.info("👤 Found user: {} (ID: {}) with current biometric state: {}", 
             email, user.getId(), (user.getBiometricSignature() != null ? "BOUND" : "UNBOUND"));
 
-        // 🛡️ SECURITY LOCK: Block any biometric update if already registered. 
-        if (user.getBiometricSignature() != null && !user.getBiometricSignature().isEmpty()) {
+        // 🛡️ SECURITY LOCK: Block any biometric update if already registered AND profile is complete. 
+        if (user.getBiometricSignature() != null && !user.getBiometricSignature().isEmpty() && user.getSectionId() != null) {
             logger.warn("🚨 SECURITY VIOLATION: User {} attempted to re-setup locked biometric", email);
             throw new IllegalArgumentException("Biometric already registered. Contact administrator to reset hardware binding.");
         }

@@ -108,6 +108,13 @@ public class AuthV1Controller {
             userData.put("sectionId", result.user().getSectionId());
             userData.put("semester", result.user().getSemester());
             
+            // 🛠️ SELF-HEALING: If student is missing section, force them to setup page
+            boolean missingSection = result.user().getRole().toString().contains("STUDENT") && result.user().getSectionId() == null;
+            if (missingSection) {
+                response.put("requiresFirstLoginSetup", true);
+                response.put("message", "Profile incomplete. Section assignment required.");
+            }
+            
             response.put("user", userData);
             return ResponseEntity.ok(response);
         } catch (Exception e) {

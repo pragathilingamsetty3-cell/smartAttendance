@@ -73,13 +73,22 @@ public class StudentV1Service {
             
             log.info("🔍 DASHBOARD DEBUG: Searching Timetable for Section ID: {} on Day: {}", sectionId, today);
             
-            todayTimetable = timetableRepository.findBySectionAndDayOfWeek(sectionId, today)
-                    .stream()
-                    .filter(t -> (t.getStartDate() == null || !todayDate.isBefore(t.getStartDate())) && 
-                                 (t.getEndDate() == null || !todayDate.isAfter(t.getEndDate())))
+            List<Timetable> allForSection = timetableRepository.findBySectionAndDayOfWeek(sectionId, today);
+            log.info("🔍 DASHBOARD DEBUG: Found {} raw classes for section {} in database.", allForSection.size(), sectionId);
+            
+            todayTimetable = allForSection.stream()
+                    .filter(t -> {
+                        boolean startOk = t.getStartDate() == null || !todayDate.isBefore(t.getStartDate());
+                        boolean endOk = t.getEndDate() == null || !todayDate.isAfter(t.getEndDate());
+                        if (!startOk || !endOk) {
+                            log.warn("🚨 DASHBOARD FILTER: Class {} filtered out. Start: {}, End: {}, Today: {}", 
+                                    t.getSubject(), t.getStartDate(), t.getEndDate(), todayDate);
+                        }
+                        return startOk && endOk;
+                    })
                     .collect(Collectors.toList());
             
-            log.info("🔍 DASHBOARD DEBUG: Found {} classes for today in database.", todayTimetable.size());
+            log.info("🔍 DASHBOARD DEBUG: Final count after date filtering: {}", todayTimetable.size());
         } else {
             log.warn("⚠️ DASHBOARD WARN: Student {} has NO SECTION ID assigned in their profile!", student.getName());
         }
