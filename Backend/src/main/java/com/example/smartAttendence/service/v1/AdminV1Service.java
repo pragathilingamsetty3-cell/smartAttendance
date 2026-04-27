@@ -2001,20 +2001,15 @@ public class AdminV1Service {
         Section section = sectionRepository.findById(sectionId)
                 .orElseThrow(() -> new IllegalArgumentException("Section not found: " + sectionId));
         
-        log.info("🔍 [MASTER FETCH] Section: {} ({})", section.getName(), sectionId);
+        log.info("🔍 [STRICT FETCH] Section: {} ({})", section.getName(), sectionId);
         
+        // 1. Try exact ID match
         List<com.example.smartAttendence.entity.Timetable> results = timetableRepository.findBySectionId(sectionId);
         
+        // 2. Fallback to Name match (Fixes "Ghost ID" issue if section was recreated)
         if (results.isEmpty()) {
-            log.warn("⚠️ [MASTER FALLBACK] No ID match for {}. Checking global count...", sectionId);
-            
-            // 🚨 EMERGENCY FAIL-SAFE: If only one section exists, it MUST be this one.
-            if (sectionRepository.count() <= 1) {
-                log.info("✅ [SINGLE SECTION MODE] Returning all database entries as a fail-safe.");
-                results = timetableRepository.findAll();
-            } else {
-                results = timetableRepository.findBySectionName(section.getName());
-            }
+            log.warn("⚠️ [NAME FALLBACK] No ID match. Searching by name: {}", section.getName());
+            results = timetableRepository.findBySectionName(section.getName());
         }
         
         return results;
