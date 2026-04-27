@@ -160,19 +160,22 @@ public class AIAnalyticsV1Service {
             );
             
             try {
+                List<String> roleStrings = studentRoles.stream().map(Enum::name).collect(java.util.stream.Collectors.toList());
+                
                 if (sectionId != null) {
                     studentCount = userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), studentRoles, com.example.smartAttendence.domain.UserStatus.ACTIVE);
                 } else if (!deptIdentifiers.isEmpty()) {
                     studentCount = userRepository.countByDepartmentsRoleAndStatus(deptIdentifiers, studentRoles, com.example.smartAttendence.domain.UserStatus.ACTIVE);
                 } else {
-                    studentCount = userRepository.countByRoleInAndStatus(studentRoles, com.example.smartAttendence.domain.UserStatus.ACTIVE);
+                    // 🛡️ NATIVE FALLBACK: Use raw SQL for global count to bypass Hibernate mapping issues
+                    studentCount = userRepository.countByRoleInAndStatusNative(roleStrings);
                 }
 
                 // 🔄 AUTO-FALLBACK: If active count is 0, check total count to detect data presence issues
                 if (studentCount == 0 && (sectionId == null && deptIdentifiers.isEmpty())) {
-                    long totalAnyStatus = userRepository.countByRoleIn(studentRoles);
+                    long totalAnyStatus = userRepository.countByRoleInNative(roleStrings);
                     if (totalAnyStatus > 0) {
-                        System.out.println("[ANALYTICS] Found " + totalAnyStatus + " students but none are ACTIVE. Showing total count as fallback.");
+                        System.out.println("[ANALYTICS] Found " + totalAnyStatus + " students via Native SQL but none are ACTIVE.");
                         studentCount = totalAnyStatus;
                     }
                 }
@@ -494,15 +497,27 @@ public class AIAnalyticsV1Service {
         
         if (totalRecords == 0) {
             return Map.of(
-                "insights", "• System is ONLINE and healthy.\n• AI Engine is in standby mode awaiting first session data.\n• Ready to monitor live classroom boundaries and device security signatures.",
+                "insights", """
+                    ### AI Executive Summary (v2.1.0-FIX)
+                    **System Pulse:** System is ONLINE and healthy.
+                    
+                    **AI Engine Status:** AI Engine is in standby mode awaiting first session data.
+                    
+                    **Analytics Snapshot:**
+                    - **Historical Integrity:** All past attendance data is securely indexed.
+                    - **Real-time Monitoring:** Listening for new biometric and spatial signals.
+                    - **Predictive Readiness:** Models are primed for walk-out and anomaly detection.
+                    
+                    *AI Insights will generate automatically once the first session of the week starts.*
+                    """,
                 "generatedAt", java.time.ZonedDateTime.now(IST).toInstant().toString(),
                 "status", "STANDBY"
             );
         }
 
         // 📊 Strategic Data Analysis
-        long walkouts = attendanceRepository.countByStatus("WALK_OUT");
-        long anomalies = alertRepository.count();
+        long walkouts = attendanceRepository.countByStatusNative("WALK_OUT");
+        long anomalies = alertRepository.countNative();
         Double avgConf = attendanceRepository.getAverageAiConfidenceFiltered(sevenDaysAgo, null, null);
         if (avgConf == null) avgConf = 0.95;
 

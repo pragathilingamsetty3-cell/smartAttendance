@@ -43,6 +43,9 @@ public interface SecurityAlertV1Repository extends JpaRepository<SecurityAlert, 
 
     long countByResolvedFalse();
 
+    @Query(value = "SELECT COUNT(*) FROM security_alerts", nativeQuery = true)
+    long countNative();
+
     @Query("SELECT AVG(a.confidence) FROM SecurityAlert a WHERE a.resolved = false")
     Double getAverageConfidence();
     

@@ -39,6 +39,9 @@ public interface AttendanceRecordV1Repository extends JpaRepository<AttendanceRe
     long countWalkOutsByStudentSince(@Param("studentId") java.util.UUID studentId, @Param("since") java.time.Instant since);
 
     long countByStatus(String status);
+    @Query(value = "SELECT COUNT(*) FROM attendance_records WHERE status = :status", nativeQuery = true)
+    long countByStatusNative(@Param("status") String status);
+    
     long countByRecordedAtAfter(Instant since);
 
     @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.status = :status AND ar.student.department IN :departments")

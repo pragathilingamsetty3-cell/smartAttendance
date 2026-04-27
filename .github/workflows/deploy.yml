@@ -56,7 +56,17 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             export HOME=/home/azureuser
+            echo "🛑 Killing old processes..."
             sudo systemctl stop smart-attendance.service || true
+            sudo pkill -9 -f 'java -jar' || true
+            
+            echo "🚚 Updating JAR file..."
             rm -f /home/azureuser/Backend/target/smartAttendence-0.0.1-SNAPSHOT.jar
             mv /home/azureuser/smartAttendence-0.0.1-SNAPSHOT.jar /home/azureuser/Backend/target/smartAttendence-0.0.1-SNAPSHOT.jar
+            
+            echo "🚀 Starting new process..."
             sudo systemctl start smart-attendance.service
+            
+            # Diagnostic wait
+            sleep 5
+            ps aux | grep java | grep smartAttendence || echo "⚠️ Backend might not have started!"

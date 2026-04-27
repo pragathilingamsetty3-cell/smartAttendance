@@ -91,8 +91,13 @@ public interface UserV1Repository extends JpaRepository<User, UUID> {
     List<User> findByDepartment(String department);
     List<User> findBySectionId(UUID sectionId);
 
-    long countByRoleInAndStatus(List<Role> roles, com.example.smartAttendence.domain.UserStatus status);
+    @Query(value = "SELECT COUNT(*) FROM users u WHERE u.role IN :roles AND u.status = 'ACTIVE'", nativeQuery = true)
+    long countByRoleInAndStatusNative(@Param("roles") List<String> roles);
 
+    @Query(value = "SELECT COUNT(*) FROM users u WHERE u.role IN :roles", nativeQuery = true)
+    long countByRoleInNative(@Param("roles") List<String> roles);
+
+    long countByRoleInAndStatus(List<Role> roles, com.example.smartAttendence.domain.UserStatus status);
     long countByRoleIn(List<Role> roles);
 
     @Query("SELECT u.email FROM V1User u GROUP BY u.email HAVING COUNT(u.email) > 1")
