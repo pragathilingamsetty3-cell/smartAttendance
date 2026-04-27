@@ -35,7 +35,6 @@ public class AIAnalyticsV1Service {
     /**
      * Aggregate data for the AI Analytics Dashboard - CACHED for extreme speed (30s TTL)
      */
-    @org.springframework.cache.annotation.Cacheable(value = "aiAnalyticsStats", key = "{#departmentId, #sectionId}")
     public Map<String, Object> getAIDashboardStats(UUID departmentId, UUID sectionId) {
         try {
             java.time.ZonedDateTime nowIST = java.time.ZonedDateTime.now(IST);
@@ -162,15 +161,18 @@ public class AIAnalyticsV1Service {
             
             try {
                 if (sectionId != null) {
+                    // Include all student-type roles for the section
                     studentCount = userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), com.example.smartAttendence.enums.Role.STUDENT, com.example.smartAttendence.domain.UserStatus.ACTIVE);
-                    // Also include CR/LR
                     studentCount += userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), com.example.smartAttendence.enums.Role.CR, com.example.smartAttendence.domain.UserStatus.ACTIVE);
                     studentCount += userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), com.example.smartAttendence.enums.Role.LR, com.example.smartAttendence.domain.UserStatus.ACTIVE);
                 } else if (!deptIdentifiers.isEmpty()) {
                     // ROBUST MATCHING: Use identifiers (Name/Code) to find students not yet assigned to sections
-                    studentCount = userRepository.countByDepartmentsAndRoles(deptIdentifiers, studentRoles);
+                    studentCount = userRepository.countByDepartmentsRoleAndStatus(deptIdentifiers, com.example.smartAttendence.enums.Role.STUDENT, com.example.smartAttendence.domain.UserStatus.ACTIVE);
+                    studentCount += userRepository.countByDepartmentsRoleAndStatus(deptIdentifiers, com.example.smartAttendence.enums.Role.CR, com.example.smartAttendence.domain.UserStatus.ACTIVE);
+                    studentCount += userRepository.countByDepartmentsRoleAndStatus(deptIdentifiers, com.example.smartAttendence.enums.Role.LR, com.example.smartAttendence.domain.UserStatus.ACTIVE);
                 } else {
-                    studentCount = userRepository.countByRoles(studentRoles);
+                    // Global count: Use the new repository method to count all student roles with ACTIVE status
+                    studentCount = userRepository.countByRoleInAndStatus(studentRoles, com.example.smartAttendence.domain.UserStatus.ACTIVE);
                 }
             } catch (Exception e) {
                 System.err.println("Dashboard: Student count error: " + e.getMessage());
