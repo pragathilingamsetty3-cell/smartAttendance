@@ -106,8 +106,8 @@ public class NotificationService {
             data.put("type", alertType);
             data.put("subject", subject);
             
-            firebaseService.sendCustomNotification(alertTitle, message, data, "attendance");
-            log.info("✅ Firebase alert sent to topic: attendance");
+            firebaseService.sendCustomNotification(alertTitle, message, data, "student_" + student.getId());
+            log.info("✅ Firebase alert sent to student: {}", student.getId());
         }
 
         // Route to Email ONLY if it's a security walkout (user requested email for reports/onboarding, 
@@ -150,9 +150,9 @@ public class NotificationService {
                 "🚀 Class Started: " + subject,
                 String.format("Your class is live in %s. Tap to mark attendance via biometrics now!", roomName),
                 data,
-                "attendance"
+                "student_" + student.getId()
             );
-            log.info("✅ Firebase check-in prompt sent.");
+            log.info("✅ Firebase check-in prompt sent to student: {}", student.getId());
         }
     }
 
