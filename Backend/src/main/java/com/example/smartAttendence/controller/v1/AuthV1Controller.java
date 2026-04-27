@@ -156,6 +156,24 @@ public class AuthV1Controller {
         }
     }
     
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest request, Authentication auth) {
+        log.info("[AUTH] Change password request for: {}", auth != null ? auth.getName() : "UNAUTHENTICATED");
+        try {
+            if (auth == null || !auth.isAuthenticated()) {
+                return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+            }
+            unifiedAuthService.changePassword(auth.getName(), request);
+            return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
+        } catch (IllegalArgumentException e) {
+            log.warn("[AUTH] Change password validation failed: {}", e.getMessage());
+            return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("[AUTH] FATAL ERROR during password change: ", e);
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to change password: " + e.getMessage()));
+        }
+    }
+    
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         log.info("[AUTH] Forgot password request for: {}", request.emailOrPhone());
@@ -206,7 +224,7 @@ public class AuthV1Controller {
     }
 
     private String extractDeviceId(HttpServletRequest request) {
-        String deviceId = request.getHeader("X-Device-ID");
+        String deviceId = request.getHeader("X-Device-Fingerprint");
         return deviceId != null ? deviceId : "UNKNOWN";
     }
 
