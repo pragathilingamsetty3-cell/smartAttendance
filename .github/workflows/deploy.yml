@@ -56,17 +56,21 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             export HOME=/home/azureuser
-            echo "🛑 Safely stopping port 10000..."
+            echo "🛑 NUCLEAR SHUTDOWN: Killing all java processes..."
             sudo systemctl stop smart-attendance.service || true
+            sudo pkill -9 java || true
             sudo fuser -k 10000/tcp || true
             
             echo "🚚 Updating JAR file..."
+            mkdir -p /home/azureuser/Backend/target/
             rm -f /home/azureuser/Backend/target/smartAttendence-0.0.1-SNAPSHOT.jar
             mv /home/azureuser/smartAttendence-0.0.1-SNAPSHOT.jar /home/azureuser/Backend/target/smartAttendence-0.0.1-SNAPSHOT.jar
             
             echo "🚀 Starting new process..."
+            sudo systemctl daemon-reload
             sudo systemctl start smart-attendance.service
             
-            # Diagnostic wait
-            sleep 5
-            ps aux | grep java | grep smartAttendence || echo "⚠️ Backend might not have started!"
+            # Diagnostic check
+            sleep 10
+            sudo systemctl status smart-attendance.service --no-pager
+            ps aux | grep java
