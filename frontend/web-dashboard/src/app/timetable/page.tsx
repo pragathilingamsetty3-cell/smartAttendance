@@ -123,7 +123,7 @@ export default function TimetablePage() {
         data = [];
       }
       
-      console.log('✅ TIMETABLE DATA RECEIVED:', data?.length || 0, 'entries');
+      console.log('✅ TIMETABLE DATA RECEIVED:', data?.length || 0, 'entries', data);
       setEntries(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('❌ FAILED TO FETCH TIMETABLE:', error);
