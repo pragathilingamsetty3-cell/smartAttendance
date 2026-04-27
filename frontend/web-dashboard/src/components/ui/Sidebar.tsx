@@ -59,7 +59,7 @@ const NAV_ITEMS: NavItem[] = [
   { 
     name: "Attendance", 
     href: "/attendance", 
-    requiredRole: ["ADMIN", "SUPER_ADMIN", "FACULTY", "STUDENT"],
+    requiredRole: ["ADMIN", "SUPER_ADMIN", "FACULTY"],
     icon: Activity 
   },
   { 

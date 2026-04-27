@@ -155,20 +155,25 @@ public class AIAnalyticsV1Service {
 
             long studentCount = 0;
             try {
-                // EXACT SAME LOGIC AS ADMIN DASHBOARD
-                studentCount = userRepository.countByRole(
-                    java.util.Arrays.asList(
-                        com.example.smartAttendence.enums.Role.STUDENT, 
-                        com.example.smartAttendence.enums.Role.CR, 
-                        com.example.smartAttendence.enums.Role.LR
-                    )
-                );
+                if (finalSectId != null) {
+                    studentCount = userRepository.countBySectionIdAndRole(finalSectId, com.example.smartAttendence.enums.Role.STUDENT);
+                } else if (finalDeptId != null) {
+                    studentCount = userRepository.countBySection_Department_IdAndRole(finalDeptId, com.example.smartAttendence.enums.Role.STUDENT);
+                } else {
+                    studentCount = userRepository.countByRole(
+                        java.util.Arrays.asList(
+                            com.example.smartAttendence.enums.Role.STUDENT, 
+                            com.example.smartAttendence.enums.Role.CR, 
+                            com.example.smartAttendence.enums.Role.LR
+                        )
+                    );
+                }
                 
-                // Fallback to absolute total if the role filter fails for some reason
-                if (studentCount == 0) {
+                if (studentCount == 0 && finalDeptId == null && finalSectId == null) {
                     studentCount = userRepository.count();
                 }
             } catch (Exception e) {
+                log.error("AI Dashboard Error: Could not count students: {}", e.getMessage());
                 studentCount = userRepository.count(); 
             }
 
