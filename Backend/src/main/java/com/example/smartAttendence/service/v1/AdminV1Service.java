@@ -1974,10 +1974,17 @@ public class AdminV1Service {
     }
 
     public void deleteTimetable(UUID id) {
-        if (!timetableRepository.existsById(id)) {
-            throw new IllegalArgumentException("Timetable entry not found: " + id);
+        com.example.smartAttendence.entity.Timetable timetable = timetableRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Timetable entry not found with ID: " + id));
+        
+        // 🛡️ SAFETY CHECK: Prevent 500 errors by checking session dependencies
+        long sessionCount = classroomSessionV1Repository.countByTimetableId(id);
+        if (sessionCount > 0) {
+            throw new IllegalArgumentException("Cannot delete timetable for '" + timetable.getSubject() + "' because it has " + sessionCount + " generated classroom sessions. Please delete the sessions first to avoid data loss.");
         }
+
         timetableRepository.deleteById(id);
+        log.info("🗑️ Timetable entry deleted: {} ({})", timetable.getSubject(), id);
     }
 
     public List<com.example.smartAttendence.entity.Timetable> getTimetablesForFaculty(UUID facultyId) {

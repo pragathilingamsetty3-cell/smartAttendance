@@ -111,5 +111,6 @@ public interface ClassroomSessionV1Repository extends JpaRepository<ClassroomSes
     @org.springframework.transaction.annotation.Transactional
     @Query("DELETE FROM ClassroomSession cs WHERE cs.timetable.id = :timetableId")
     void deleteByTimetableId(@Param("timetableId") UUID timetableId);
+    long countByTimetableId(UUID timetableId);
 }
 
