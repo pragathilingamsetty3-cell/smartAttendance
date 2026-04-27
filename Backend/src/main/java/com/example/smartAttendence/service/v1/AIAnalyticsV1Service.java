@@ -137,6 +137,7 @@ public class AIAnalyticsV1Service {
                             ? session.getSection().getDepartment().getCode() : "N/A");
                         map.put("sectionName", (session.getSection() != null) ? session.getSection().getName() : "N/A");
                         map.put("active", true);
+
                         return map;
                     })
                     .collect(Collectors.toList());

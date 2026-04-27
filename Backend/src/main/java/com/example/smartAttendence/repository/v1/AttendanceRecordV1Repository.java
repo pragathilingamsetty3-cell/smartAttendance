@@ -29,6 +29,9 @@ public interface AttendanceRecordV1Repository extends JpaRepository<AttendanceRe
     @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.session.id = :sessionId AND ar.status = :status")
     long countBySessionIdAndStatus(@Param("sessionId") UUID sessionId, @Param("status") String status);
 
+    @Query("SELECT COUNT(ar) FROM AttendanceRecord ar WHERE ar.session.id = :sessionId AND ar.status IN :statuses")
+    long countBySessionIdAndStatusIn(@Param("sessionId") UUID sessionId, @Param("statuses") List<String> statuses);
+
     @Query("SELECT ar FROM AttendanceRecord ar WHERE ar.session.id = :sessionId ORDER BY ar.recordedAt DESC")
     List<AttendanceRecord> findBySessionIdOrderByRecordedAtDesc(@Param("sessionId") UUID sessionId);
 
@@ -107,6 +110,18 @@ public interface AttendanceRecordV1Repository extends JpaRepository<AttendanceRe
            "AND (:deptId IS NULL OR (ar.student.section IS NOT NULL AND ar.student.section.department.id = :deptId)) " +
            "AND (:sectId IS NULL OR (ar.student.section IS NOT NULL AND ar.student.section.id = :sectId))")
     long countByAiDecisionTrueFiltered(@Param("since") Instant since, @Param("deptId") java.util.UUID deptId, @Param("sectId") java.util.UUID sectId);
+
+    @Query("SELECT COUNT(DISTINCT ar.student.id) FROM AttendanceRecord ar " +
+           "WHERE ar.status IN :statuses AND ar.recordedAt >= :since " +
+           "AND (:deptId IS NULL OR (ar.student.section IS NOT NULL AND ar.student.section.department.id = :deptId)) " +
+           "AND (:sectId IS NULL OR (ar.student.section IS NOT NULL AND ar.student.section.id = :sectId))")
+    long countDistinctStudentsByStatusInFiltered(@Param("statuses") List<String> statuses, @Param("since") Instant since, @Param("deptId") java.util.UUID deptId, @Param("sectId") java.util.UUID sectId);
+
+    @Query("SELECT COUNT(DISTINCT ar.student.id) FROM AttendanceRecord ar " +
+           "WHERE ar.status = :status AND ar.recordedAt >= :since " +
+           "AND (:deptId IS NULL OR (ar.student.section IS NOT NULL AND ar.student.section.department.id = :deptId)) " +
+           "AND (:sectId IS NULL OR (ar.student.section IS NOT NULL AND ar.student.section.id = :sectId))")
+    long countDistinctStudentsByStatusFiltered(@Param("status") String status, @Param("since") Instant since, @Param("deptId") java.util.UUID deptId, @Param("sectId") java.util.UUID sectId);
 
     @Query("SELECT COUNT(DISTINCT a.user.id) FROM SecurityAlert a " +
            "WHERE a.resolved = false " +

@@ -110,12 +110,11 @@ public class NotificationService {
             log.info("✅ Firebase alert sent to student: {}", student.getId());
         }
 
-        // Route to Email ONLY if it's a security walkout (user requested email for reports/onboarding, 
-        // but it's good practice for security alerts too). 
-        // For general "ABSENT" alerts, we stick to Firebase as requested.
-        if (isWalkout && student.getEmail() != null) {
+        // Route to Email for formal record (Walkouts and AI-marked Absences)
+        boolean shouldSendEmail = isWalkout || "AUTOMATED_ABSENCE".equalsIgnoreCase(alertType);
+        if (shouldSendEmail && student.getEmail() != null) {
             emailService.sendSimpleEmail(student.getEmail(), alertTitle, message);
-            log.info("📧 Email security alert sent to: {}", student.getEmail());
+            log.info("📧 Email alert sent to: {} for {}", student.getEmail(), alertType);
         }
     }
 

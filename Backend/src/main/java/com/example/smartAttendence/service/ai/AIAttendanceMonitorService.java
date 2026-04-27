@@ -104,7 +104,7 @@ public class AIAttendanceMonitorService {
             session = sessionRepository.save(session);
         }
 
-        if (timeIsAfterThreshold(slot.getStartTime(), now.toLocalDateTime(), 5)) {
+        if (timeIsAfterThreshold(slot.getStartTime(), now.toLocalDateTime(), 10)) {
             enforceAttendance(session, slot);
         }
 
