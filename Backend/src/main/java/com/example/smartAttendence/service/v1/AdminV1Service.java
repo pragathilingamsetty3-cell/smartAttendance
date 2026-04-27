@@ -2001,18 +2001,22 @@ public class AdminV1Service {
         Section section = sectionRepository.findById(sectionId)
                 .orElseThrow(() -> new IllegalArgumentException("Section not found: " + sectionId));
         
-        log.info("🔍 [UNIVERSAL FETCH] Fetching all weekly slots for Section: {} ({})", section.getName(), sectionId);
+        log.info("🔍 [MASTER FETCH] Section: {} ({})", section.getName(), sectionId);
         
-        // Fetch ALL entries for this section ID
         List<com.example.smartAttendence.entity.Timetable> results = timetableRepository.findBySectionId(sectionId);
         
-        // Fallback to name match (Role-agnostic)
         if (results.isEmpty()) {
-            log.warn("⚠️ [UNIVERSAL FALLBACK] No ID match. Trying Name: {}", section.getName());
-            results = timetableRepository.findBySectionName(section.getName());
+            log.warn("⚠️ [MASTER FALLBACK] No ID match for {}. Checking global count...", sectionId);
+            
+            // 🚨 EMERGENCY FAIL-SAFE: If only one section exists, it MUST be this one.
+            if (sectionRepository.count() <= 1) {
+                log.info("✅ [SINGLE SECTION MODE] Returning all database entries as a fail-safe.");
+                results = timetableRepository.findAll();
+            } else {
+                results = timetableRepository.findBySectionName(section.getName());
+            }
         }
         
-        log.info("✅ [FETCH COMPLETE] Found {} weekly slots for Section {}", results.size(), section.getName());
         return results;
     }
 
