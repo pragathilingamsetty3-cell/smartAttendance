@@ -153,13 +153,17 @@ public class AIAnalyticsV1Service {
                     .collect(Collectors.toList());
 
             long studentCount = 0;
-            List<String> studentRoles = List.of("STUDENT", "CR", "LR");
-            
             try {
-                // Use a Native Query that explicitly targets the PUBLIC schema
-                studentCount = userRepository.countByRoleInAndStatusNative(studentRoles);
+                // EXACT SAME LOGIC AS ADMIN DASHBOARD
+                studentCount = userRepository.countByRole(
+                    java.util.Arrays.asList(
+                        com.example.smartAttendence.enums.Role.STUDENT, 
+                        com.example.smartAttendence.enums.Role.CR, 
+                        com.example.smartAttendence.enums.Role.LR
+                    )
+                );
                 
-                // If it's still 0, we'll try to find ANY user in the public schema
+                // Fallback to absolute total if the role filter fails for some reason
                 if (studentCount == 0) {
                     studentCount = userRepository.count();
                 }
@@ -275,7 +279,7 @@ public class AIAnalyticsV1Service {
 
             // System Diagnostics (For Debugging Azure)
             Map<String, Object> diagnostics = new HashMap<>();
-            diagnostics.put("buildTime", "2026-04-27 13:22 IST");
+            diagnostics.put("buildTime", "2026-04-27 13:25 IST");
             diagnostics.put("dbConnected", true);
             diagnostics.put("profile", System.getProperty("spring.profiles.active", "unknown"));
             diagnostics.put("studentRoleCount", studentCount);
@@ -283,7 +287,7 @@ public class AIAnalyticsV1Service {
             
             response.put("systemDiagnostics", diagnostics);
             response.put("totalStudents", studentCount);
-            response.put("systemVersion", "v2.6.0-SCHEMA-FIX");
+            response.put("systemVersion", "v2.7.0-MATCHED-LOGIC");
             response.put("activeStudents", attendanceRepository.countActiveFiltered(nowIST.toInstant().minusSeconds(3600), finalDeptId, finalSectId));
             response.put("anomaliesDetected", distinctAnomalies);
             response.put("activeAlerts", filteredAlerts); 
@@ -492,7 +496,7 @@ public class AIAnalyticsV1Service {
         if (totalRecords == 0) {
             return Map.of(
                 "insights", """
-                    ### AI Executive Summary (v2.6.0-SCHEMA-FIX)
+                    ### AI Executive Summary (v2.7.0-MATCHED-LOGIC)
                     **System Pulse:** System is ONLINE and healthy.
                     
                     **AI Engine Status:** AI Engine is in standby mode awaiting first session data.
