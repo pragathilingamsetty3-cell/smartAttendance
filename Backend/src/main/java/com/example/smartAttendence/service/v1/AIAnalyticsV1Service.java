@@ -156,21 +156,30 @@ public class AIAnalyticsV1Service {
             List<String> studentRoles = List.of("STUDENT", "CR", "LR");
             
             try {
+                // 1. Try with strict filters (Section/Dept + Role + Status)
                 if (sectionId != null) {
                     studentCount = userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), studentRoles.stream().map(com.example.smartAttendence.enums.Role::valueOf).collect(Collectors.toList()), com.example.smartAttendence.domain.UserStatus.ACTIVE);
-                    if (studentCount == 0) {
-                        studentCount = userRepository.countBySectionIdIn(List.of(sectionId));
-                    }
                 } else if (!deptIdentifiers.isEmpty()) {
                     studentCount = userRepository.countByDepartmentsRoleAndStatus(deptIdentifiers, studentRoles.stream().map(com.example.smartAttendence.enums.Role::valueOf).collect(Collectors.toList()), com.example.smartAttendence.domain.UserStatus.ACTIVE);
-                    if (studentCount == 0) {
+                }
+
+                // 2. If 0, try relaxing status (Include Pending/Inactive)
+                if (studentCount == 0) {
+                    if (sectionId != null) {
+                        studentCount = userRepository.countBySectionIdIn(List.of(sectionId));
+                    } else if (!deptIdentifiers.isEmpty()) {
                         studentCount = userRepository.countByDepartments(deptIdentifiers);
                     }
-                } else {
+                }
+
+                // 3. FINAL FALLBACK: If still 0, or if no filters, use NATIVE query for absolute total
+                if (studentCount == 0) {
                     studentCount = userRepository.countByRoleInNative(studentRoles);
                 }
             } catch (Exception e) {
                 System.err.println("Dashboard: Student count error: " + e.getMessage());
+                // Absolute safety fallback
+                studentCount = userRepository.countByRoleInNative(studentRoles);
             }
 
 
