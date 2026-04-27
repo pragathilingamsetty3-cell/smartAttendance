@@ -294,7 +294,7 @@ public class AIAnalyticsV1Service {
 
             // System Diagnostics (For Debugging Azure)
             Map<String, Object> diagnostics = new HashMap<>();
-            diagnostics.put("buildTime", "2026-04-27 12:45 IST");
+            diagnostics.put("buildTime", "2026-04-27 12:55 IST");
             diagnostics.put("dbConnected", true);
             diagnostics.put("profile", System.getProperty("spring.profiles.active", "unknown"));
             diagnostics.put("studentRoleCount", studentCount);
