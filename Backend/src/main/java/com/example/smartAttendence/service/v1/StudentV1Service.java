@@ -68,6 +68,9 @@ public class StudentV1Service {
                 today);
 
         if (student.getSection() != null || student.getSectionId() != null) {
+            UUID sectionId = student.getSectionId();
+            java.time.LocalDate todayDate = now.toLocalDate();
+            
             List<Timetable> allForSection = timetableRepository.findBySectionId(sectionId);
             log.info("🔍 DASHBOARD DEBUG: Total classes in DB for section {}: {}", sectionId, allForSection.size());
             
