@@ -149,21 +149,7 @@ function AnalyticsContent() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-        <Card glass>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-blue-500/20 rounded-lg">
-                <Users className="h-5 w-5 text-blue-400" />
-              </div>
-              <span className="text-2xl font-bold text-white">{stats.totalStudents}</span>
-            </div>
-            <p className="text-gray-400 text-sm">Total Students</p>
-            <div className="mt-2 text-xs text-blue-400">
-              Registered in system
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
         <Card glass>
           <CardContent className="p-6">
