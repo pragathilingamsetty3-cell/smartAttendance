@@ -2001,17 +2001,30 @@ public class AdminV1Service {
         Section section = sectionRepository.findById(sectionId)
                 .orElseThrow(() -> new IllegalArgumentException("Section not found: " + sectionId));
         
+        log.info("🔍 [DEEP TRACE] Fetching for Section: {} ({})", section.getName(), sectionId);
+        
+        // 1. Try Primary Search
         List<com.example.smartAttendence.entity.Timetable> results = timetableRepository.findBySectionId(sectionId);
         
-        // 🛠️ FALLBACK: If ID search fails, try by Name (in case of recreation)
+        // 2. Try Fallback Search (Java-side scan if DB query failed)
         if (results.isEmpty()) {
-            log.warn("⚠️ [TIMETABLE FALLBACK] No entries for ID {}. Searching by name '{}'...", sectionId, section.getName());
-            results = timetableRepository.findBySectionName(section.getName());
+            log.warn("⚠️ [TIMETABLE FALLBACK] DB query returned 0. Starting Java-side global scan...");
+            List<com.example.smartAttendence.entity.Timetable> allTimetables = timetableRepository.findAll();
+            
+            results = allTimetables.stream()
+                    .filter(t -> {
+                        // Match by ID OR Name OR Department matching
+                        boolean idMatch = t.getSection() != null && t.getSection().getId().equals(sectionId);
+                        boolean nameMatch = t.getSection() != null && t.getSection().getName().equalsIgnoreCase(section.getName());
+                        
+                        return idMatch || nameMatch;
+                    })
+                    .collect(Collectors.toList());
+                    
             if (!results.isEmpty()) {
-                log.info("✅ [TIMETABLE FALLBACK] Found {} entries by Name for '{}'", results.size(), section.getName());
+                log.info("✅ [FALLBACK SUCCESS] Java-side scan found {} entries that DB query missed!", results.size());
             } else {
-                long totalCount = timetableRepository.count();
-                log.error("❌ [TIMETABLE FAIL] NO entries found for ID or Name. Total Timetables in DB: {}", totalCount);
+                log.error("❌ [FALLBACK FAIL] Global scan also found 0 entries for Section {}", section.getName());
             }
         }
         
