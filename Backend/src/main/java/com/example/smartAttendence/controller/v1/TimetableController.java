@@ -107,7 +107,12 @@ public class TimetableController {
             List<TimetableResponseDTO> dtos = timetables.stream()
                     .map(this::mapToTimetableResponse)
                     .toList();
-            return ResponseEntity.ok(dtos);
+            return ResponseEntity.ok()
+                    .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                    .header("Pragma", "no-cache")
+                    .header("Expires", "0")
+                    .header("X-Server-Time", String.valueOf(System.currentTimeMillis()))
+                    .body(dtos);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
