@@ -19,6 +19,7 @@ public interface ClassroomSessionV1Repository extends JpaRepository<ClassroomSes
     
     List<ClassroomSession> findByFacultyId(UUID facultyId);
     List<ClassroomSession> findByRoomId(UUID roomId);
+    long countByRoomId(UUID roomId);
 
     @Query("SELECT COUNT(cs) > 0 FROM ClassroomSession cs WHERE cs.timetable = :timetable AND cs.startTime BETWEEN :startTime AND :endTime")
     Boolean existsByTimetableAndStartTimeBetween(@Param("timetable") Timetable timetable, 

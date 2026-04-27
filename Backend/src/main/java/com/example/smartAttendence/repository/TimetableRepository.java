@@ -41,6 +41,7 @@ public interface TimetableRepository extends JpaRepository<Timetable, UUID> {
     List<Timetable> findBySectionId(UUID sectionId);
 
     List<Timetable> findByRoomId(UUID roomId);
+    long countByRoomId(UUID roomId);
 
     @Query("SELECT t FROM Timetable t WHERE t.faculty.id = :facultyId AND t.dayOfWeek = :dayOfWeek ORDER BY t.startTime")
     List<Timetable> findByFacultyAndDayOfWeek(@Param("facultyId") UUID facultyId, @Param("dayOfWeek") DayOfWeek dayOfWeek);

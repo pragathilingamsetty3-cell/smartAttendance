@@ -505,13 +505,22 @@ public class AdminV1Service {
      */
     @org.springframework.cache.annotation.CacheEvict(value = "rooms", allEntries = true)
     public void deleteRoom(UUID id) {
-        if (!roomRepository.existsById(id)) {
-            throw new IllegalArgumentException("Room not found with ID: " + id);
+        Room room = roomRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Room not found with ID: " + id));
+        
+        // 🛡️ SAFETY CHECK: Prevent 500 errors by checking foreign key dependencies
+        long sessionCount = classroomSessionV1Repository.countByRoomId(id);
+        if (sessionCount > 0) {
+            throw new IllegalArgumentException("Cannot delete room '" + room.getName() + "' because it has " + sessionCount + " existing classroom sessions. Please delete the sessions first.");
+        }
+
+        long timetableCount = timetableRepository.countByRoomId(id);
+        if (timetableCount > 0) {
+            throw new IllegalArgumentException("Cannot delete room '" + room.getName() + "' because it is assigned to " + timetableCount + " timetable entries. Please reassign the timetable to another room first.");
         }
         
-        // TODO: Check if room has active sessions before deleting
         roomRepository.deleteById(id);
-        log.info("🗑️ Room deleted: {}", id);
+        log.info("🗑️ Room deleted: {} ({})", room.getName(), id);
     }
 
     /**
