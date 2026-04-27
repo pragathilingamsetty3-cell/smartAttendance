@@ -62,7 +62,12 @@ public class StudentV1Service {
         DayOfWeek today = now.getDayOfWeek();
         List<Timetable> todayTimetable = new ArrayList<>();
         if (student.getSection() != null) {
-            todayTimetable = timetableRepository.findBySectionAndDayOfWeek(student.getSection().getId(), today);
+            java.time.LocalDate todayDate = now.toLocalDate();
+            todayTimetable = timetableRepository.findBySectionAndDayOfWeek(student.getSection().getId(), today)
+                    .stream()
+                    .filter(t -> (t.getStartDate() == null || !todayDate.isBefore(t.getStartDate())) && 
+                                 (t.getEndDate() == null || !todayDate.isAfter(t.getEndDate())))
+                    .collect(Collectors.toList());
         }
 
         List<TimetableResponseDTO> todayClasses = todayTimetable.stream()

@@ -13,6 +13,8 @@ import com.example.smartAttendence.repository.TimetableRepository;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
 import com.example.smartAttendence.service.v1.NotificationService;
 import com.google.cloud.firestore.Firestore;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.Nullable;
@@ -62,7 +64,12 @@ public class AIAttendanceMonitorService {
         log.debug("🤖 AI MONITOR: Starting autonomous scan at {} {}", day, time);
 
         // 1. PROCESS ACTIVE SESSIONS
-        List<Timetable> activeSlots = timetableRepository.findByDayOfWeekAndStartTimeBeforeAndEndTimeAfter(day, time, time);
+        java.time.LocalDate todayDate = now.toLocalDate();
+        List<Timetable> activeSlots = timetableRepository.findByDayOfWeekAndStartTimeBeforeAndEndTimeAfter(day, time, time)
+                .stream()
+                .filter(t -> (t.getStartDate() == null || !todayDate.isBefore(t.getStartDate())) && 
+                             (t.getEndDate() == null || !todayDate.isAfter(t.getEndDate())))
+                .collect(Collectors.toList());
 
         for (Timetable slot : activeSlots) {
             if (Boolean.TRUE.equals(slot.getIsHoliday())) {
