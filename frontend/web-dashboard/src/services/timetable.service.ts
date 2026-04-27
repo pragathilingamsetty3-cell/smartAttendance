@@ -7,7 +7,8 @@ class TimetableService {
   }
 
   async getTimetablesForSection(sectionId: string): Promise<any[]> {
-    const response = await apiClient.get(`/api/v1/admin/timetables/section/${sectionId}`);
+    // 🚀 CACHE BUSTER: Force Cloudflare/Azure to bypass cache and fetch fresh data
+    const response = await apiClient.get(`/api/v1/admin/timetables/section/${sectionId}?cb=${Date.now()}`);
     return response.data;
   }
 
