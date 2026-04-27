@@ -78,33 +78,24 @@ public class StudentV1Service {
             List<Timetable> todayRaw = timetableRepository.findBySectionAndDayOfWeek(sectionId, today);
             log.info("🔍 DASHBOARD DEBUG: Raw classes for today ({}): {}", today, todayRaw.size());
 
-            // 🛠️ ULTIMATE SELF-HEALING: If no classes found for this ID, check by Name fallback
+            // 🛠️ BRUTE-FORCE SELF-HEALING: Search GLOBALLY for any section with this name that has classes
             if (allForSection.isEmpty()) {
                 String sectionName = student.getSection() != null ? student.getSection().getName() : null;
-                log.warn("⚠️ SELF-HEALING: No classes found for Section ID {}. Checking for other sections named '{}'...", sectionId, sectionName);
+                log.warn("🚨 GLOBAL SELF-HEALING: No classes for ID {}. Searching by name '{}' globally...", sectionId, sectionName);
                 
                 if (sectionName != null) {
-                    List<Section> sectionsWithSameName = sectionRepository.findActiveSectionsByDepartmentIdOrderByNameAsc(student.getSection().getDepartment().getId())
-                            .stream().filter(s -> s.getName().equalsIgnoreCase(sectionName)).toList();
-                    
-                    for (Section altSection : sectionsWithSameName) {
-                        if (altSection.getId().equals(sectionId)) continue;
+                    List<Timetable> foundByName = timetableRepository.findBySectionName(sectionName);
+                    if (!foundByName.isEmpty()) {
+                        Section correctSection = foundByName.get(0).getSection();
+                        log.info("✅ SUCCESS: Found {} classes in Section ID {}. REPAIRING PROFILE...", foundByName.size(), correctSection.getId());
                         
-                        List<Timetable> altClasses = timetableRepository.findBySectionId(altSection.getId());
-                        if (!altClasses.isEmpty()) {
-                            log.info("✅ SELF-HEALING: Found {} classes in Section ID {}. AUTO-REASSIGNING student {}...", altClasses.size(), altSection.getId(), student.getName());
-                            
-                            // 🚀 FIX THE PROFILE PERMANENTLY
-                            student.setSection(altSection);
-                            student.setSectionId(altSection.getId());
-                            userV1Repository.save(student);
-                            
-                            // Update local variables to use the new data
-                            sectionId = altSection.getId();
-                            allForSection = altClasses;
-                            todayRaw = timetableRepository.findBySectionAndDayOfWeek(sectionId, today);
-                            break; 
-                        }
+                        student.setSection(correctSection);
+                        student.setSectionId(correctSection.getId());
+                        userV1Repository.save(student);
+                        
+                        sectionId = correctSection.getId();
+                        allForSection = foundByName;
+                        todayRaw = timetableRepository.findBySectionAndDayOfWeek(sectionId, today);
                     }
                 }
             }
