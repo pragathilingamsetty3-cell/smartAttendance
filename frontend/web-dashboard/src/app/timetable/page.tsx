@@ -290,7 +290,9 @@ export default function TimetablePage() {
             Data Architect Diagnostics
           </summary>
           <div className="mt-4 p-4 rounded-lg bg-black/40 font-mono text-[10px] text-gray-500 overflow-auto max-h-60">
-            <p className="mb-2 text-[#7C3AED]">Selected Section ID: {selectedSection || 'NONE'}</p>
+            <p className="mb-2 text-[#7C3AED]">User Role: {userRole}</p>
+            <p className="mb-2 text-[#7C3AED]">User Profile Section ID: {(user as any)?.sectionId || (user as any)?.section_id || (user as any)?.section?.id || 'NOT FOUND'}</p>
+            <p className="mb-2 text-[#7C3AED]">Current Filter Section ID: {selectedSection || 'NONE'}</p>
             <p className="mb-2 text-[#7C3AED]">Total Entries Received: {entries.length}</p>
             <pre>{JSON.stringify(entries, null, 2)}</pre>
           </div>
