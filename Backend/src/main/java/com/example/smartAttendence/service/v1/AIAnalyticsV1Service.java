@@ -167,8 +167,8 @@ public class AIAnalyticsV1Service {
                 } else if (!deptIdentifiers.isEmpty()) {
                     studentCount = userRepository.countByDepartmentsRoleAndStatus(deptIdentifiers, studentRoles, com.example.smartAttendence.domain.UserStatus.ACTIVE);
                 } else {
-                    // 🛡️ NATIVE FALLBACK: Use raw SQL for global count to bypass Hibernate mapping issues
-                    studentCount = userRepository.countByRoleInAndStatusNative(roleStrings);
+                    // 🛡️ MATCH DASHBOARD LOGIC: Remove strict ACTIVE filter to show all registered students
+                    studentCount = userRepository.countByRoleInNative(roleStrings);
                 }
 
                 // 🔄 AUTO-FALLBACK: If active count is 0, check total count to detect data presence issues
