@@ -91,8 +91,9 @@ public interface UserV1Repository extends JpaRepository<User, UUID> {
     List<User> findByDepartment(String department);
     List<User> findBySectionId(UUID sectionId);
 
-    @Query("SELECT COUNT(u) FROM V1User u WHERE u.role IN :roles AND u.status = :status")
-    long countByRoleInAndStatus(@Param("roles") List<Role> roles, @Param("status") com.example.smartAttendence.domain.UserStatus status);
+    long countByRoleInAndStatus(List<Role> roles, com.example.smartAttendence.domain.UserStatus status);
+
+    long countByRoleIn(List<Role> roles);
 
     @Query("SELECT u.email FROM V1User u GROUP BY u.email HAVING COUNT(u.email) > 1")
     List<String> findDuplicateEmails();

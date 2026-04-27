@@ -161,14 +161,20 @@ public class AIAnalyticsV1Service {
             
             try {
                 if (sectionId != null) {
-                    // Include all student-type roles for the section
                     studentCount = userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), studentRoles, com.example.smartAttendence.domain.UserStatus.ACTIVE);
                 } else if (!deptIdentifiers.isEmpty()) {
-                    // ROBUST MATCHING: Use identifiers (Name/Code) to find students not yet assigned to sections
                     studentCount = userRepository.countByDepartmentsRoleAndStatus(deptIdentifiers, studentRoles, com.example.smartAttendence.domain.UserStatus.ACTIVE);
                 } else {
-                    // Global count: Use the new repository method to count all student roles with ACTIVE status
                     studentCount = userRepository.countByRoleInAndStatus(studentRoles, com.example.smartAttendence.domain.UserStatus.ACTIVE);
+                }
+
+                // 🔄 AUTO-FALLBACK: If active count is 0, check total count to detect data presence issues
+                if (studentCount == 0 && (sectionId == null && deptIdentifiers.isEmpty())) {
+                    long totalAnyStatus = userRepository.countByRoleIn(studentRoles);
+                    if (totalAnyStatus > 0) {
+                        System.out.println("[ANALYTICS] Found " + totalAnyStatus + " students but none are ACTIVE. Showing total count as fallback.");
+                        studentCount = totalAnyStatus;
+                    }
                 }
             } catch (Exception e) {
                 System.err.println("Dashboard: Student count error: " + e.getMessage());
