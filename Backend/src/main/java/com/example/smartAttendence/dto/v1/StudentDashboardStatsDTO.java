@@ -41,4 +41,7 @@ public class StudentDashboardStatsDTO {
     
     // AI Insights for Student
     private double aiVerificationConfidence; // 0.0 - 1.0 (Accuracy Score)
+    
+    // 🔍 Diagnostics (Optional, for debugging)
+    private Map<String, Object> debugInfo;
 }

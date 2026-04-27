@@ -68,27 +68,30 @@ public class StudentV1Service {
                 today);
 
         if (student.getSection() != null || student.getSectionId() != null) {
-            UUID sectionId = student.getSection() != null ? student.getSection().getId() : student.getSectionId();
-            java.time.LocalDate todayDate = now.toLocalDate();
+            List<Timetable> allForSection = timetableRepository.findBySectionId(sectionId);
+            log.info("🔍 DASHBOARD DEBUG: Total classes in DB for section {}: {}", sectionId, allForSection.size());
             
-            log.info("🔍 DASHBOARD DEBUG: Searching Timetable for Section ID: {} on Day: {}", sectionId, today);
-            
-            List<Timetable> allForSection = timetableRepository.findBySectionAndDayOfWeek(sectionId, today);
-            log.info("🔍 DASHBOARD DEBUG: Found {} raw classes for section {} in database.", allForSection.size(), sectionId);
-            
-            todayTimetable = allForSection.stream()
+            List<Timetable> todayRaw = timetableRepository.findBySectionAndDayOfWeek(sectionId, today);
+            log.info("🔍 DASHBOARD DEBUG: Raw classes for today ({}): {}", today, todayRaw.size());
+
+            todayTimetable = todayRaw.stream()
                     .filter(t -> {
                         boolean startOk = t.getStartDate() == null || !todayDate.isBefore(t.getStartDate());
                         boolean endOk = t.getEndDate() == null || !todayDate.isAfter(t.getEndDate());
-                        if (!startOk || !endOk) {
-                            log.warn("🚨 DASHBOARD FILTER: Class {} filtered out. Start: {}, End: {}, Today: {}", 
-                                    t.getSubject(), t.getStartDate(), t.getEndDate(), todayDate);
-                        }
                         return startOk && endOk;
                     })
                     .collect(Collectors.toList());
             
-            log.info("🔍 DASHBOARD DEBUG: Final count after date filtering: {}", todayTimetable.size());
+            Map<String, Object> debug = new HashMap<>();
+            debug.put("sectionId", sectionId);
+            debug.put("today", today.toString());
+            debug.put("totalSectionClasses", allForSection.size());
+            debug.put("todayRawClasses", todayRaw.size());
+            debug.put("todayFilteredClasses", todayTimetable.size());
+            debug.put("serverTime", now.toString());
+            debug.put("serverDate", todayDate.toString());
+            
+            student.setRegistrationNumber(student.getRegistrationNumber()); // Ensure it's there
         } else {
             log.warn("⚠️ DASHBOARD WARN: Student {} has NO SECTION ID assigned in their profile!", student.getName());
         }
@@ -138,6 +141,12 @@ public class StudentV1Service {
                 .average()
                 .orElse(92.0); // Baseline confidence for new students
 
+        Map<String, Object> debugInfo = new HashMap<>();
+        debugInfo.put("studentId", studentId);
+        debugInfo.put("sectionId", student.getSectionId());
+        debugInfo.put("hasSectionEntity", student.getSection() != null);
+        debugInfo.put("todayClassesCount", todayClasses.size());
+
         return StudentDashboardStatsDTO.builder()
                 .overallAttendance(Math.round(overallAttendance * 10.0) / 10.0)
                 .attendedClasses((int) attendedCount)
@@ -148,9 +157,10 @@ public class StudentV1Service {
                 .recentHallPass(recentHallPass)
                 .departmentName(deptName)
                 .sectionName(sectionName)
-                .semester(student.getSemester())
+                .semester(student.getSemester() != null ? student.getSemester() : 1)
                 .registrationNumber(student.getRegistrationNumber())
-                .aiVerificationConfidence(Math.round(avgConfidence * 10.0) / 10.0)
+                .aiVerificationConfidence(avgConfidence)
+                .debugInfo(debugInfo)
                 .build();
     }
 

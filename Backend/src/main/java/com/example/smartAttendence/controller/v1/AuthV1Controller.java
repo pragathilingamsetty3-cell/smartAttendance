@@ -109,7 +109,12 @@ public class AuthV1Controller {
             userData.put("semester", result.user().getSemester());
             
             // 🛠️ SELF-HEALING: If student is missing section, force them to setup page
-            boolean missingSection = result.user().getRole().toString().contains("STUDENT") && result.user().getSectionId() == null;
+            com.example.smartAttendence.enums.Role role = result.user().getRole();
+            boolean isStudentRole = role == com.example.smartAttendence.enums.Role.STUDENT || 
+                                   role == com.example.smartAttendence.enums.Role.CR || 
+                                   role == com.example.smartAttendence.enums.Role.LR;
+            
+            boolean missingSection = isStudentRole && result.user().getSectionId() == null;
             if (missingSection) {
                 response.put("requiresFirstLoginSetup", true);
                 response.put("message", "Profile incomplete. Section assignment required.");
