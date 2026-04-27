@@ -279,7 +279,7 @@ public class AIAnalyticsV1Service {
 
             // System Diagnostics (For Debugging Azure)
             Map<String, Object> diagnostics = new HashMap<>();
-            diagnostics.put("buildTime", "2026-04-27 13:25 IST");
+            diagnostics.put("buildTime", "2026-04-27 13:30 IST");
             diagnostics.put("dbConnected", true);
             diagnostics.put("profile", System.getProperty("spring.profiles.active", "unknown"));
             diagnostics.put("studentRoleCount", studentCount);
@@ -287,7 +287,7 @@ public class AIAnalyticsV1Service {
             
             response.put("systemDiagnostics", diagnostics);
             response.put("totalStudents", studentCount);
-            response.put("systemVersion", "v2.7.0-MATCHED-LOGIC");
+            response.put("systemVersion", "v3.0.0-STABLE");
             response.put("activeStudents", attendanceRepository.countActiveFiltered(nowIST.toInstant().minusSeconds(3600), finalDeptId, finalSectId));
             response.put("anomaliesDetected", distinctAnomalies);
             response.put("activeAlerts", filteredAlerts); 
@@ -494,9 +494,23 @@ public class AIAnalyticsV1Service {
         long totalRecords = attendanceRepository.countByRecordedAtAfter(sevenDaysAgo);
         
         if (totalRecords == 0) {
+            String diagnosticInfo = String.format("""
+                
+                ---
+                **🔧 SERVER HEARTBEAT (v3.0.0-STABLE):**
+                *   **Students Found:** %d
+                *   **Total Users (System):** %d
+                *   **DB Profile:** %s
+                *   **Report Time:** 13:40 IST
+                """, 
+                userRepository.countByRole(java.util.Arrays.asList(com.example.smartAttendence.enums.Role.STUDENT, com.example.smartAttendence.enums.Role.CR, com.example.smartAttendence.enums.Role.LR)),
+                userRepository.count(),
+                System.getProperty("spring.profiles.active", "unknown")
+            );
+
             return Map.of(
-                "insights", """
-                    ### AI Executive Summary (v2.7.0-MATCHED-LOGIC)
+                "insights", String.format("""
+                    ### AI Executive Summary (v3.0.0-STABLE)
                     **System Pulse:** System is ONLINE and healthy.
                     
                     **AI Engine Status:** AI Engine is in standby mode awaiting first session data.
@@ -507,7 +521,8 @@ public class AIAnalyticsV1Service {
                     - **Predictive Readiness:** Models are primed for walk-out and anomaly detection.
                     
                     *AI Insights will generate automatically once the first session of the week starts.*
-                    """,
+                    %s
+                    """, diagnosticInfo),
                 "generatedAt", java.time.ZonedDateTime.now(IST).toInstant().toString(),
                 "status", "STANDBY"
             );
