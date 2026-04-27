@@ -2002,8 +2002,21 @@ public class AdminV1Service {
     public List<com.example.smartAttendence.entity.Timetable> getTimetablesForSection(UUID sectionId) {
         Section section = sectionRepository.findById(sectionId)
                 .orElseThrow(() -> new IllegalArgumentException("Section not found: " + sectionId));
+        
         List<com.example.smartAttendence.entity.Timetable> results = timetableRepository.findBySectionId(sectionId);
-        log.info("🔍 [DATABASE CHECK] Found {} timetable entries for Section ID: {}", results.size(), sectionId);
+        
+        // 🛠️ FALLBACK: If ID search fails, try by Name (in case of recreation)
+        if (results.isEmpty()) {
+            log.warn("⚠️ [TIMETABLE FALLBACK] No entries for ID {}. Searching by name '{}'...", sectionId, section.getName());
+            results = timetableRepository.findBySectionName(section.getName());
+            if (!results.isEmpty()) {
+                log.info("✅ [TIMETABLE FALLBACK] Found {} entries by Name for '{}'", results.size(), section.getName());
+            } else {
+                long totalCount = timetableRepository.count();
+                log.error("❌ [TIMETABLE FAIL] NO entries found for ID or Name. Total Timetables in DB: {}", totalCount);
+            }
+        }
+        
         return results;
     }
 
