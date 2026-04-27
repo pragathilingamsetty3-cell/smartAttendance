@@ -27,7 +27,7 @@ interface TimetableGridProps {
 }
 
 const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
-const HOURS = Array.from({ length: 12 }, (_, i) => i + 8); // 8 AM to 8 PM
+const HOURS = Array.from({ length: 17 }, (_, i) => i + 7); // 7 AM to 11 PM (23:00)
 
 export function TimetableGrid({ entries, onEdit, onDelete, userRole }: TimetableGridProps) {
   const isFaculty = String(userRole || '').includes('FACULTY');

@@ -7,8 +7,14 @@ class TimetableService {
   }
 
   async getTimetablesForSection(sectionId: string): Promise<any[]> {
-    // 🚀 CACHE BUSTER: Force Cloudflare/Azure to bypass cache and fetch fresh data
-    const response = await apiClient.get(`/api/v1/admin/timetables/section/${sectionId}?cb=${Date.now()}`);
+    // 🚀 THE ULTIMATE BYPASS: If calling from a student session, use the dedicated student endpoint
+    // to avoid Nginx /admin/ blocks.
+    const isStudent = localStorage.getItem('user_role') === 'STUDENT' || window.location.pathname.includes('/student');
+    const endpoint = isStudent 
+      ? `/api/v1/student/timetable` 
+      : `/api/v1/admin/timetables/section/${sectionId}`;
+
+    const response = await apiClient.get(`${endpoint}?cb=${Date.now()}`);
     return response.data;
   }
 
