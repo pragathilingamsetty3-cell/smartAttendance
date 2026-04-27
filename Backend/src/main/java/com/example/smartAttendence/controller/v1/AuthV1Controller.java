@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.annotation.security.PermitAll;
 
 import java.util.Map;
 import java.util.UUID;
@@ -235,6 +236,16 @@ public class AuthV1Controller {
             log.error("[AUTH] Reset password error: {}", e.getMessage());
             return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @GetMapping("/version")
+    @PermitAll
+    public ResponseEntity<Map<String, String>> getVersion() {
+        return ResponseEntity.ok(Map.of(
+            "version", "VER-REPAIR-BRUTE-FORCE-99",
+            "status", "ACTIVE",
+            "timestamp", String.valueOf(System.currentTimeMillis())
+        ));
     }
 
     @PostMapping("/refresh-token")
