@@ -158,20 +158,16 @@ public class AIAnalyticsV1Service {
             try {
                 if (sectionId != null) {
                     studentCount = userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), studentRoles.stream().map(com.example.smartAttendence.enums.Role::valueOf).collect(Collectors.toList()), com.example.smartAttendence.domain.UserStatus.ACTIVE);
+                    if (studentCount == 0) {
+                        studentCount = userRepository.countBySectionIdIn(List.of(sectionId));
+                    }
                 } else if (!deptIdentifiers.isEmpty()) {
                     studentCount = userRepository.countByDepartmentsRoleAndStatus(deptIdentifiers, studentRoles.stream().map(com.example.smartAttendence.enums.Role::valueOf).collect(Collectors.toList()), com.example.smartAttendence.domain.UserStatus.ACTIVE);
-                } else {
-                    // 🛡️ MATCH DASHBOARD LOGIC: Remove strict ACTIVE filter to show all registered students
-                    studentCount = userRepository.countByRoleInNative(studentRoles);
-                }
-
-                // 🔄 AUTO-FALLBACK: If active count is 0, check total count to detect data presence issues
-                if (studentCount == 0 && (sectionId == null && deptIdentifiers.isEmpty())) {
-                    long totalAnyStatus = userRepository.countByRoleInNative(studentRoles);
-                    if (totalAnyStatus > 0) {
-                        System.out.println("[ANALYTICS] Found " + totalAnyStatus + " students via Native SQL.");
-                        studentCount = totalAnyStatus;
+                    if (studentCount == 0) {
+                        studentCount = userRepository.countByDepartments(deptIdentifiers);
                     }
+                } else {
+                    studentCount = userRepository.countByRoleInNative(studentRoles);
                 }
             } catch (Exception e) {
                 System.err.println("Dashboard: Student count error: " + e.getMessage());

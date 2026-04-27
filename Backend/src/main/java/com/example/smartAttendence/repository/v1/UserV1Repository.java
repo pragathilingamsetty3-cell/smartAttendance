@@ -90,6 +90,8 @@ public interface UserV1Repository extends JpaRepository<User, UUID> {
     // Re-added for SharedUtilityService compatibility
     List<User> findByDepartment(String department);
     List<User> findBySectionId(UUID sectionId);
+    @Query("SELECT COUNT(u) FROM V1User u WHERE u.sectionId IN :sectionIds")
+    long countBySectionIdIn(@Param("sectionIds") List<UUID> sectionIds);
 
     @Query(value = "SELECT COUNT(*) FROM users u WHERE u.role IN :roles AND u.status = 'ACTIVE'", nativeQuery = true)
     long countByRoleInAndStatusNative(@Param("roles") List<String> roles);
