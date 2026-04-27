@@ -82,6 +82,8 @@ public class AuthV1Controller {
                 userData.put("biometricSignature", result.user().getBiometricSignature());
                 userData.put("isTemporaryPassword", result.user().getIsTemporaryPassword());
                 userData.put("secretKey", result.user().getSecretKey());
+                userData.put("sectionId", result.user().getSectionId());
+                userData.put("semester", result.user().getSemester());
                 
                 response.put("user", userData);
                 return ResponseEntity.status(202).body(response);
@@ -103,6 +105,8 @@ public class AuthV1Controller {
             userData.put("biometricSignature", result.user().getBiometricSignature());
             userData.put("isTemporaryPassword", result.user().getIsTemporaryPassword());
             userData.put("secretKey", result.user().getSecretKey());
+            userData.put("sectionId", result.user().getSectionId());
+            userData.put("semester", result.user().getSemester());
             
             response.put("user", userData);
             return ResponseEntity.ok(response);
@@ -158,6 +162,9 @@ public class AuthV1Controller {
             userData.put("isTemporaryPassword", false);
             userData.put("deviceId", user.getDeviceId());
             userData.put("biometricSignature", user.getBiometricSignature());
+            userData.put("sectionId", user.getSectionId());
+            userData.put("semester", user.getSemester());
+            userData.put("department", user.getDepartment());
             userData.put("needsSetup", false);
             
             response.put("user", userData);

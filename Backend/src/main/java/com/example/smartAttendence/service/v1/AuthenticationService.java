@@ -183,6 +183,7 @@ public class AuthenticationService {
             Section section = sectionRepository.findByName(request.section())
                     .orElseThrow(() -> new IllegalArgumentException("Invalid section: " + request.section()));
             user.setSection(section);
+            user.setSectionId(section.getId()); // 🛠️ FIX: Explicitly set ID for read-only relationship mapping
         }
         
         if (request.department() != null && !request.department().isBlank()) {
