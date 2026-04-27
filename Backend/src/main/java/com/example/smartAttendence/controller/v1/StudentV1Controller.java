@@ -97,15 +97,29 @@ public class StudentV1Controller {
     public ResponseEntity<?> getTimetable() {
         try {
             var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            User student = adminV1Service.getUserByEmail(auth.getName());
+            String email = auth.getName();
+            log.info("🔍 [DIAGNOSTIC] Fetching timetable for student email: {}", email);
+            
+            User student = adminV1Service.getUserByEmail(email);
             
             if (student == null) {
-                return ResponseEntity.status(404).body(Map.of("error", "Student not found"));
+                log.error("❌ [DIAGNOSTIC] Student profile not found for email: {}", email);
+                return ResponseEntity.status(404).body(Map.of("error", "Student not found for email: " + email));
             }
+
+            log.info("👤 [DIAGNOSTIC] Found student: {} (ID: {}). SectionID in DB: {}, Section Object: {}", 
+                     student.getName(), student.getId(), student.getSectionId(), 
+                     student.getSection() != null ? student.getSection().getName() : "NULL");
 
             UUID sectionId = student.getSectionId();
             
-            // 🚨 RECOVERY: If ID is null, try to find by Name from the linked Section object
+            // 🚨 RECOVERY 1: If field is null but object exists, use object ID
+            if (sectionId == null && student.getSection() != null) {
+                sectionId = student.getSection().getId();
+                log.info("💡 [DIAGNOSTIC] Resolved sectionId from linked Section object: {}", sectionId);
+            }
+            
+            // 🚨 RECOVERY 2: If both null, try to find by Name from the linked Section object (Legacy logic)
             if (sectionId == null && student.getSection() != null) {
                 String sectionName = student.getSection().getName();
                 log.warn("⚠️ [RECOVERY] Student {} has null SectionID. Searching by name: {}", student.getId(), sectionName);
@@ -123,10 +137,11 @@ public class StudentV1Controller {
             }
 
             if (sectionId == null) {
-                log.error("❌ [FAILURE] Student {} has no section ID or Name link.", student.getId());
-                return ResponseEntity.ok(java.util.Collections.emptyList());
+                log.error("❌ [FAILURE] Student {} has no section ID or Name link. Cannot fetch timetable.", student.getId());
+                return ResponseEntity.badRequest().body(Map.of("error", "Your profile is not linked to any section. Please contact Admin."));
             }
 
+            log.info("🛰️ [DIAGNOSTIC] Calling adminV1Service.getTimetablesForSection with ID: {}", sectionId);
             java.util.List<com.example.smartAttendence.entity.Timetable> timetables = 
                 adminV1Service.getTimetablesForSection(sectionId);
             
@@ -134,10 +149,11 @@ public class StudentV1Controller {
             
             return ResponseEntity.ok()
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                .header("X-Diag-Section-ID", sectionId.toString())
                 .body(timetables.stream().map(this::mapToTimetableResponse).toList());
         } catch (Exception e) {
             log.error("Failed to fetch student timetable", e);
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("error", "Backend failure: " + e.getMessage()));
         }
     }
 

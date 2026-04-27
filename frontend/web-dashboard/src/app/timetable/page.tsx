@@ -101,9 +101,11 @@ export default function TimetablePage() {
     }
   };
 
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const fetchTimetable = async () => {
     if (!user) return;
     setLoading(true);
+    setFetchError(null);
     try {
       let data = [];
       const isFaculty = String(userRole).includes('FACULTY');
@@ -133,8 +135,10 @@ export default function TimetablePage() {
       
       console.log('✅ TIMETABLE DATA RECEIVED:', data?.length || 0, 'entries', data);
       setEntries(Array.isArray(data) ? data : []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ FAILED TO FETCH TIMETABLE:', error);
+      const msg = error.response?.data?.error || error.message || 'Failed to sync timetable';
+      setFetchError(msg);
       setEntries([]);
     } finally {
       setLoading(false);
@@ -209,6 +213,19 @@ export default function TimetablePage() {
           </Button>
         )}
       </div>
+
+      {/* Error Alert Area */}
+      {fetchError && (
+        <Card glass className="bg-red-500/10 border-red-500/30">
+          <CardContent className="p-4 flex items-center space-x-3 text-red-400">
+            <CheckCircle className="w-5 h-5 rotate-45" />
+            <p className="text-sm font-medium">Sync Error: {fetchError}</p>
+            <Button size="sm" variant="ghost" onClick={() => fetchTimetable()} className="ml-auto text-xs hover:bg-red-500/20">
+              Retry Sync
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters Area - Only for Admins/Faculty Coordinators */}
       {userRole !== 'FACULTY' && userRole !== 'STUDENT' && (

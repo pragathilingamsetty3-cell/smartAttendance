@@ -2005,11 +2005,13 @@ public class AdminV1Service {
         
         // 1. Try exact ID match
         List<com.example.smartAttendence.entity.Timetable> results = timetableRepository.findBySectionId(sectionId);
+        log.info("📊 [ID FETCH] Found {} entries by ID {}", results.size(), sectionId);
         
         // 2. Fallback to Name match (Fixes "Ghost ID" issue if section was recreated)
         if (results.isEmpty()) {
             log.warn("⚠️ [NAME FALLBACK] No ID match. Searching by name: {}", section.getName());
             results = timetableRepository.findBySectionName(section.getName());
+            log.info("📊 [NAME FETCH] Found {} entries by name '{}'", results.size(), section.getName());
         }
         
         return results;
