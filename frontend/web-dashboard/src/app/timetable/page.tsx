@@ -24,7 +24,8 @@ export default function TimetablePage() {
   const { user, getUserRole } = useAuth();
   const userRole = getUserRole();
   const [loading, setLoading] = useState(true);
-  const [entries, setEntries] = useState<any[]>([]);
+  const [entries, setEntries] = React.useState<any[]>([]);
+  const [activeEndpoint, setActiveEndpoint] = React.useState<string>('NONE');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEntry, setEditingEntry] = useState<any>(null);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -109,19 +110,24 @@ export default function TimetablePage() {
       const isStudent = ['STUDENT', 'CR', 'LR'].includes(String(userRole)) || String(userRole).includes('STUDENT');
       
       if (selectedSection) {
+        setActiveEndpoint(isStudent ? '/api/v1/student/timetable' : `/api/v1/admin/timetables/section/${selectedSection}`);
         data = await timetableService.getTimetablesForSection(selectedSection);
         if (selectedFaculty) {
           data = data.filter((e: any) => e.faculty?.id === selectedFaculty);
         }
       } else if (selectedFaculty) {
+        setActiveEndpoint(`/api/v1/admin/timetables/faculty/${selectedFaculty}`);
         data = await timetableService.getTimetablesForFaculty(selectedFaculty);
       } else if (isFaculty && user.id) {
+        setActiveEndpoint(`/api/v1/admin/timetables/faculty/${user.id}`);
         data = await timetableService.getTimetablesForFaculty(user.id);
       } else if (isStudent) {
+        setActiveEndpoint('/api/v1/student/timetable');
         // 🎓 FOR STUDENTS/CRs/LRs: Call the dedicated student endpoint.
         // The backend will automatically handle sectionId recovery if it's missing from the token.
         data = await timetableService.getTimetablesForSection(user.sectionId || '');
       } else {
+        setActiveEndpoint('FALLBACK_EMPTY');
         data = [];
       }
       
@@ -292,11 +298,13 @@ export default function TimetablePage() {
             Data Architect Diagnostics
           </summary>
           <div className="mt-4 p-4 rounded-lg bg-black/40 font-mono text-[10px] text-gray-500 overflow-auto max-h-60">
-            <p className="mb-2 text-[#7C3AED]">User Role: {userRole}</p>
-            <p className="mb-2 text-[#7C3AED]">User Profile Section ID: {(user as any)?.sectionId || (user as any)?.section_id || (user as any)?.section?.id || 'NOT FOUND'}</p>
-            <p className="mb-2 text-[#7C3AED]">Current Filter Section ID: {selectedSection || 'NONE'}</p>
-            <p className="mb-2 text-[#7C3AED]">Total Entries Received: {entries.length}</p>
-            <pre>{JSON.stringify(entries, null, 2)}</pre>
+            <p className="mb-1 uppercase font-bold text-gray-500">▼ Data Architect Diagnostics</p>
+            <p>User Role: {String(userRole)}</p>
+            <p>Active Endpoint: {activeEndpoint}</p>
+            <p>User Profile Section ID: {user?.sectionId || 'NOT FOUND'}</p>
+            <p>Current Filter Section ID: {selectedSection || 'NOT SELECTED'}</p>
+            <p>Total Entries Received: {entries.length}</p>
+            <pre className="mt-2 text-[8px] opacity-50">{JSON.stringify(entries, null, 2)}</pre>
           </div>
         </details>
       </div>

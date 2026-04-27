@@ -1,5 +1,6 @@
 package com.example.smartAttendence.controller.v1;
 
+import com.example.smartAttendence.dto.v1.TimetableResponseDTO;
 import com.example.smartAttendence.domain.User;
 import com.example.smartAttendence.dto.v1.StudentDashboardStatsDTO;
 import com.example.smartAttendence.service.v1.AdminV1Service;
@@ -129,49 +130,56 @@ public class StudentV1Controller {
             java.util.List<com.example.smartAttendence.entity.Timetable> timetables = 
                 adminV1Service.getTimetablesForSection(sectionId);
             
+            log.info("📅 [FETCH] Found {} timetable entries for section {}", timetables.size(), sectionId);
+            
             return ResponseEntity.ok()
                 .header("Cache-Control", "no-cache, no-store, must-revalidate")
-                .body(timetables.stream().map(this::mapToDTO).toList());
+                .body(timetables.stream().map(this::mapToTimetableResponse).toList());
         } catch (Exception e) {
             log.error("Failed to fetch student timetable", e);
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
 
-    private Map<String, Object> mapToDTO(com.example.smartAttendence.entity.Timetable t) {
-        Map<String, Object> dto = new java.util.HashMap<>();
-        dto.put("id", t.getId());
-        dto.put("subject", t.getSubject());
-        dto.put("dayOfWeek", t.getDayOfWeek() != null ? t.getDayOfWeek().name() : null);
-        dto.put("startTime", t.getStartTime() != null ? t.getStartTime().toString() : null);
-        dto.put("endTime", t.getEndTime() != null ? t.getEndTime().toString() : null);
-        dto.put("isExamDay", t.getIsExamDay());
-        dto.put("isHoliday", t.getIsHoliday());
-        dto.put("isAdhoc", t.getIsAdhoc());
+    private TimetableResponseDTO mapToTimetableResponse(com.example.smartAttendence.entity.Timetable t) {
+        if (t == null) return null;
         
-        if (t.getRoom() != null) {
-            dto.put("room", Map.of(
-                "id", t.getRoom().getId(),
-                "name", t.getRoom().getName(),
-                "building", t.getRoom().getBuilding()
-            ));
-        }
-        
-        if (t.getFaculty() != null) {
-            dto.put("faculty", Map.of(
-                "id", t.getFaculty().getId(),
-                "name", t.getFaculty().getName(),
-                "email", t.getFaculty().getEmail()
-            ));
-        }
-
-        if (t.getSection() != null) {
-            dto.put("section", Map.of(
-                "id", t.getSection().getId(),
-                "name", t.getSection().getName()
-            ));
-        }
-        
-        return dto;
+        return TimetableResponseDTO.builder()
+                .id(t.getId())
+                .subject(t.getSubject())
+                .dayOfWeek(t.getDayOfWeek() != null ? t.getDayOfWeek().name() : null)
+                .startTime(t.getStartTime() != null ? t.getStartTime().toString() : null)
+                .endTime(t.getEndTime() != null ? t.getEndTime().toString() : null)
+                .isExamDay(t.getIsExamDay())
+                .isHoliday(t.getIsHoliday())
+                .holidayDate(t.getHolidayDate() != null ? t.getHolidayDate().toString() : null)
+                .isAdhoc(t.getIsAdhoc())
+                .startDate(t.getStartDate() != null ? t.getStartDate().toString() : null)
+                .endDate(t.getEndDate() != null ? t.getEndDate().toString() : null)
+                .description(t.getDescription())
+                // Relation Info
+                .room(t.getRoom() != null ? TimetableResponseDTO.RoomInfo.builder()
+                        .id(t.getRoom().getId())
+                        .name(t.getRoom().getName())
+                        .building(t.getRoom().getBuilding())
+                        .floor(t.getRoom().getFloor())
+                        .build() : null)
+                .faculty(t.getFaculty() != null ? TimetableResponseDTO.FacultyInfo.builder()
+                        .id(t.getFaculty().getId())
+                        .name(t.getFaculty().getName())
+                        .email(t.getFaculty().getEmail())
+                        .build() : null)
+                .section(t.getSection() != null ? TimetableResponseDTO.SectionInfo.builder()
+                        .id(t.getSection().getId())
+                        .name(t.getSection().getName())
+                        .build() : null)
+                // Break Info
+                .hasLunchBreak(t.getHasLunchBreak())
+                .lunchBreakStart(t.getLunchBreakStart() != null ? t.getLunchBreakStart().toString() : null)
+                .lunchBreakEnd(t.getLunchBreakEnd() != null ? t.getLunchBreakEnd().toString() : null)
+                .hasShortBreak(t.getHasShortBreak())
+                .shortBreakStart(t.getShortBreakStart() != null ? t.getShortBreakStart().toString() : null)
+                .shortBreakEnd(t.getShortBreakEnd() != null ? t.getShortBreakEnd().toString() : null)
+                .build();
     }
 }
