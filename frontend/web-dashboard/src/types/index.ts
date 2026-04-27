@@ -9,7 +9,7 @@ export * from './emergency';
 export * from './student-dashboard';
 
 // --- Enums (from frontend-integration-spec.md Section 3) ---
-export enum Role { SUPER_ADMIN = 'SUPER_ADMIN', ADMIN = 'ADMIN', FACULTY = 'FACULTY', STUDENT = 'STUDENT' }
+export enum Role { SUPER_ADMIN = 'SUPER_ADMIN', ADMIN = 'ADMIN', FACULTY = 'FACULTY', STUDENT = 'STUDENT', CR = 'CR', LR = 'LR' }
 export enum UserStatus { ACTIVE = 'ACTIVE', INACTIVE = 'INACTIVE', SUSPENDED = 'SUSPENDED' }
 export enum RoomChangeType { SUDDEN_CHANGE = 'SUDDEN_CHANGE', PRE_PLANNED = 'PRE_PLANNED', WEEKLY_SWAP = 'WEEKLY_SWAP', EMERGENCY_MOVE = 'EMERGENCY_MOVE' }
 

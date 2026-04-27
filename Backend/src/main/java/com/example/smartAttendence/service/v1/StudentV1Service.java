@@ -197,6 +197,7 @@ public class StudentV1Service {
                 .sectionName(sectionName)
                 .semester(student.getSemester() != null ? student.getSemester() : 1)
                 .registrationNumber(student.getRegistrationNumber())
+                .sectionId(student.getSectionId())
                 .aiVerificationConfidence(avgConfidence)
                 .debugInfo(debugInfo)
                 .build();

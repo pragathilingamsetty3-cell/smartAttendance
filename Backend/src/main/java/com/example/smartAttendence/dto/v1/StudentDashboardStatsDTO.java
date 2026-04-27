@@ -38,6 +38,7 @@ public class StudentDashboardStatsDTO {
     private String sectionName;
     private Integer semester;
     private String registrationNumber;
+    private UUID sectionId;
     
     // AI Insights for Student
     private double aiVerificationConfidence; // 0.0 - 1.0 (Accuracy Score)

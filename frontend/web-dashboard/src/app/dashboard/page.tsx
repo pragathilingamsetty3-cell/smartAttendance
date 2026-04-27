@@ -51,9 +51,12 @@ export default function Dashboard() {
       await new Promise(resolve => setTimeout(resolve, 800));
       
       try {
-        const endpoint = user?.role === Role.FACULTY 
+        const isFaculty = user?.role === Role.FACULTY;
+        const isStudent = user?.role === Role.STUDENT || user?.role === Role.CR || user?.role === Role.LR;
+        
+        const endpoint = isFaculty 
           ? '/api/v1/faculty/dashboard/stats' 
-          : user?.role === Role.STUDENT
+          : isStudent
           ? '/api/v1/student/dashboard/stats'
           : '/api/v1/admin/dashboard/stats';
           
@@ -86,7 +89,7 @@ export default function Dashboard() {
       >
         {user?.role === Role.FACULTY ? (
           <FacultyDashboardView stats={stats} loading={loading} sectionId={user?.sectionId} />
-        ) : user?.role === Role.STUDENT ? (
+        ) : (user?.role === Role.STUDENT || user?.role === Role.CR || user?.role === Role.LR) ? (
           <StudentDashboardView stats={stats} loading={loading} user={user} />
         ) : (
           <AdminDashboardView stats={stats} loading={loading} AnimatedCounter={AnimatedCounter} />

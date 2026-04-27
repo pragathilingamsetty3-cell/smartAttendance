@@ -1,4 +1,5 @@
 import apiClient from '../lib/apiClient';
+import { useAuthStore } from '../stores/authStore';
 
 class TimetableService {
   async getTimetablesForFaculty(facultyId: string): Promise<any[]> {
@@ -9,7 +10,10 @@ class TimetableService {
   async getTimetablesForSection(sectionId: string): Promise<any[]> {
     // 🚀 THE ULTIMATE BYPASS: If calling from a student session, use the dedicated student endpoint
     // to avoid Nginx /admin/ blocks.
-    const isStudent = localStorage.getItem('user_role') === 'STUDENT' || window.location.pathname.includes('/student');
+    const user = useAuthStore.getState().user;
+    const isStudent = user?.role === 'STUDENT' || user?.role === 'CR' || user?.role === 'LR' || 
+                      window.location.pathname.includes('/student');
+    
     const endpoint = isStudent 
       ? `/api/v1/student/timetable` 
       : `/api/v1/admin/timetables/section/${sectionId}`;

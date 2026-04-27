@@ -35,7 +35,7 @@ public class StudentV1Controller {
      * Get real-time dashboard statistics for student
      */
     @GetMapping("/dashboard/stats")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'CR', 'LR')")
     public ResponseEntity<?> getDashboardStats() {
         try {
             var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
@@ -58,7 +58,7 @@ public class StudentV1Controller {
      * Get complete student profile details
      */
     @GetMapping("/profile")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'CR', 'LR')")
     public ResponseEntity<?> getProfile() {
         try {
             var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
@@ -92,7 +92,7 @@ public class StudentV1Controller {
      * Get timetable for the student's section (Bypassing /admin security)
      */
     @GetMapping("/timetable")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'CR', 'LR')")
     public ResponseEntity<?> getTimetable() {
         try {
             var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();

@@ -49,7 +49,7 @@ export default function TimetablePage() {
   useEffect(() => {
     if (user && userRole) {
       // 🎓 FOR STUDENTS: Automatically set their assigned section
-      const isStudent = userRole === 'STUDENT' || String(userRole).includes('STUDENT');
+      const isStudent = userRole === 'STUDENT' || userRole === 'CR' || userRole === 'LR' || String(userRole).includes('STUDENT');
       
       if (isStudent) {
         // Use type casting to check for variations without crashing the build
@@ -106,7 +106,7 @@ export default function TimetablePage() {
     try {
       let data = [];
       const isFaculty = String(userRole).includes('FACULTY');
-      const isStudent = String(userRole).includes('STUDENT');
+      const isStudent = ['STUDENT', 'CR', 'LR'].includes(String(userRole)) || String(userRole).includes('STUDENT');
       
       if (selectedSection) {
         data = await timetableService.getTimetablesForSection(selectedSection);
@@ -117,8 +117,10 @@ export default function TimetablePage() {
         data = await timetableService.getTimetablesForFaculty(selectedFaculty);
       } else if (isFaculty && user.id) {
         data = await timetableService.getTimetablesForFaculty(user.id);
-      } else if (isStudent && user.sectionId) {
-        data = await timetableService.getTimetablesForSection(user.sectionId);
+      } else if (isStudent) {
+        // 🎓 FOR STUDENTS/CRs/LRs: Call the dedicated student endpoint.
+        // The backend will automatically handle sectionId recovery if it's missing from the token.
+        data = await timetableService.getTimetablesForSection(user.sectionId || '');
       } else {
         data = [];
       }

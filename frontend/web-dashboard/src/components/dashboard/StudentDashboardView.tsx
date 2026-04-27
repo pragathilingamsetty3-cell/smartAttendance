@@ -51,7 +51,9 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
   ];
 
   // Only show Biometric Setup if not already done or profile is incomplete
-  const needsSetup = !user?.biometricSignature || !user?.sectionId;
+  // Profile setup check - be less intrusive if the backend already found the section
+  const hasSection = user?.sectionId || stats?.sectionName && stats.sectionName !== 'N/A';
+  const needsSetup = !user?.biometricSignature || !hasSection;
   
   const activeQuickActions = needsSetup 
     ? [
