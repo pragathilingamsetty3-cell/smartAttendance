@@ -153,29 +153,23 @@ public class AIAnalyticsV1Service {
                     .collect(Collectors.toList());
 
             long studentCount = 0;
-            List<com.example.smartAttendence.enums.Role> studentRoles = List.of(
-                com.example.smartAttendence.enums.Role.STUDENT, 
-                com.example.smartAttendence.enums.Role.CR, 
-                com.example.smartAttendence.enums.Role.LR
-            );
+            List<String> studentRoles = List.of("STUDENT", "CR", "LR");
             
             try {
-                List<String> roleStrings = studentRoles.stream().map(Enum::name).collect(java.util.stream.Collectors.toList());
-                
                 if (sectionId != null) {
-                    studentCount = userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), studentRoles, com.example.smartAttendence.domain.UserStatus.ACTIVE);
+                    studentCount = userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), studentRoles.stream().map(com.example.smartAttendence.enums.Role::valueOf).collect(Collectors.toList()), com.example.smartAttendence.domain.UserStatus.ACTIVE);
                 } else if (!deptIdentifiers.isEmpty()) {
-                    studentCount = userRepository.countByDepartmentsRoleAndStatus(deptIdentifiers, studentRoles, com.example.smartAttendence.domain.UserStatus.ACTIVE);
+                    studentCount = userRepository.countByDepartmentsRoleAndStatus(deptIdentifiers, studentRoles.stream().map(com.example.smartAttendence.enums.Role::valueOf).collect(Collectors.toList()), com.example.smartAttendence.domain.UserStatus.ACTIVE);
                 } else {
                     // 🛡️ MATCH DASHBOARD LOGIC: Remove strict ACTIVE filter to show all registered students
-                    studentCount = userRepository.countByRoleInNative(roleStrings);
+                    studentCount = userRepository.countByRoleInNative(studentRoles);
                 }
 
                 // 🔄 AUTO-FALLBACK: If active count is 0, check total count to detect data presence issues
                 if (studentCount == 0 && (sectionId == null && deptIdentifiers.isEmpty())) {
-                    long totalAnyStatus = userRepository.countByRoleInNative(roleStrings);
+                    long totalAnyStatus = userRepository.countByRoleInNative(studentRoles);
                     if (totalAnyStatus > 0) {
-                        System.out.println("[ANALYTICS] Found " + totalAnyStatus + " students via Native SQL but none are ACTIVE.");
+                        System.out.println("[ANALYTICS] Found " + totalAnyStatus + " students via Native SQL.");
                         studentCount = totalAnyStatus;
                     }
                 }
