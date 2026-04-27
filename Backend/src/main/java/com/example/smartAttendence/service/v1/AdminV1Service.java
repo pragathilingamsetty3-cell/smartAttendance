@@ -2001,33 +2001,18 @@ public class AdminV1Service {
         Section section = sectionRepository.findById(sectionId)
                 .orElseThrow(() -> new IllegalArgumentException("Section not found: " + sectionId));
         
-        log.info("🔍 [DEEP TRACE] Fetching for Section: {} ({})", section.getName(), sectionId);
+        log.info("🔍 [UNIVERSAL FETCH] Fetching all weekly slots for Section: {} ({})", section.getName(), sectionId);
         
-        // 1. Try Primary Search
+        // Fetch ALL entries for this section ID
         List<com.example.smartAttendence.entity.Timetable> results = timetableRepository.findBySectionId(sectionId);
         
-        // 2. Try Fallback Search (Java-side scan if DB query failed)
+        // Fallback to name match (Role-agnostic)
         if (results.isEmpty()) {
-            log.warn("⚠️ [TIMETABLE FALLBACK] DB query returned 0. Starting Java-side global scan...");
-            List<com.example.smartAttendence.entity.Timetable> allTimetables = timetableRepository.findAll();
-            
-            results = allTimetables.stream()
-                    .filter(t -> {
-                        // Match by ID OR Name OR Department matching
-                        boolean idMatch = t.getSection() != null && t.getSection().getId().equals(sectionId);
-                        boolean nameMatch = t.getSection() != null && t.getSection().getName().equalsIgnoreCase(section.getName());
-                        
-                        return idMatch || nameMatch;
-                    })
-                    .collect(Collectors.toList());
-                    
-            if (!results.isEmpty()) {
-                log.info("✅ [FALLBACK SUCCESS] Java-side scan found {} entries that DB query missed!", results.size());
-            } else {
-                log.error("❌ [FALLBACK FAIL] Global scan also found 0 entries for Section {}", section.getName());
-            }
+            log.warn("⚠️ [UNIVERSAL FALLBACK] No ID match. Trying Name: {}", section.getName());
+            results = timetableRepository.findBySectionName(section.getName());
         }
         
+        log.info("✅ [FETCH COMPLETE] Found {} weekly slots for Section {}", results.size(), section.getName());
         return results;
     }
 
