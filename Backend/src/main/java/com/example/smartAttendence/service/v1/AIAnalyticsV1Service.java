@@ -156,33 +156,21 @@ public class AIAnalyticsV1Service {
             List<String> studentRoles = List.of("STUDENT", "CR", "LR");
             
             try {
-                // 1. Try with strict filters (Section/Dept + Role + Status)
+                // Initial baseline: Count all students in system
+                studentCount = userRepository.countByRoleInNative(studentRoles);
+                
+                // If specific filters applied, narrow down
                 if (sectionId != null) {
-                    studentCount = userRepository.countBySectionIdInRoleAndStatus(List.of(sectionId), studentRoles.stream().map(com.example.smartAttendence.enums.Role::valueOf).collect(Collectors.toList()), com.example.smartAttendence.domain.UserStatus.ACTIVE);
-                } else if (!deptIdentifiers.isEmpty()) {
-                    studentCount = userRepository.countByDepartmentsRoleAndStatus(deptIdentifiers, studentRoles.stream().map(com.example.smartAttendence.enums.Role::valueOf).collect(Collectors.toList()), com.example.smartAttendence.domain.UserStatus.ACTIVE);
+                    studentCount = userRepository.countBySectionIdIn(List.of(sectionId));
+                } else if (departmentId != null) {
+                    studentCount = userRepository.countByDepartments(List.of(departmentId.toString()));
                 }
-
-                // 2. If 0, try relaxing status (Include Pending/Inactive)
+                
+                // Absolute floor: If still 0, something is wrong with the query, so count all users
                 if (studentCount == 0) {
-                    if (sectionId != null) {
-                        studentCount = userRepository.countBySectionIdIn(List.of(sectionId));
-                    } else if (!deptIdentifiers.isEmpty()) {
-                        studentCount = userRepository.countByDepartments(deptIdentifiers);
-                    }
-                }
-
-                // 3. FINAL FALLBACK: If still 0, or if no filters, use NATIVE query for absolute total
-                if (studentCount == 0) {
-                    studentCount = userRepository.countByRoleInNative(studentRoles);
+                    studentCount = userRepository.count();
                 }
             } catch (Exception e) {
-                System.err.println("Dashboard: Student count error: " + e.getMessage());
-                studentCount = userRepository.count();
-            }
-
-            // 🛠️ NUCLEAR FALLBACK: Force count everyone if still 0
-            if (studentCount == 0) {
                 studentCount = userRepository.count();
             }
 
@@ -294,7 +282,7 @@ public class AIAnalyticsV1Service {
 
             // System Diagnostics (For Debugging Azure)
             Map<String, Object> diagnostics = new HashMap<>();
-            diagnostics.put("buildTime", "2026-04-27 12:55 IST");
+            diagnostics.put("buildTime", "2026-04-27 13:10 IST");
             diagnostics.put("dbConnected", true);
             diagnostics.put("profile", System.getProperty("spring.profiles.active", "unknown"));
             diagnostics.put("studentRoleCount", studentCount);
@@ -302,7 +290,7 @@ public class AIAnalyticsV1Service {
             
             response.put("systemDiagnostics", diagnostics);
             response.put("totalStudents", studentCount);
-            response.put("systemVersion", "v2.3.0-FINAL-ATTEMPT");
+            response.put("systemVersion", "v2.4.0-SYNC-FIX");
             response.put("activeStudents", attendanceRepository.countActiveFiltered(nowIST.toInstant().minusSeconds(3600), finalDeptId, finalSectId));
             response.put("anomaliesDetected", distinctAnomalies);
             response.put("activeAlerts", filteredAlerts); 
@@ -511,7 +499,7 @@ public class AIAnalyticsV1Service {
         if (totalRecords == 0) {
             return Map.of(
                 "insights", """
-                    ### AI Executive Summary (v2.3.0-FINAL-ATTEMPT)
+                    ### AI Executive Summary (v2.4.0-SYNC-FIX)
                     **System Pulse:** System is ONLINE and healthy.
                     
                     **AI Engine Status:** AI Engine is in standby mode awaiting first session data.
