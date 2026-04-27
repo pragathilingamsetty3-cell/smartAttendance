@@ -71,7 +71,13 @@ public class AIAttendanceMonitorService {
                              (t.getEndDate() == null || !todayDate.isAfter(t.getEndDate())))
                 .collect(Collectors.toList());
 
+        log.info("🤖 AI MONITOR: Scan found {} active timetable slots for current time: {}", activeSlots.size(), time);
         for (Timetable slot : activeSlots) {
+            log.info("📍 AI MONITOR: Processing Slot - Subject: {}, Section: {}, Room: {}", 
+                    slot.getSubject(), 
+                    slot.getSection() != null ? slot.getSection().getName() : "N/A",
+                    slot.getRoom() != null ? slot.getRoom().getName() : "N/A");
+            
             if (Boolean.TRUE.equals(slot.getIsHoliday())) {
                 if (slot.getHolidayDate() != null && !slot.getHolidayDate().equals(today)) {
                     log.debug("🤖 AI MONITOR: Session '{}' - Holiday mismatch date. Proceeding.", slot.getSubject());

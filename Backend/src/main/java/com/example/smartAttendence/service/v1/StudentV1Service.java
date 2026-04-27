@@ -61,6 +61,12 @@ public class StudentV1Service {
         // 2. Fetch Today's Classes (IST)
         DayOfWeek today = now.getDayOfWeek();
         List<Timetable> todayTimetable = new ArrayList<>();
+        
+        log.info("🔍 DASHBOARD DEBUG: Fetching classes for Student: {} (Reg: {}), Section: {}, Day: {}", 
+                student.getName(), student.getRegistrationNumber(), 
+                student.getSection() != null ? student.getSection().getName() : "NULL", 
+                today);
+
         if (student.getSection() != null) {
             java.time.LocalDate todayDate = now.toLocalDate();
             todayTimetable = timetableRepository.findBySectionAndDayOfWeek(student.getSection().getId(), today)
@@ -68,6 +74,10 @@ public class StudentV1Service {
                     .filter(t -> (t.getStartDate() == null || !todayDate.isBefore(t.getStartDate())) && 
                                  (t.getEndDate() == null || !todayDate.isAfter(t.getEndDate())))
                     .collect(Collectors.toList());
+            
+            log.info("🔍 DASHBOARD DEBUG: Found {} classes for today in database.", todayTimetable.size());
+        } else {
+            log.warn("⚠️ DASHBOARD WARN: Student {} has NO SECTION assigned in their profile!", student.getName());
         }
 
         List<TimetableResponseDTO> todayClasses = todayTimetable.stream()

@@ -10,6 +10,7 @@ import com.example.smartAttendence.repository.v1.UserV1Repository;
 import com.example.smartAttendence.service.ai.AILearningOptimizer;
 import com.example.smartAttendence.entity.SecurityAlert;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -21,6 +22,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AIAnalyticsV1Service {
 
@@ -155,18 +157,24 @@ public class AIAnalyticsV1Service {
 
             long studentCount = 0;
             try {
+                List<com.example.smartAttendence.enums.Role> studentRoles = java.util.Arrays.asList(
+                    com.example.smartAttendence.enums.Role.STUDENT, 
+                    com.example.smartAttendence.enums.Role.CR, 
+                    com.example.smartAttendence.enums.Role.LR
+                );
+
                 if (finalSectId != null) {
-                    studentCount = userRepository.countBySectionIdAndRole(finalSectId, com.example.smartAttendence.enums.Role.STUDENT);
-                } else if (finalDeptId != null) {
-                    studentCount = userRepository.countBySection_Department_IdAndRole(finalDeptId, com.example.smartAttendence.enums.Role.STUDENT);
-                } else {
-                    studentCount = userRepository.countByRole(
-                        java.util.Arrays.asList(
-                            com.example.smartAttendence.enums.Role.STUDENT, 
-                            com.example.smartAttendence.enums.Role.CR, 
-                            com.example.smartAttendence.enums.Role.LR
-                        )
+                    studentCount = userRepository.countBySectionIdInRoleAndStatus(
+                        java.util.Collections.singletonList(finalSectId), 
+                        studentRoles, 
+                        com.example.smartAttendence.domain.UserStatus.ACTIVE
                     );
+                } else if (finalDeptId != null) {
+                    // Filter by department
+                    studentCount = userRepository.countBySection_Department_IdAndRole(finalDeptId, com.example.smartAttendence.enums.Role.STUDENT);
+                    // Add CR/LR for that department too if needed, but usually section is the primary filter
+                } else {
+                    studentCount = userRepository.countByRole(studentRoles);
                 }
                 
                 if (studentCount == 0 && finalDeptId == null && finalSectId == null) {
