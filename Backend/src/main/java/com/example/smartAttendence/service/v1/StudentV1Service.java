@@ -67,9 +67,13 @@ public class StudentV1Service {
                 student.getSection() != null ? student.getSection().getName() : "NULL", 
                 today);
 
-        if (student.getSection() != null) {
+        if (student.getSection() != null || student.getSectionId() != null) {
+            UUID sectionId = student.getSection() != null ? student.getSection().getId() : student.getSectionId();
             java.time.LocalDate todayDate = now.toLocalDate();
-            todayTimetable = timetableRepository.findBySectionAndDayOfWeek(student.getSection().getId(), today)
+            
+            log.info("🔍 DASHBOARD DEBUG: Searching Timetable for Section ID: {} on Day: {}", sectionId, today);
+            
+            todayTimetable = timetableRepository.findBySectionAndDayOfWeek(sectionId, today)
                     .stream()
                     .filter(t -> (t.getStartDate() == null || !todayDate.isBefore(t.getStartDate())) && 
                                  (t.getEndDate() == null || !todayDate.isAfter(t.getEndDate())))
@@ -77,7 +81,7 @@ public class StudentV1Service {
             
             log.info("🔍 DASHBOARD DEBUG: Found {} classes for today in database.", todayTimetable.size());
         } else {
-            log.warn("⚠️ DASHBOARD WARN: Student {} has NO SECTION assigned in their profile!", student.getName());
+            log.warn("⚠️ DASHBOARD WARN: Student {} has NO SECTION ID assigned in their profile!", student.getName());
         }
 
         List<TimetableResponseDTO> todayClasses = todayTimetable.stream()

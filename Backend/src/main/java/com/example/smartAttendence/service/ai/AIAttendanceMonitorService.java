@@ -144,9 +144,12 @@ public class AIAttendanceMonitorService {
     }
 
     private void notifySectionOnSessionStart(ClassroomSession session) {
-        List<User> students = userRepository.findBySectionId(session.getSection().getId());
-        log.info("📢 NOTIFY: Sending 'Mark Attendance' prompts to {} students in Section: {}", 
-                students.size(), session.getSection().getName());
+        UUID sectionId = session.getSection().getId();
+        List<User> students = userRepository.findBySectionIdExplicit(sectionId);
+        
+        log.info("📢 NOTIFY: Sending 'Mark Attendance' prompts to {} students in Section: {} (ID: {})", 
+                students.size(), session.getSection().getName(), sectionId);
+        
         for (User student : students) {
             notificationService.sendSessionStartPrompt(student, session);
             // Also send the Class Start notification for redundancy/clarity
