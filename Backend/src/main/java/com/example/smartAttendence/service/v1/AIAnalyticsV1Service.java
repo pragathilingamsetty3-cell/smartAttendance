@@ -156,22 +156,18 @@ public class AIAnalyticsV1Service {
             List<String> studentRoles = List.of("STUDENT", "CR", "LR");
             
             try {
-                // Initial baseline: Count all students in system
+                // Count ONLY Students, CRs, and LRs
                 studentCount = userRepository.countByRoleInNative(studentRoles);
                 
-                // If specific filters applied, narrow down
+                // If specific filters (Dept/Section) are applied, refine the count
                 if (sectionId != null) {
                     studentCount = userRepository.countBySectionIdIn(List.of(sectionId));
                 } else if (departmentId != null) {
                     studentCount = userRepository.countByDepartments(List.of(departmentId.toString()));
                 }
-                
-                // Absolute floor: If still 0, something is wrong with the query, so count all users
-                if (studentCount == 0) {
-                    studentCount = userRepository.count();
-                }
             } catch (Exception e) {
-                studentCount = userRepository.count();
+                // If the role query fails, we have a fallback but it might include admins
+                studentCount = userRepository.count(); 
             }
 
 
@@ -282,7 +278,7 @@ public class AIAnalyticsV1Service {
 
             // System Diagnostics (For Debugging Azure)
             Map<String, Object> diagnostics = new HashMap<>();
-            diagnostics.put("buildTime", "2026-04-27 13:10 IST");
+            diagnostics.put("buildTime", "2026-04-27 13:16 IST");
             diagnostics.put("dbConnected", true);
             diagnostics.put("profile", System.getProperty("spring.profiles.active", "unknown"));
             diagnostics.put("studentRoleCount", studentCount);
@@ -290,7 +286,7 @@ public class AIAnalyticsV1Service {
             
             response.put("systemDiagnostics", diagnostics);
             response.put("totalStudents", studentCount);
-            response.put("systemVersion", "v2.4.0-SYNC-FIX");
+            response.put("systemVersion", "v2.5.0-STUDENT-ONLY");
             response.put("activeStudents", attendanceRepository.countActiveFiltered(nowIST.toInstant().minusSeconds(3600), finalDeptId, finalSectId));
             response.put("anomaliesDetected", distinctAnomalies);
             response.put("activeAlerts", filteredAlerts); 
@@ -499,7 +495,7 @@ public class AIAnalyticsV1Service {
         if (totalRecords == 0) {
             return Map.of(
                 "insights", """
-                    ### AI Executive Summary (v2.4.0-SYNC-FIX)
+                    ### AI Executive Summary (v2.5.0-STUDENT-ONLY)
                     **System Pulse:** System is ONLINE and healthy.
                     
                     **AI Engine Status:** AI Engine is in standby mode awaiting first session data.
