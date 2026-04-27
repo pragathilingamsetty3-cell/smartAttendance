@@ -38,7 +38,8 @@ public interface TimetableRepository extends JpaRepository<Timetable, UUID> {
 
     List<Timetable> findByFacultyId(UUID facultyId);
 
-    List<Timetable> findBySectionId(UUID sectionId);
+    @Query("SELECT t FROM Timetable t WHERE t.sectionId = :sectionId OR t.section.id = :sectionId")
+    List<Timetable> findBySectionId(@Param("sectionId") UUID sectionId);
 
     List<Timetable> findByRoomId(UUID roomId);
     long countByRoomId(UUID roomId);
@@ -49,7 +50,7 @@ public interface TimetableRepository extends JpaRepository<Timetable, UUID> {
     @Query("SELECT t FROM Timetable t WHERE t.room.id = :roomId AND t.dayOfWeek = :dayOfWeek ORDER BY t.startTime")
     List<Timetable> findByRoomAndDayOfWeek(@Param("roomId") UUID roomId, @Param("dayOfWeek") DayOfWeek dayOfWeek);
 
-    @Query("SELECT t FROM Timetable t WHERE t.section.id = :sectionId AND t.dayOfWeek = :dayOfWeek ORDER BY t.startTime")
+    @Query("SELECT t FROM Timetable t WHERE (t.sectionId = :sectionId OR t.section.id = :sectionId) AND t.dayOfWeek = :dayOfWeek ORDER BY t.startTime")
     List<Timetable> findBySectionAndDayOfWeek(@Param("sectionId") UUID sectionId, @Param("dayOfWeek") DayOfWeek dayOfWeek);
 
     /**

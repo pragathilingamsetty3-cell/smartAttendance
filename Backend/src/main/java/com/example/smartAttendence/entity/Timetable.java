@@ -69,6 +69,9 @@ public class Timetable {
     @JoinColumn(name = "section_id")
     private Section section;
 
+    @Column(name = "section_id", insertable = false, updatable = false)
+    private UUID sectionId;
+
     @Column(name = "is_adhoc", nullable = false)
     private Boolean isAdhoc = false;
 
