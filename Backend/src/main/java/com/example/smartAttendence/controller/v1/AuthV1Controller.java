@@ -69,11 +69,20 @@ public class AuthV1Controller {
                 response.put("message", "First login detected. Setup required.");
                 response.put("accessToken", accessToken);
                 response.put("refreshToken", refreshToken.getToken());
+                
                 Map<String, Object> userData = new HashMap<>();
                 userData.put("id", result.user().getId());
                 userData.put("email", result.user().getEmail());
                 userData.put("role", result.user().getRole());
                 userData.put("name", result.user().getName() != null ? result.user().getName() : "");
+                userData.put("registrationNumber", result.user().getRegistrationNumber());
+                userData.put("department", result.user().getDepartment());
+                userData.put("firstLogin", result.user().isFirstLogin());
+                userData.put("deviceId", result.user().getDeviceId());
+                userData.put("biometricSignature", result.user().getBiometricSignature());
+                userData.put("isTemporaryPassword", result.user().getIsTemporaryPassword());
+                userData.put("secretKey", result.user().getSecretKey());
+                
                 response.put("user", userData);
                 return ResponseEntity.status(202).body(response);
             }
@@ -81,12 +90,21 @@ public class AuthV1Controller {
             Map<String, Object> response = new HashMap<>();
             response.put("accessToken", accessToken);
             response.put("refreshToken", refreshToken.getToken());
-            response.put("user", Map.of(
-                "id", result.user().getId(),
-                "email", result.user().getEmail(),
-                "role", result.user().getRole(),
-                "name", result.user().getName() != null ? result.user().getName() : ""
-            ));
+            
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("id", result.user().getId());
+            userData.put("email", result.user().getEmail());
+            userData.put("role", result.user().getRole());
+            userData.put("name", result.user().getName() != null ? result.user().getName() : "");
+            userData.put("registrationNumber", result.user().getRegistrationNumber());
+            userData.put("department", result.user().getDepartment());
+            userData.put("firstLogin", result.user().isFirstLogin());
+            userData.put("deviceId", result.user().getDeviceId());
+            userData.put("biometricSignature", result.user().getBiometricSignature());
+            userData.put("isTemporaryPassword", result.user().getIsTemporaryPassword());
+            userData.put("secretKey", result.user().getSecretKey());
+            
+            response.put("user", userData);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("[AUTH] Login Exception: {}", e.getMessage());
