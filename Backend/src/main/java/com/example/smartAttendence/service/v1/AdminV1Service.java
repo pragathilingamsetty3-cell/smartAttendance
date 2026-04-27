@@ -1977,11 +1977,9 @@ public class AdminV1Service {
         com.example.smartAttendence.entity.Timetable timetable = timetableRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Timetable entry not found with ID: " + id));
         
-        // 🛡️ SAFETY CHECK: Prevent 500 errors by checking session dependencies
-        long sessionCount = classroomSessionV1Repository.countByTimetableId(id);
-        if (sessionCount > 0) {
-            throw new IllegalArgumentException("Cannot delete timetable for '" + timetable.getSubject() + "' because it has " + sessionCount + " generated classroom sessions. Please delete the sessions first to avoid data loss.");
-        }
+        // 🛡️ AUTO-CLEANUP: Automatically delete connected classroom sessions to allow schedule reset
+        classroomSessionV1Repository.deleteByTimetableId(id);
+        log.info("🧹 Auto-cleaned classroom sessions for timetable: {}", id);
 
         timetableRepository.deleteById(id);
         log.info("🗑️ Timetable entry deleted: {} ({})", timetable.getSubject(), id);
