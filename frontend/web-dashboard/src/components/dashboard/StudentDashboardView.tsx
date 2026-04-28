@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Activity,
@@ -32,6 +32,19 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
   const [isMarking, setIsMarking] = useState(false);
   const [markError, setMarkError] = useState<string | null>(null);
   const [markSuccess, setMarkSuccess] = useState<string | null>(null);
+
+  // 🛠️ MOBILE DEBUG CONSOLE (Eruda)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const script = document.createElement('script');
+      script.src = "//cdn.jsdelivr.net/npm/eruda";
+      script.onload = () => {
+        (window as any).eruda.init();
+        console.log('🛠️ Eruda Mobile Console Initialized');
+      };
+      document.body.appendChild(script);
+    }
+  }, []);
 
   const handleMarkAttendance = async () => {
     console.log('🔵 [MARK-ATTENDANCE] ====== BUTTON CLICKED ======');
