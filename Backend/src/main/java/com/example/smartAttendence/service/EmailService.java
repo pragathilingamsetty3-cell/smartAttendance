@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 import org.springframework.core.io.FileSystemResource;
@@ -19,9 +20,9 @@ import java.time.LocalDate;
 
 @Service
 public class EmailService {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
-    
+
     @Autowired
     private JavaMailSender mailSender;
 
@@ -40,17 +41,17 @@ public class EmailService {
             message.setTo(toEmail);
             message.setSubject("Password Reset OTP - Smart Attendance System");
             message.setText("Hello,\n\n" +
-                           "You requested to reset your password for the Smart Attendance System.\n\n" +
-                           "🔢 Your One-Time Password (OTP): " + otp + "\n\n" +
-                           "⏰ Validity: This OTP will expire in 15 minutes\n\n" +
-                           "🔒 Security Notice:\n" +
-                           "• Never share this OTP with anyone\n" +
-                           "• Our support team will never ask for your OTP\n" +
-                           "• This OTP can only be used once\n\n" +
-                           "If you didn't request this password reset, please ignore this email.\n\n" +
-                           "Best regards,\n" +
-                           "Smart Attendance Security Team");
-            
+                    "You requested to reset your password for the Smart Attendance System.\n\n" +
+                    "🔢 Your One-Time Password (OTP): " + otp + "\n\n" +
+                    "⏰ Validity: This OTP will expire in 15 minutes\n\n" +
+                    "🔒 Security Notice:\n" +
+                    "• Never share this OTP with anyone\n" +
+                    "• Our support team will never ask for your OTP\n" +
+                    "• This OTP can only be used once\n\n" +
+                    "If you didn't request this password reset, please ignore this email.\n\n" +
+                    "Best regards,\n" +
+                    "Smart Attendance Security Team");
+
             mailSender.send(message);
             logger.info("Password reset OTP sent to: {}", toEmail);
         } catch (Exception e) {
@@ -64,7 +65,7 @@ public class EmailService {
     public void sendPasswordResetOTP(String email, String name, String otp) {
         sendPasswordResetOtp(email, otp);
     }
-    
+
     /**
      * Send simple text email
      */
@@ -88,13 +89,12 @@ public class EmailService {
     public void sendPasswordChangeConfirmation(String toEmail, String name) {
         String subject = "Security Alert: Password Changed";
         String body = String.format(
-            "Dear %s,%n%n" +
-            "The password for your Smart Attendance System account was successfully changed.%n%n" +
-            "If you did not make this change, please contact the administrator immediately.%n%n" +
-            "Best regards,%n" +
-            "Smart Attendance Security Team",
-            name
-        );
+                "Dear %s,%n%n" +
+                        "The password for your Smart Attendance System account was successfully changed.%n%n" +
+                        "If you did not make this change, please contact the administrator immediately.%n%n" +
+                        "Best regards,%n" +
+                        "Smart Attendance Security Team",
+                name);
         sendSimpleEmail(toEmail, subject, body);
     }
 
@@ -109,68 +109,69 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            
+
             helper.setFrom(fromEmail);
             helper.setTo(toEmail);
             helper.setSubject("Weekly Attendance Report - " + facultyName);
             helper.setText("Dear " + facultyName + ",\n\n" +
-                           "Please find attached your weekly attendance report.\n\n" +
-                           "📊 Report Details:\n" +
-                           "• Generated on: " + java.time.LocalDate.now() + "\n" +
-                           "• Coverage: Past week (Monday - Sunday)\n" +
-                           "• Format: Excel with multiple sheets\n\n" +
-                           "📈 Report Contents:\n" +
-                           "• Summary sheet: Overall attendance statistics\n" +
-                           "• Detailed sheet: Individual student records\n" +
-                           "• Analytics sheet: Trends and patterns\n\n" +
-                           "🔍 Action Items:\n" +
-                           "• Review students with <75% attendance\n" +
-                           "• Identify patterns of absenteeism\n" +
-                           "• Plan interventions for at-risk students\n\n" +
-                           "For any questions about this report, please contact the system administrator.\n\n" +
-                           "Best regards,\n" +
-                           "Smart Attendance Reporting System\n" +
-                           "🤖 AI-powered attendance analytics");
-            
+                    "Please find attached your weekly attendance report.\n\n" +
+                    "📊 Report Details:\n" +
+                    "• Generated on: " + java.time.LocalDate.now() + "\n" +
+                    "• Coverage: Past week (Monday - Sunday)\n" +
+                    "• Format: Excel with multiple sheets\n\n" +
+                    "📈 Report Contents:\n" +
+                    "• Summary sheet: Overall attendance statistics\n" +
+                    "• Detailed sheet: Individual student records\n" +
+                    "• Analytics sheet: Trends and patterns\n\n" +
+                    "🔍 Action Items:\n" +
+                    "• Review students with <75% attendance\n" +
+                    "• Identify patterns of absenteeism\n" +
+                    "• Plan interventions for at-risk students\n\n" +
+                    "For any questions about this report, please contact the system administrator.\n\n" +
+                    "Best regards,\n" +
+                    "Smart Attendance Reporting System\n" +
+                    "🤖 AI-powered attendance analytics");
+
             FileSystemResource file = new FileSystemResource(reportFile);
             helper.addAttachment("Weekly_Attendance_Report_" + java.time.LocalDate.now() + ".xlsx", file);
-            
+
             mailSender.send(message);
             logger.info("Weekly report sent successfully to: {}", toEmail);
         } catch (MessagingException e) {
             logger.error("Failed to send weekly report to: {}", toEmail, e);
         }
     }
-    
-    public void sendSessionStartNotification(String toEmail, String facultyName, String subject, java.time.Instant startTime, java.time.Instant endTime, String roomName) {
+
+    public void sendSessionStartNotification(String toEmail, String facultyName, String subject,
+            java.time.Instant startTime, java.time.Instant endTime, String roomName) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
             message.setTo(toEmail);
             message.setSubject("🤖 Session Started Automatically: " + subject);
             message.setText("Dear " + facultyName + ",\n\n" +
-                           "Good news! Your session has been automatically started by the AI Scheduler.\n\n" +
-                           "📅 Session Details:\n" +
-                           "• Subject: " + subject + "\n" +
-                           "• Room: " + roomName + "\n" +
-                           "• Start Time: " + startTime + "\n" +
-                           "• End Time: " + endTime + "\n" +
-                           "• Status: Active and ready for attendance\n\n" +
-                           "🤖 AI Scheduler Features:\n" +
-                           "• Automatic session creation based on timetable\n" +
-                           "• PostGIS geofencing for accurate attendance\n" +
-                           "• Real-time student location tracking\n" +
-                           "• Automated report generation\n\n" +
-                           "📱 What you can do:\n" +
-                           "• Monitor attendance in real-time\n" +
-                           "• View student locations on map\n" +
-                           "• Generate instant reports\n" +
-                           "• Manage exceptions (hall passes, etc.)\n\n" +
-                           "The system will automatically end this session at the scheduled time.\n\n" +
-                           "Best regards,\n" +
-                           "AI Scheduler Team\n" +
-                           "🚀 Smart Attendance Automation");
-            
+                    "Good news! Your session has been automatically started by the AI Scheduler.\n\n" +
+                    "📅 Session Details:\n" +
+                    "• Subject: " + subject + "\n" +
+                    "• Room: " + roomName + "\n" +
+                    "• Start Time: " + startTime + "\n" +
+                    "• End Time: " + endTime + "\n" +
+                    "• Status: Active and ready for attendance\n\n" +
+                    "🤖 AI Scheduler Features:\n" +
+                    "• Automatic session creation based on timetable\n" +
+                    "• PostGIS geofencing for accurate attendance\n" +
+                    "• Real-time student location tracking\n" +
+                    "• Automated report generation\n\n" +
+                    "📱 What you can do:\n" +
+                    "• Monitor attendance in real-time\n" +
+                    "• View student locations on map\n" +
+                    "• Generate instant reports\n" +
+                    "• Manage exceptions (hall passes, etc.)\n\n" +
+                    "The system will automatically end this session at the scheduled time.\n\n" +
+                    "Best regards,\n" +
+                    "AI Scheduler Team\n" +
+                    "🚀 Smart Attendance Automation");
+
             mailSender.send(message);
             logger.info("Session start notification sent to: {}", toEmail);
         } catch (Exception e) {
@@ -180,7 +181,7 @@ public class EmailService {
     }
 
     public void sendEmergencyChangeEmail(com.example.smartAttendence.domain.ClassroomSession session,
-                                         com.example.smartAttendence.entity.EmergencySessionChange change) {
+            com.example.smartAttendence.entity.EmergencySessionChange change) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
@@ -188,20 +189,20 @@ public class EmailService {
 
             message.setSubject("🚨 Emergency Session Change: " + session.getSubject());
             message.setText("Dear " + session.getFaculty().getName() + ",\n\n" +
-                           "An emergency change has been made to your session.\n\n" +
-                           "📅 Session Details:\n" +
-                           "• Subject: " + session.getSubject() + "\n" +
-                           "• Session ID: " + session.getId() + "\n" +
-                           "• Change Type: " + change.getChangeType() + "\n" +
-                           "• Reason: " + change.getReason() + "\n" +
-                           "• Effective Time: " + change.getEffectiveTimestamp() + "\n" +
-                           "• Changed By: " + change.getChangedBy().getName() + "\n\n" +
-                           "🔄 Changes Made:\n" +
-                           buildChangeDetails(change) + "\n\n" +
-                           "This change was processed as an emergency override.\n\n" +
-                           "Best regards,\n" +
-                           "Smart Attendance Emergency Response Team");
-            
+                    "An emergency change has been made to your session.\n\n" +
+                    "📅 Session Details:\n" +
+                    "• Subject: " + session.getSubject() + "\n" +
+                    "• Session ID: " + session.getId() + "\n" +
+                    "• Change Type: " + change.getChangeType() + "\n" +
+                    "• Reason: " + change.getReason() + "\n" +
+                    "• Effective Time: " + change.getEffectiveTimestamp() + "\n" +
+                    "• Changed By: " + change.getChangedBy().getName() + "\n\n" +
+                    "🔄 Changes Made:\n" +
+                    buildChangeDetails(change) + "\n\n" +
+                    "This change was processed as an emergency override.\n\n" +
+                    "Best regards,\n" +
+                    "Smart Attendance Emergency Response Team");
+
             mailSender.send(message);
             logger.info("Emergency change notification sent to faculty: {}", session.getFaculty().getEmail());
         } catch (Exception e) {
@@ -210,7 +211,7 @@ public class EmailService {
     }
 
     public void sendSubstituteNotification(com.example.smartAttendence.domain.ClassroomSession session,
-                                          com.example.smartAttendence.entity.EmergencySessionChange change) {
+            com.example.smartAttendence.entity.EmergencySessionChange change) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
@@ -218,24 +219,24 @@ public class EmailService {
 
             message.setSubject("👨‍🏫 Substitute Faculty Assignment: " + session.getSubject());
             message.setText("Dear " + session.getFaculty().getName() + ",\n\n" +
-                           "You have been assigned as substitute faculty for the following session.\n\n" +
-                           "📅 Session Details:\n" +
-                           "• Subject: " + session.getSubject() + "\n" +
-                           "• Session ID: " + session.getId() + "\n" +
-                           "• Room: " + session.getRoom().getName() + "\n" +
-                           "• Start Time: " + session.getStartTime() + "\n" +
-                           "• End Time: " + session.getEndTime() + "\n" +
-                           "• Original Faculty ID: " + change.getOriginalFacultyId() + "\n" +
-                           "• Reason for Substitution: " + change.getReason() + "\n\n" +
-                           "🔧 Your Responsibilities:\n" +
-                           "• Monitor student attendance via the mobile app\n" +
-                           "• Approve/deny hall pass requests as needed\n" +
-                           "• Handle any classroom emergencies\n" +
-                           "• Generate end-of-session reports\n\n" +
-                           "The AI attendance system will handle automatic student tracking.\n\n" +
-                           "Best regards,\n" +
-                           "Smart Attendance Scheduling Team");
-            
+                    "You have been assigned as substitute faculty for the following session.\n\n" +
+                    "📅 Session Details:\n" +
+                    "• Subject: " + session.getSubject() + "\n" +
+                    "• Session ID: " + session.getId() + "\n" +
+                    "• Room: " + session.getRoom().getName() + "\n" +
+                    "• Start Time: " + session.getStartTime() + "\n" +
+                    "• End Time: " + session.getEndTime() + "\n" +
+                    "• Original Faculty ID: " + change.getOriginalFacultyId() + "\n" +
+                    "• Reason for Substitution: " + change.getReason() + "\n\n" +
+                    "🔧 Your Responsibilities:\n" +
+                    "• Monitor student attendance via the mobile app\n" +
+                    "• Approve/deny hall pass requests as needed\n" +
+                    "• Handle any classroom emergencies\n" +
+                    "• Generate end-of-session reports\n\n" +
+                    "The AI attendance system will handle automatic student tracking.\n\n" +
+                    "Best regards,\n" +
+                    "Smart Attendance Scheduling Team");
+
             mailSender.send(message);
             logger.info("Substitute notification sent to: {}", session.getFaculty().getEmail());
         } catch (Exception e) {
@@ -246,31 +247,31 @@ public class EmailService {
     /**
      * Send weekly attendance report with Excel attachment
      */
-    public void sendWeeklyReport(String toEmail, String facultyName, byte[] excelReport, 
-                              LocalDate weekStart, LocalDate weekEnd) {
+    public void sendWeeklyReport(String toEmail, String facultyName, byte[] excelReport,
+            LocalDate weekStart, LocalDate weekEnd) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            
+
             helper.setFrom(fromEmail);
             helper.setTo(toEmail);
             helper.setSubject("Weekly Attendance Report - " + weekStart + " to " + weekEnd);
             helper.setText("Dear " + facultyName + ",\n\n" +
-                         "Please find attached the weekly attendance report for the period " + 
-                         weekStart + " to " + weekEnd + ".\n\n" +
-                         "This report includes:\n" +
-                         "• Total attendance records\n" +
-                         "• Student-wise attendance summary\n" +
-                         "• Session details and timestamps\n\n" +
-                         "For any queries, please contact the system administrator.\n\n" +
-                         "Best regards,\n" +
-                         "Smart Attendance System");
-            
+                    "Please find attached the weekly attendance report for the period " +
+                    weekStart + " to " + weekEnd + ".\n\n" +
+                    "This report includes:\n" +
+                    "• Total attendance records\n" +
+                    "• Student-wise attendance summary\n" +
+                    "• Session details and timestamps\n\n" +
+                    "For any queries, please contact the system administrator.\n\n" +
+                    "Best regards,\n" +
+                    "Smart Attendance System");
+
             // Add Excel attachment
-            helper.addAttachment("weekly-attendance-report-" + weekStart + ".xlsx", 
-                               new jakarta.mail.util.ByteArrayDataSource(excelReport, 
-                               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-            
+            helper.addAttachment("weekly-attendance-report-" + weekStart + ".xlsx",
+                    new jakarta.mail.util.ByteArrayDataSource(excelReport,
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+
             mailSender.send(message);
             logger.info("Weekly report email sent successfully to: {}", toEmail);
         } catch (MessagingException e) {
@@ -279,7 +280,7 @@ public class EmailService {
     }
 
     public void sendEmergencyChangeEmailToParents(com.example.smartAttendence.domain.ClassroomSession session,
-                                                com.example.smartAttendence.entity.EmergencySessionChange change) {
+            com.example.smartAttendence.entity.EmergencySessionChange change) {
         // TODO: Implement parent email notification
         // This would involve:
         // 1. Getting all parent emails for students in the session
@@ -289,31 +290,70 @@ public class EmailService {
 
     private String buildChangeDetails(com.example.smartAttendence.entity.EmergencySessionChange change) {
         StringBuilder details = new StringBuilder();
-        
+
         if (change.getOriginalFacultyId() != null && change.getNewFacultyId() != null) {
             details.append("• Faculty: ").append(change.getOriginalFacultyId())
-                   .append(" → ").append(change.getNewFacultyId()).append("\n");
+                    .append(" → ").append(change.getNewFacultyId()).append("\n");
         }
-        
+
         if (change.getOriginalRoomId() != null && change.getNewRoomId() != null) {
             details.append("• Room: ").append(change.getOriginalRoomId())
-                   .append(" → ").append(change.getNewRoomId()).append("\n");
+                    .append(" → ").append(change.getNewRoomId()).append("\n");
         }
-        
+
         if (change.getOriginalStartTime() != null && change.getNewStartTime() != null) {
             details.append("• Start Time: ").append(change.getOriginalStartTime())
-                   .append(" → ").append(change.getNewStartTime()).append("\n");
+                    .append(" → ").append(change.getNewStartTime()).append("\n");
         }
-        
+
         if (change.getOriginalEndTime() != null && change.getNewEndTime() != null) {
             details.append("• End Time: ").append(change.getOriginalEndTime())
-                   .append(" → ").append(change.getNewEndTime()).append("\n");
+                    .append(" → ").append(change.getNewEndTime()).append("\n");
         }
-        
+
         if (details.length() == 0) {
             details.append("• Session cancelled or other emergency action taken");
         }
-        
+
         return details.toString();
+    }
+
+    public void sendAbsentNotification(String toEmail, String studentName, String subjectName, String dateStr) {
+        try {
+            jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
+            org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(toEmail);
+            helper.setSubject("Attendance Alert: Marked Absent for " + subjectName);
+
+            String htmlContent = buildAbsentEmailHtml(studentName, subjectName, dateStr);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            logger.info("📧 Sent absent notification email to {}", toEmail);
+
+        } catch (Exception e) {
+            logger.error("❌ Failed to send absent email to {}: {}", toEmail, e.getMessage());
+        }
+    }
+
+    private String buildAbsentEmailHtml(String studentName, String subjectName, String dateStr) {
+        return "<html>" +
+               "<body style='font-family: Arial, sans-serif; background-color: #f4f4f5; padding: 20px;'>" +
+               "<div style='max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'>" +
+               "<h2 style='color: #ef4444; margin-bottom: 20px;'>Attendance Alert</h2>" +
+               "<p>Dear <strong>" + studentName + "</strong>,</p>" +
+               "<p>Our system has automatically marked you as <strong>ABSENT</strong> for the following class session because you did not verify your attendance via the Smart Attendance System.</p>" +
+               "<div style='background-color: #f9fafb; padding: 15px; border-left: 4px solid #ef4444; margin: 20px 0;'>" +
+               "<p style='margin: 0;'><strong>Subject:</strong> " + subjectName + "</p>" +
+               "<p style='margin: 5px 0 0 0;'><strong>Date:</strong> " + dateStr + "</p>" +
+               "</div>" +
+               "<p>If you believe this is an error and you were present in the classroom, please contact your faculty member immediately to request a manual correction.</p>" +
+               "<br/>" +
+               "<p style='color: #6b7280; font-size: 12px;'>This is an automated message generated by the Smart Attendance Engine. Please do not reply.</p>" +
+               "</div>" +
+               "</body>" +
+               "</html>";
     }
 }
