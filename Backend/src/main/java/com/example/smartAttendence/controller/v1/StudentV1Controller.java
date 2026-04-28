@@ -17,6 +17,7 @@ import com.example.smartAttendence.repository.v1.UserV1Repository;
 import com.example.smartAttendence.repository.SectionRepository;
 import com.example.smartAttendence.entity.Section;
 import java.util.UUID;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
@@ -94,6 +95,7 @@ public class StudentV1Controller {
      */
     @GetMapping("/timetable")
     @PreAuthorize("hasAnyRole('STUDENT', 'CR', 'LR')")
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getTimetable() {
         try {
             var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
