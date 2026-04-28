@@ -31,8 +31,11 @@ class AttendanceService {
       const enhancedPing = await this.prepareSecurePing(ping);
       const response = await apiClient.post<HeartbeatResponse>('/api/v1/attendance/heartbeat-enhanced', enhancedPing);
       return response.data;
-    } catch (error) {
-      throw handleAttendanceError(error, '');
+    } catch (error: any) {
+      // 🔍 DIAGNOSTIC: Re-throw raw axios error to preserve error.response.data
+      // This ensures the frontend can read the backend's detailed error message & stacktrace
+      console.error('[AttendanceService] Heartbeat Enhanced Error:', error?.response?.data || error?.message);
+      throw error;
     }
   }
 
