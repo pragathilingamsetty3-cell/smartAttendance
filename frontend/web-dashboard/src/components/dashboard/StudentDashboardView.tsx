@@ -60,7 +60,7 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
         }
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: true,
-          timeout: 10000,
+          timeout: 30000,
           maximumAge: 0
         });
       });
@@ -96,6 +96,8 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
          setMarkError('Please enable location services to verify your attendance.');
       } else if (error.message && error.message.includes('denied')) {
          setMarkError('Location access denied. Please allow location access in your browser settings.');
+      } else if (error.message && error.message.includes('Timeout expired')) {
+         setMarkError('GPS signal is weak indoors. Please step near a window and try again.');
       } else {
         setMarkError('Failed to verify attendance. Are you currently in the classroom?');
       }
