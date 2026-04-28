@@ -143,16 +143,29 @@ public class AttendanceV1Controller {
         pulseThrottleCache.put(userRateKey, System.currentTimeMillis());
 
         try {
-            // Process sensor fusion and spoofing detection
-            sensorFusionService.processEnhancedHeartbeat(ping);
+            // 🔧 SESSION RESOLVER: The dashboard sends Timetable IDs, but sensor_readings
+            // requires ClassroomSession IDs. Resolve or auto-create the session first.
+            java.util.UUID resolvedSessionId = attendanceService.resolveOrCreateSession(ping.sessionId());
             
+            // Create a new ping with the resolved ClassroomSession ID
+            EnhancedHeartbeatPing resolvedPing = new EnhancedHeartbeatPing(
+                ping.studentId(), resolvedSessionId,
+                ping.latitude(), ping.longitude(),
+                ping.stepCount(), ping.accelerationX(), ping.accelerationY(), ping.accelerationZ(),
+                ping.isDeviceMoving(), ping.timestamp(), ping.deviceFingerprint(), ping.biometricSignature(),
+                ping.batteryLevel(), ping.isCharging(), ping.isScreenOn(), ping.deviceState(),
+                ping.gpsAccuracy(), ping.nextHeartbeatInterval(), ping.requestSignature(), ping.sequenceId()
+            );
+
+            // Process sensor fusion and spoofing detection
+            sensorFusionService.processEnhancedHeartbeat(resolvedPing);            
             // Get recent readings for spoofing detection
-            var recentReadings = sensorFusionService.getRecentReadings(ping.studentId(), ping.sessionId(), 10);
+            var recentReadings = sensorFusionService.getRecentReadings(resolvedPing.studentId(), resolvedPing.sessionId(), 10);
             boolean spoofingDetected = sensorFusionService.detectSpoofing(recentReadings);
             
             if (spoofingDetected) {
                 // 🔐 SECURITY: Log spoofing attempt securely
-                logger.warn("Location spoofing detected for student: {}", ping.studentId());
+                logger.warn("Location spoofing detected for student: {}", resolvedPing.studentId());
                 
                 // Save Security Alert so it appears on Dashboard (Unifed via Service)
                 securityUtils.getCurrentUser().ifPresent(student -> {
@@ -165,7 +178,7 @@ public class AttendanceV1Controller {
                     );
                     
                     // Mark as ABSENT for security violation (Implicitly handled by processEnhancedHeartbeat next)
-                    attendanceService.processEnhancedHeartbeat(ping, isCellular);
+                    attendanceService.processEnhancedHeartbeat(resolvedPing, isCellular);
                 });
 
                 return ResponseEntity.status(403)
@@ -178,18 +191,18 @@ public class AttendanceV1Controller {
             }
 
             // 🔋 BATTERY OPTIMIZATION LOGIC
-            Long recommendedInterval = calculateOptimalHeartbeatInterval(ping);
+            Long recommendedInterval = calculateOptimalHeartbeatInterval(resolvedPing);
             
             // 🛰️ PHASE 2: ADAPTIVE GPS OPTIMIZATION
-            var gpsOptimization = sensorFusionService.determineOptimalGPSMode(ping);
-            var recentReadingsForGPS = sensorFusionService.getRecentReadings(ping.studentId(), ping.sessionId(), 5);
-            boolean needsHighAccuracy = sensorFusionService.needsHighAccuracyGPS(ping, recentReadingsForGPS);
+            var gpsOptimization = sensorFusionService.determineOptimalGPSMode(resolvedPing);
+            var recentReadingsForGPS = sensorFusionService.getRecentReadings(resolvedPing.studentId(), resolvedPing.sessionId(), 5);
+            boolean needsHighAccuracy = sensorFusionService.needsHighAccuracyGPS(resolvedPing, recentReadingsForGPS);
             
             // 🤖 PHASE 3: AI LEARNING OPTIMIZATION
-            var aiOptimization = aiLearningOptimizer.optimizeForStudent(ping);
+            var aiOptimization = aiLearningOptimizer.optimizeForStudent(resolvedPing);
             
             // Process enhanced heartbeat with time-based smoothing
-            attendanceService.processEnhancedHeartbeat(ping, isCellular);
+            attendanceService.processEnhancedHeartbeat(resolvedPing, isCellular);
 
             java.util.Map<String, Object> response = new java.util.HashMap<>();
             response.put("message", "Enhanced heartbeat processed successfully");
@@ -197,19 +210,19 @@ public class AttendanceV1Controller {
             response.put("sensorDataProcessed", true);
             
             java.util.Map<String, Object> batteryOpt = new java.util.HashMap<>();
-            batteryOpt.put("currentBatteryLevel", ping.batteryLevel() != null ? ping.batteryLevel() : 100);
-            batteryOpt.put("deviceState", ping.deviceState() != null ? ping.deviceState() : "UNKNOWN");
+            batteryOpt.put("currentBatteryLevel", resolvedPing.batteryLevel() != null ? resolvedPing.batteryLevel() : 100);
+            batteryOpt.put("deviceState", resolvedPing.deviceState() != null ? resolvedPing.deviceState() : "UNKNOWN");
             batteryOpt.put("recommendedInterval", recommendedInterval);
-            batteryOpt.put("batteryMode", getBatteryMode(ping.batteryLevel()));
-            batteryOpt.put("lowPowerAction", ping.batteryLevel() != null && ping.batteryLevel() < 20 ? "MINIMIZE_GPS" : "NORMAL");
+            batteryOpt.put("batteryMode", getBatteryMode(resolvedPing.batteryLevel()));
+            batteryOpt.put("lowPowerAction", resolvedPing.batteryLevel() != null && resolvedPing.batteryLevel() < 20 ? "MINIMIZE_GPS" : "NORMAL");
             response.put("batteryOptimization", batteryOpt);
 
             // 🛡️ AI SECURITY STATUS
             java.util.Map<String, Object> securityStatus = new java.util.HashMap<>();
-            User student = userRepository.findById(ping.studentId()).orElse(null);
+            User student = userRepository.findById(resolvedPing.studentId()).orElse(null);
             if (student != null) {
-                securityStatus.put("hardwareVerified", student.getDeviceId() != null && student.getDeviceId().equals(ping.deviceFingerprint()));
-                securityStatus.put("biometricVerified", student.getBiometricSignature() != null && student.getBiometricSignature().equals(ping.biometricSignature()));
+                securityStatus.put("hardwareVerified", student.getDeviceId() != null && student.getDeviceId().equals(resolvedPing.deviceFingerprint()));
+                securityStatus.put("biometricVerified", student.getBiometricSignature() != null && student.getBiometricSignature().equals(resolvedPing.biometricSignature()));
                 securityStatus.put("deviceLocked", student.getDeviceId() != null);
             }
             response.put("securityVerification", securityStatus);
