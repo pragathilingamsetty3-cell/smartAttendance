@@ -30,6 +30,9 @@ public class StudentDashboardStatsDTO {
     // Current active session (if student is currently in a class)
     private TimetableResponseDTO activeSession;
     
+    // Whether student has already marked attendance for the active session
+    private Boolean attendanceMarked;
+    
     // Recent hall pass status
     private HallPassStatusDTO recentHallPass;
     

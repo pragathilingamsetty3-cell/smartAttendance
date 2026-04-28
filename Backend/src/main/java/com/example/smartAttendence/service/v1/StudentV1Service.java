@@ -149,6 +149,17 @@ public class StudentV1Service {
                 .orElse(null);
 
         TimetableResponseDTO activeSession = mapToTimetableResponse(activeSessionEntity);
+        
+        // 3b. Check if student already marked attendance for the active session today
+        boolean attendanceMarked = false;
+        if (activeSessionEntity != null) {
+            // Check for any PRESENT record by this student today (within active session time window)
+            Instant todayStart = now.toLocalDate().atStartOfDay(IST).toInstant();
+            attendanceMarked = allRecords.stream()
+                    .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()))
+                    .anyMatch(r -> r.getRecordedAt() != null && r.getRecordedAt().isAfter(todayStart));
+            log.info("📋 ATTENDANCE CHECK: Student {} attendance marked today = {}", student.getName(), attendanceMarked);
+        }
 
         // 4. Attendance Trend (Last 7 Days)
         Map<String, Double> attendanceTrend = calculateAttendanceTrend(studentId, now);
@@ -192,6 +203,7 @@ public class StudentV1Service {
                 .attendanceTrend(attendanceTrend)
                 .todayClasses(todayClasses)
                 .activeSession(activeSession)
+                .attendanceMarked(attendanceMarked)
                 .recentHallPass(recentHallPass)
                 .departmentName(deptName)
                 .sectionName(sectionName)

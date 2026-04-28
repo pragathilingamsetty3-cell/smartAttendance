@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Activity,
@@ -20,6 +20,7 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { StudentDashboardStatsDTO, EnhancedUserDTO } from '@/types';
+import { attendanceService } from '@/services/attendance.service';
 
 interface StudentDashboardViewProps {
   stats: StudentDashboardStatsDTO | null;
@@ -28,6 +29,81 @@ interface StudentDashboardViewProps {
 }
 
 export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stats, loading, user }) => {
+  const [isMarking, setIsMarking] = useState(false);
+  const [markError, setMarkError] = useState<string | null>(null);
+
+  const handleMarkAttendance = async () => {
+    if (!stats?.activeSession || !user?.id) return;
+    
+    setIsMarking(true);
+    setMarkError(null);
+    
+    try {
+      // Get basic battery info if available
+      let batteryLevel = 100;
+      let isCharging = false;
+      try {
+        if ('getBattery' in navigator) {
+          const battery: any = await (navigator as any).getBattery();
+          batteryLevel = battery.level * 100;
+          isCharging = battery.charging;
+        }
+      } catch (e) {
+        console.warn('Battery API not available');
+      }
+
+      // Get geolocation
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error('Geolocation is not supported by your browser'));
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        });
+      });
+
+      await attendanceService.sendHeartbeatEnhanced({
+        studentId: user.id,
+        sessionId: stats.activeSession.id,
+        deviceFingerprint: localStorage.getItem('X-Device-Fingerprint') || 'UNKNOWN',
+        timestamp: new Date().toISOString(),
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        stepCount: 0,
+        accelerationX: 0,
+        accelerationY: 0,
+        accelerationZ: 0,
+        isDeviceMoving: false,
+        batteryLevel,
+        isCharging,
+        isScreenOn: true,
+        deviceState: 'STATIONARY',
+        nextHeartbeatInterval: 30000
+      });
+
+      // Force a page reload to fetch updated stats (which will now have attendanceMarked = true)
+      window.location.reload();
+      
+    } catch (error: any) {
+      console.error('Failed to mark attendance:', error);
+      
+      if (error.response?.data?.reason) {
+        setMarkError(`Verification failed: ${error.response.data.reason}`);
+      } else if (error.message && error.message.includes('Geolocation')) {
+         setMarkError('Please enable location services to verify your attendance.');
+      } else if (error.message && error.message.includes('denied')) {
+         setMarkError('Location access denied. Please allow location access in your browser settings.');
+      } else {
+        setMarkError('Failed to verify attendance. Are you currently in the classroom?');
+      }
+    } finally {
+      setIsMarking(false);
+    }
+  };
+
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 }
@@ -198,20 +274,57 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
 
             <div className="pt-2">
                 {stats?.activeSession ? (
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 rounded-3xl bg-white/[0.03] border border-white/5">
-                        <div className="flex gap-4 items-center">
-                            <div className="p-3 bg-emerald-500/20 rounded-2xl text-emerald-500">
-                                <CheckCircle2 size={24} />
+                    stats.attendanceMarked ? (
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 rounded-3xl bg-white/[0.03] border border-white/5">
+                            <div className="flex gap-4 items-center">
+                                <div className="p-3 bg-emerald-500/20 rounded-2xl text-emerald-500">
+                                    <CheckCircle2 size={24} />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-white tracking-tight">Attendance Verified</p>
+                                    <p className="text-[10px] text-slate-500 uppercase tracking-widest">Via Mobile Sensor Sync</p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-xs font-bold text-white tracking-tight">Attendance Verified</p>
-                                <p className="text-[10px] text-slate-500 uppercase tracking-widest">Via Mobile Sensor Sync</p>
-                            </div>
+                            <Link href="/dashboard/student/hall-pass/request">
+                                <Button variant="glass" size="sm" className="rounded-xl border-violet-500/30 hover:bg-violet-500/10 text-violet-400 font-bold tracking-tight">
+                                    Request Exit
+                                </Button>
+                            </Link>
                         </div>
-                        <Button variant="glass" size="sm" className="rounded-xl border-violet-500/30 hover:bg-violet-500/10 text-violet-400 font-bold tracking-tight">
-                            Request Exit
-                        </Button>
-                    </div>
+                    ) : (
+                        <div className="flex flex-col gap-4 p-6 rounded-3xl bg-violet-500/5 border border-violet-500/20">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                                <div className="flex gap-4 items-center">
+                                    <div className="p-3 bg-violet-500/20 rounded-2xl text-violet-400">
+                                        <Fingerprint size={24} />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-white tracking-tight">Action Required</p>
+                                        <p className="text-[10px] text-slate-500 uppercase tracking-widest">Verify Attendance</p>
+                                    </div>
+                                </div>
+                                <Button 
+                                    className="bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl px-6"
+                                    onClick={handleMarkAttendance}
+                                    disabled={isMarking}
+                                >
+                                    {isMarking ? (
+                                        <span className="flex items-center gap-2">
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Verifying...
+                                        </span>
+                                    ) : (
+                                        "Mark Attendance"
+                                    )}
+                                </Button>
+                            </div>
+                            {markError && (
+                                <div className="text-[10px] font-bold text-red-400 bg-red-500/10 p-3 rounded-xl border border-red-500/20 text-center">
+                                    {markError}
+                                </div>
+                            )}
+                        </div>
+                    )
                 ) : (
                     <div className="text-center py-6">
                         <p className="text-xs text-slate-500 font-bold uppercase tracking-[0.2em]">Automatic attendance system standby</p>

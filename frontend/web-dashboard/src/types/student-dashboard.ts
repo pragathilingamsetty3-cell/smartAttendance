@@ -35,6 +35,7 @@ export interface StudentDashboardStatsDTO {
   attendanceTrend: Record<string, number>;
   todayClasses: TimetableResponseDTO[];
   activeSession?: TimetableResponseDTO;
+  attendanceMarked?: boolean;
   recentHallPass?: HallPassStatusDTO;
   departmentName: string;
   sectionName: string;
