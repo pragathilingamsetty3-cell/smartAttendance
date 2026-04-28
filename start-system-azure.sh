@@ -42,14 +42,17 @@ if ! command -v cloudflared &> /dev/null; then
     sudo dpkg -i cloudflared.deb
 fi
 
-# 3. Start Backend (Low Memory Mode)
+# 3. Pull latest code from Git and always rebuild Backend
 echo "[2/4] Starting Backend Engine (384MB Mode)..."
 mkdir -p logs
-JAR_FILE=$(ls Backend/target/*.jar 2>/dev/null | head -n 1)
-if [ -z "$JAR_FILE" ]; then
-    cd Backend && ./mvnw clean package -DskipTests && cd ..
-    JAR_FILE=$(ls Backend/target/*.jar 2>/dev/null | head -n 1)
-fi
+
+echo "📦 Pulling latest code from Git..."
+git pull origin main 2>&1 | tee -a logs/backend.log
+
+echo "🔨 Building backend with latest changes..."
+cd Backend && ./mvnw clean package -DskipTests 2>&1 | tail -n 5 && cd ..
+JAR_FILE=$(ls Backend/target/*.jar 2>/dev/null | grep -v '\.original' | head -n 1)
+
 nohup java -Xmx384m -jar "$JAR_FILE" > logs/backend.log 2>&1 &
 BACKEND_PID=$!
 
@@ -74,7 +77,7 @@ nohup cloudflared tunnel --url http://localhost:3000 > logs/tunnel-frontend.log 
 TUNNEL_FRONTEND_PID=$!
 
 echo "--------------------------------------------------"
-echo "🌍 SYSTEM IS LIVE & OPTIMIZED FOR 1GB RAM!"
+echo "🚀 SECURE DEPLOYMENT IS ACTIVE!"
 echo "--------------------------------------------------"
 echo "⏳ Waiting for tunnels... (run 'cat logs/tunnel-frontend.log | grep trycloudflare' in 10s)"
 echo "💡 To stop: kill $BACKEND_PID $FRONTEND_PID $TUNNEL_BACKEND_PID $TUNNEL_FRONTEND_PID"
