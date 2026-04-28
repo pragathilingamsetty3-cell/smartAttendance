@@ -92,14 +92,20 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
       
       if (error.response?.data?.reason) {
         setMarkError(`Verification failed: ${error.response.data.reason}`);
+      } else if (error.response?.data?.message) {
+        // This catches 500 Internal Server Errors from the backend
+        setMarkError(`System Error: ${error.response.data.message}`);
       } else if (error.message && error.message.includes('Geolocation')) {
          setMarkError('Please enable location services to verify your attendance.');
       } else if (error.message && error.message.includes('denied')) {
          setMarkError('Location access denied. Please allow location access in your browser settings.');
       } else if (error.message && error.message.includes('Timeout expired')) {
          setMarkError('GPS signal is weak indoors. Please step near a window and try again.');
+      } else if (error.message && error.message.includes('Network Error')) {
+         setMarkError('Network connection failed. Please check your internet.');
       } else {
-        setMarkError('Failed to verify attendance. Are you currently in the classroom?');
+        // Fallback to show the actual raw error message instead of hiding it
+        setMarkError(`Error: ${error.message || 'Unknown error occurred. Are you currently in the classroom?'}`);
       }
     } finally {
       setIsMarking(false);
