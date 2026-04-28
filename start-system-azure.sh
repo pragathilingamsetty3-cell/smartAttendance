@@ -33,7 +33,7 @@ export JWT_PRIVATE_KEY='MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC3VeXd
 export ALLOWED_ORIGINS='*'
 export SPRING_PROFILES_ACTIVE=local
 export EMAIL_USERNAME=pragathilingamsetty3@gmail.com
-export EMAIL_PASSWORD=fmebynnscdoggdux
+export EMAIL_PASSWORD=znvnakotauabooxt
 
 # 2. Start Cloudflare (Arm64)
 if ! command -v cloudflared &> /dev/null; then
