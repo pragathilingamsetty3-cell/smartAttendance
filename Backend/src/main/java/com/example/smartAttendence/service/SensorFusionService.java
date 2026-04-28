@@ -75,11 +75,9 @@ public class SensorFusionService {
      * Get recent sensor readings for analysis
      */
     public List<SensorReading> getRecentReadings(UUID studentId, UUID sessionId, int limit) {
-        return sensorReadingRepository.findAll().stream()
-                .filter(sr -> studentId.equals(sr.getStudentId()) && sessionId.equals(sr.getSessionId()))
-                .sorted((a, b) -> b.getReadingTimestamp().compareTo(a.getReadingTimestamp()))
-                .limit(limit)
-                .toList();
+        // 🏎️ PERFORMANCE: Using optimized repository method instead of findAll().stream()
+        // This prevents full table scans and memory crashes as the database grows.
+        return sensorReadingRepository.findTop10ByStudentIdAndSessionIdOrderByReadingTimestampDesc(studentId, sessionId);
     }
 
     /**

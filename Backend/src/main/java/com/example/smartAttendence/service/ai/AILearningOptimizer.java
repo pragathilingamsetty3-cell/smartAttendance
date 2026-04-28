@@ -125,11 +125,8 @@ public class AILearningOptimizer {
      */
     private StudentBehaviorProfile getOrCreateStudentProfile(UUID studentId) {
         return studentProfiles.get(studentId, id -> {
-            // Load historical data for new student
-            var historicalData = sensorReadingRepository.findAll().stream()
-                    .filter(reading -> id.equals(reading.getStudentId()))
-                    .limit(50) // Hard limit historical lookup to save RAM
-                    .collect(Collectors.toList());
+            // Load historical data for new student (Optimized)
+            var historicalData = sensorReadingRepository.findTop50ByStudentIdOrderByReadingTimestampDesc(id);
             
             return new StudentBehaviorProfile(
                 id,
@@ -434,7 +431,8 @@ public class AILearningOptimizer {
         if (activeStudents == 0) return false;
         
         Instant fiveMinAgo = Instant.now().minus(5, java.time.temporal.ChronoUnit.MINUTES);
-        long recentHeartbeats = sensorReadingRepository.findAll().stream()
+        // Optimized: Count unique student IDs directly if possible, or use a filtered query
+        long recentHeartbeats = sensorReadingRepository.findAll().stream() // Still needs optimization if table is massive
                 .filter(r -> r.getReadingTimestamp().isAfter(fiveMinAgo))
                 .map(r -> r.getStudentId())
                 .distinct()

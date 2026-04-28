@@ -44,6 +44,19 @@ public interface SensorReadingRepository extends JpaRepository<SensorReading, UU
     );
 
     /**
+     * Find recent sensor readings for a student in a session (Optimized)
+     */
+    List<SensorReading> findTop10ByStudentIdAndSessionIdOrderByReadingTimestampDesc(
+            UUID studentId, 
+            UUID sessionId
+    );
+
+    /**
+     * Find most recent readings for a student across all sessions (Optimized for AI Profile)
+     */
+    List<SensorReading> findTop50ByStudentIdOrderByReadingTimestampDesc(UUID studentId);
+
+    /**
      * Find sensor readings within a time range for a session
      */
     @Query("SELECT sr FROM SensorReading sr WHERE sr.sessionId = :sessionId " +
