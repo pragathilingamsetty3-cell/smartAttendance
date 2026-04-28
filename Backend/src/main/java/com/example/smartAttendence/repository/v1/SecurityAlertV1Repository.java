@@ -34,7 +34,7 @@ public interface SecurityAlertV1Repository extends JpaRepository<SecurityAlert, 
            "AND (:sectId IS NULL OR a.user.section.id = :sectId)")
     long countByResolvedFalseFiltered(@Param("deptId") UUID deptId, @Param("sectId") UUID sectId, @Param("since") java.time.LocalDateTime since);
 
-    @Query("SELECT a FROM SecurityAlert a WHERE a.resolved = false " +
+    @Query("SELECT a FROM SecurityAlert a LEFT JOIN FETCH a.user WHERE a.resolved = false " +
            "AND a.createdAt >= :since " +
            "AND (:deptId IS NULL OR a.user.section.department.id = :deptId) " +
            "AND (:sectId IS NULL OR a.user.section.id = :sectId) " +

@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class AIAnalyticsV1Service {
 
     private static final java.time.ZoneId IST = java.time.ZoneId.of("Asia/Kolkata");
