@@ -60,7 +60,10 @@ public class AuthV1Controller {
             log.info("[AUTH] Login attempt for email: {}", request.getEmail());
             AuthenticationService.LoginResult result = unifiedAuthService.login(request.getEmail(), request.getPassword(), extractDeviceId(httpRequest));
             
-            String tokenFingerprint = generateDeviceFingerprint(httpRequest);
+            // 🔐 Use the ACTUAL device fingerprint from the frontend header, NOT a generated one.
+            // The frontend sends X-Device-Fingerprint on EVERY request (including login).
+            // If we generate a different one here, the threat filter will always see a mismatch.
+            String tokenFingerprint = extractDeviceId(httpRequest);
             String accessToken = jwtUtil.generateToken(result.user().getEmail(), result.user().getRole().toString(), tokenFingerprint, UUID.randomUUID().toString(), getClientIP(httpRequest), httpRequest.getHeader("User-Agent"), "EXTERNAL");
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(result.user());
 
