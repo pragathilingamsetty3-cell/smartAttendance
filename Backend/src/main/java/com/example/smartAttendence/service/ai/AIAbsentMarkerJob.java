@@ -55,48 +55,60 @@ public class AIAbsentMarkerJob {
     @Scheduled(fixedRate = 300000)
     @Transactional
     public void processAutoAbsentMarking() {
-        logger.info("🤖 AI Auto-Absent Marker: Scanning for ended sessions to finalize attendance...");
+        Instant now = Instant.now();
+        Instant thresholdTime = now.minus(GRACE_PERIOD_MINUTES, ChronoUnit.MINUTES);
         
-        Instant thresholdTime = Instant.now().minus(GRACE_PERIOD_MINUTES, ChronoUnit.MINUTES);
+        // Get ALL active sessions first for diagnostics
+        List<ClassroomSession> allActive = sessionRepository.findByActiveTrue();
+        logger.info("🤖 AI Auto-Absent Marker: Scanning... NOW={}, threshold={}, total active sessions={}", 
+                now, thresholdTime, allActive.size());
         
-        // Find sessions that ended before our threshold but are still marked active
-        // Or find sessions that just became inactive but we haven't processed yet.
-        // Actually, the system might keep them 'active=true' if the faculty didn't manually end them.
-        // Let's rely on the scheduled endTime.
+        for (ClassroomSession s : allActive) {
+            logger.info("   📋 Active Session: id={}, subject='{}', section={}, endTime={}, ended={}", 
+                    s.getId(), s.getSubject(), 
+                    s.getSection() != null ? s.getSection().getName() : "null",
+                    s.getEndTime(), 
+                    s.getEndTime() != null ? s.getEndTime().isBefore(thresholdTime) : "null-endTime");
+        }
         
-        // Ideally we'd have an 'attendanceProcessed' flag on ClassroomSession.
-        // For now, we will query sessions where endTime < thresholdTime and active = true
-        // Then we mark them as active = false to signify we processed them.
-        
-        List<ClassroomSession> sessionsToProcess = sessionRepository.findByActiveTrue()
-                .stream()
+        List<ClassroomSession> sessionsToProcess = allActive.stream()
                 .filter(s -> s.getEndTime() != null && s.getEndTime().isBefore(thresholdTime))
                 .collect(Collectors.toList());
 
+        logger.info("🤖 AI Auto-Absent Marker: Found {} sessions past grace period to process", sessionsToProcess.size());
+
         for (ClassroomSession session : sessionsToProcess) {
             processSession(session);
-            // Mark session as inactive so we don't process it again
             session.setActive(false);
             sessionRepository.save(session);
-            logger.info("✅ Finished processing auto-absent for session: {}", session.getId());
+            logger.info("✅ Finished processing auto-absent for session: {} ('{}')", session.getId(), session.getSubject());
         }
     }
 
     private void processSession(ClassroomSession session) {
         if (session.getSection() == null) {
-            logger.warn("Session {} has no section assigned. Skipping.", session.getId());
+            logger.warn("⚠️ Session {} has no section assigned. Skipping.", session.getId());
             return;
         }
 
         // Get all students in this section
         List<User> expectedStudents = userRepository.findBySectionIdAndRole(session.getSection().getId(), Role.STUDENT);
+        logger.info("📊 Processing session '{}' ({}): section={}, expectedStudents={}", 
+                session.getSubject(), session.getId(), session.getSection().getName(), expectedStudents.size());
         
         // Get all recorded attendance for this session
         List<AttendanceRecord> records = attendanceRepository.findBySessionIdOrderByRecordedAtAsc(session.getId());
+        logger.info("   📋 Total attendance records for this session: {}", records.size());
+        for (AttendanceRecord r : records) {
+            logger.info("   📝 Record: student={}, status={}, recordedAt={}", 
+                    r.getStudent().getName(), r.getStatus(), r.getRecordedAt());
+        }
+        
         Set<java.util.UUID> attendedStudentIds = records.stream()
                 .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()))
                 .map(r -> r.getStudent().getId())
                 .collect(Collectors.toSet());
+        logger.info("   ✅ Students who attended (PRESENT/LATE): {}", attendedStudentIds.size());
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy").withZone(ZoneId.of("Asia/Kolkata"));
         String dateStr = formatter.format(session.getStartTime());
@@ -123,6 +135,8 @@ public class AIAbsentMarkerJob {
                     attendanceRepository.save(record);
                     
                     // Trigger email notification
+                    logger.info("   📧 SENDING absent email to: {} ({}) for subject '{}'", 
+                            student.getName(), student.getEmail(), subjectName);
                     emailService.sendAbsentNotification(student.getEmail(), student.getName(), subjectName, dateStr);
                     absentCount++;
                 } else if (!"ABSENT".equals(existingRecord.get().getStatus())) {

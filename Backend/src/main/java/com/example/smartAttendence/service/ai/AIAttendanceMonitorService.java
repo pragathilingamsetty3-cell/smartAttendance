@@ -183,14 +183,17 @@ public class AIAttendanceMonitorService {
     }
 
     private void autoEndExpiredSessions(Instant now) {
-        // End sessions that logically timed out by 1 minute buffer
-        Instant cutoffTime = now.minus(1, java.time.temporal.ChronoUnit.MINUTES);
+        // IMPORTANT: Wait 15 minutes after endTime before deactivating sessions.
+        // The AIAbsentMarkerJob needs sessions to be active=true and processes them
+        // 10 minutes after endTime. If we deactivate too early, absent emails never get sent.
+        Instant cutoffTime = now.minus(15, java.time.temporal.ChronoUnit.MINUTES);
         List<ClassroomSession> expired = sessionRepository.findByEndTimeBeforeAndActiveTrue(cutoffTime);
         
         for (ClassroomSession session : expired) {
             session.setActive(false);
             sessionRepository.save(session);
-            log.info("🏁 AI CLEANUP: Auto-ended expired session: {} for {}", session.getId(), session.getSubject());
+            log.info("🏁 AI CLEANUP: Auto-ended expired session: {} for '{}' (endTime was: {})", 
+                    session.getId(), session.getSubject(), session.getEndTime());
         }
     }
 
@@ -265,19 +268,49 @@ public class AIAttendanceMonitorService {
 
     private void enforceWalkoutRules(ClassroomSession session, Timetable slot) {
         List<AttendanceRecord> walkouts = attendanceRepository.findBySessionIdAndStatus(session.getId(), "WALK_OUT");
+        log.info("🚶 WALKOUT CHECK: Session '{}' has {} WALK_OUT records", session.getSubject(), walkouts.size());
 
         for (AttendanceRecord record : walkouts) {
             User student = record.getStudent();
             String docId = session.getId() + "_" + student.getId();
+            // Also check drift_tracking (written by AttendanceV1Service.handleOutOfBounds)
+            String driftDocId = session.getId() + ":" + student.getId();
 
             try {
                 if (firestore != null) {
+                    // Check walkout_timers first (legacy)
                     var timerDoc = firestore.collection("walkout_timers").document(docId).get().get();
-                    if (!timerDoc.exists()) continue;
+                    
+                    // If not found, check drift_tracking (used by heartbeat handler)
+                    if (!timerDoc.exists()) {
+                        var driftDoc = firestore.collection("drift_tracking").document(driftDocId).get().get();
+                        if (driftDoc.exists()) {
+                            log.info("🚶 WALKOUT: Found drift_tracking doc for student {}. Using firstDrift as walkout start.", student.getName());
+                            // Use drift start time
+                            Object firstDriftObj = driftDoc.get("firstDrift");
+                            if (firstDriftObj instanceof com.google.cloud.Timestamp) {
+                                Instant walkoutStart = ((com.google.cloud.Timestamp) firstDriftObj).toDate().toInstant();
+                                if (Duration.between(walkoutStart, Instant.now()).toMinutes() >= 5) {
+                                    if (!firestore.collection("hall_passes").document(docId).get().get().exists()) {
+                                        log.warn("🤖 AI MONITOR [WALKOUT_EXPIRED]: Student {} - No return/pass after {}min. Revoking.", 
+                                                student.getName(), Duration.between(walkoutStart, Instant.now()).toMinutes());
+                                        record.setStatus("ABSENT");
+                                        record.setAiDecision(true);
+                                        record.setNote("AI Automated Absence: Unauthorized Walkout > 5m");
+                                        attendanceRepository.save(record);
+                                        notificationService.sendAttendanceAlert(student, slot, "UNAUTHORIZED_WALKOUT");
+                                        firestore.collection("drift_tracking").document(driftDocId).delete();
+                                    }
+                                }
+                            }
+                        } else {
+                            log.debug("🚶 WALKOUT: No timer/drift doc found for student {}. Skipping.", student.getName());
+                        }
+                        continue;
+                    }
 
                     Instant walkoutStart = Instant.parse(timerDoc.getString("startTime"));
                     if (Duration.between(walkoutStart, Instant.now()).toMinutes() >= 5) {
-                        // Check Hall Pass
                         if (!firestore.collection("hall_passes").document(docId).get().get().exists()) {
                             log.warn("🤖 AI MONITOR [WALKOUT_EXPIRED]: Student {} - No return/pass. Revoking.", student.getName());
                             record.setStatus("ABSENT");
@@ -297,7 +330,7 @@ public class AIAttendanceMonitorService {
                         }
                     }
                 }
-            } catch (Exception e) { log.error("Walkout enforcement fail: {}", e.getMessage()); }
+            } catch (Exception e) { log.error("Walkout enforcement fail for {}: {}", student.getName(), e.getMessage()); }
         }
     }
 }
