@@ -220,10 +220,33 @@ public class AttendanceV1Service {
         logger.info("🔵 [PROCESS-HB] Session loaded: subject='{}', active={}, geofence present={}", 
                 session.getSubject(), session.isActive(), session.getGeofencePolygon() != null);
         
+        // 🌐 GPS ACCURACY-AWARE GEOFENCE CHECK
+        // Indoor GPS often has 30-50m accuracy. We buffer the polygon to account for this.
         Point point = GEOMETRY_FACTORY.createPoint(new Coordinate(ping.longitude(), ping.latitude()));
         point.setSRID(SRID_WGS84);
-        boolean inside = session.getGeofencePolygon().contains(point);
-        logger.info("🔵 [PROCESS-HB] Geofence check: inside={} | Student location: ({}, {})", inside, ping.latitude(), ping.longitude());
+        
+        org.locationtech.jts.geom.Geometry geofence = session.getGeofencePolygon();
+        boolean inside = geofence.contains(point);
+        
+        // If not inside, check with GPS accuracy buffer before rejecting
+        // 1 degree ≈ 111,000 meters at equator, so buffer = accuracy_meters / 111000
+        if (!inside && ping.latitude() != 0) {
+            double accuracyMeters = 50.0; // Default buffer of 50m for web dashboard (no accuracy field)
+            double bufferDegrees = accuracyMeters / 111000.0;
+            org.locationtech.jts.geom.Geometry bufferedGeofence = geofence.buffer(bufferDegrees);
+            boolean insideBuffered = bufferedGeofence.contains(point);
+            
+            logger.info("🔵 [PROCESS-HB] Geofence strict check: inside={} | With {}m buffer: inside={} | Student: ({}, {})", 
+                    inside, accuracyMeters, insideBuffered, ping.latitude(), ping.longitude());
+            logger.info("🔵 [PROCESS-HB] Geofence bounds: {}", geofence.getEnvelopeInternal());
+            
+            if (insideBuffered) {
+                logger.info("🟢 [PROCESS-HB] Student is within GPS accuracy buffer. Treating as INSIDE.");
+                inside = true;
+            }
+        } else {
+            logger.info("🔵 [PROCESS-HB] Geofence check: inside={} | Student location: ({}, {})", inside, ping.latitude(), ping.longitude());
+        }
 
         if (!inside) {
             // 🧠 ELITE ACCURACY: Hysteresis (Anti-Jitter)
