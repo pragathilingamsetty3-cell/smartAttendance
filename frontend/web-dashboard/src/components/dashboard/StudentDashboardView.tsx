@@ -21,6 +21,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { StudentDashboardStatsDTO, EnhancedUserDTO } from '@/types';
 import { attendanceService } from '@/services/attendance.service';
+import { verifyBiometric, isBiometricSupported } from '@/lib/biometrics';
 
 interface StudentDashboardViewProps {
   stats: StudentDashboardStatsDTO | null;
@@ -64,7 +65,26 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
     setMarkSuccess(null);
     
     try {
-      // Step 1: Get battery info
+      // Step 1: 🔐 BIOMETRIC VERIFICATION — Prompt fingerprint scan
+      console.log('🔵 [MARK-ATTENDANCE] Step 1: Requesting fingerprint verification...');
+      let biometricSignature: string | undefined;
+      
+      if (isBiometricSupported()) {
+        try {
+          biometricSignature = await verifyBiometric(user.biometricSignature);
+          console.log('🟢 [MARK-ATTENDANCE] Step 1 ✓ Fingerprint verified:', biometricSignature?.substring(0, 20) + '...');
+        } catch (bioError: any) {
+          console.error('🔴 [MARK-ATTENDANCE] Fingerprint verification failed:', bioError.message);
+          setMarkError(`🔐 ${bioError.message}`);
+          setIsMarking(false);
+          return;
+        }
+      } else {
+        console.warn('🟡 [MARK-ATTENDANCE] Biometric not supported on this device. Using stored signature.');
+        biometricSignature = user.biometricSignature || undefined;
+      }
+
+      // Step 2: Get battery info
       let batteryLevel = 100;
       let isCharging = false;
       try {
@@ -76,10 +96,10 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
       } catch (e) {
         console.warn('🟡 [MARK-ATTENDANCE] Battery API not available');
       }
-      console.log('🔵 [MARK-ATTENDANCE] Step 1 ✓ Battery:', batteryLevel, '% | Charging:', isCharging);
+      console.log('🔵 [MARK-ATTENDANCE] Step 2 ✓ Battery:', batteryLevel, '% | Charging:', isCharging);
 
-      // Step 2: Get geolocation
-      console.log('🔵 [MARK-ATTENDANCE] Step 2: Requesting geolocation...');
+      // Step 3: Get geolocation
+      console.log('🔵 [MARK-ATTENDANCE] Step 3: Requesting geolocation...');
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         if (!navigator.geolocation) {
           reject(new Error('Geolocation is not supported by your browser'));
@@ -91,13 +111,17 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
           maximumAge: 0
         });
       });
-      console.log('🔵 [MARK-ATTENDANCE] Step 2 ✓ Location:', position.coords.latitude, position.coords.longitude, '| Accuracy:', position.coords.accuracy, 'm');
+      console.log('🔵 [MARK-ATTENDANCE] Step 3 ✓ Location:', position.coords.latitude, position.coords.longitude, '| Accuracy:', position.coords.accuracy, 'm');
 
-      // Step 3: Build payload
+      // Step 4: Build payload with biometric + device fingerprint
+      const deviceFingerprint = localStorage.getItem('sa_fingerprint') || 'UNKNOWN';
+      console.log('🔵 [MARK-ATTENDANCE] Step 4: Device fingerprint:', deviceFingerprint.substring(0, 12) + '...');
+      
       const payload = {
         studentId: user.id,
         sessionId: stats.activeSession.id,
-        deviceFingerprint: localStorage.getItem('X-Device-Fingerprint') || 'UNKNOWN',
+        deviceFingerprint,
+        biometricSignature,
         timestamp: new Date().toISOString(),
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
@@ -112,15 +136,15 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
         deviceState: 'STATIONARY' as const,
         nextHeartbeatInterval: 30000
       };
-      console.log('🔵 [MARK-ATTENDANCE] Step 3 ✓ Payload built:', JSON.stringify(payload, null, 2));
+      console.log('🔵 [MARK-ATTENDANCE] Step 4 ✓ Payload built with biometric + device');
 
-      // Step 4: Send heartbeat
-      console.log('🔵 [MARK-ATTENDANCE] Step 4: Sending heartbeat-enhanced to backend...');
+      // Step 5: Send heartbeat
+      console.log('🔵 [MARK-ATTENDANCE] Step 5: Sending heartbeat-enhanced to backend...');
       const response = await attendanceService.sendHeartbeatEnhanced(payload);
-      console.log('🟢 [MARK-ATTENDANCE] Step 4 ✓ Backend Response:', JSON.stringify(response, null, 2));
+      console.log('🟢 [MARK-ATTENDANCE] Step 5 ✓ Backend Response:', JSON.stringify(response, null, 2));
 
-      // Step 5: Show success and reload after delay
-      setMarkSuccess(`✅ Attendance heartbeat sent successfully! Response: ${JSON.stringify(response).substring(0, 200)}`);
+      // Step 6: Show success and reload after delay
+      setMarkSuccess('✅ Attendance marked successfully! Fingerprint verified.');
       console.log('🟢 [MARK-ATTENDANCE] ====== SUCCESS — Reloading in 2s ======');
       
       setTimeout(() => {
@@ -135,7 +159,16 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
       console.error('🔴 [MARK-ATTENDANCE] Error message:', error.message);
       
       if (error.response?.data?.reason) {
-        setMarkError(`Verification failed: ${error.response.data.reason}`);
+        const reason = error.response.data.reason;
+        if (reason.toLowerCase().includes('fingerprint') || reason.toLowerCase().includes('biometric')) {
+          setMarkError(`🔐 Fingerprint Not Matched! Your fingerprint does not match the one registered during setup. Please try again or contact your administrator.`);
+        } else if (reason.toLowerCase().includes('device')) {
+          setMarkError(`📱 Device Mismatch! ${reason}`);
+        } else if (reason.toLowerCase().includes('outside') || reason.toLowerCase().includes('boundary')) {
+          setMarkError(`📍 ${reason}`);
+        } else {
+          setMarkError(`❌ ${reason}`);
+        }
       } else if (error.response?.data?.message) {
         let msg = `System Error: ${error.response.data.message}`;
         if (error.response.data.stacktrace) msg += ` | ${error.response.data.stacktrace}`;

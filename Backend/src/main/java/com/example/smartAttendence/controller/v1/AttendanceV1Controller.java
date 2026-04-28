@@ -218,8 +218,17 @@ public class AttendanceV1Controller {
             
             // Process enhanced heartbeat with time-based smoothing
             logger.info("🔵 [HB-ENHANCED] Step 3: Calling processEnhancedHeartbeat with resolved session {}...", resolvedSessionId);
-            attendanceService.processEnhancedHeartbeat(resolvedPing, isCellular);
-            logger.info("🟢 [HB-ENHANCED] Step 3 ✓ processEnhancedHeartbeat completed (no exception thrown)");
+            String processingError = attendanceService.processEnhancedHeartbeat(resolvedPing, isCellular);
+            
+            if (processingError != null) {
+                logger.warn("🔴 [HB-ENHANCED] Step 3 FAILED: {}", processingError);
+                return ResponseEntity.status(403).body(Map.of(
+                    "error", "Attendance verification failed",
+                    "reason", processingError,
+                    "timestamp", java.time.Instant.now()
+                ));
+            }
+            logger.info("🟢 [HB-ENHANCED] Step 3 ✓ processEnhancedHeartbeat completed successfully");
 
             java.util.Map<String, Object> response = new java.util.HashMap<>();
             response.put("message", "Enhanced heartbeat processed successfully");

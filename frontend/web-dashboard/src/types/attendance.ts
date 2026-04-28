@@ -12,6 +12,7 @@ export interface EnhancedHeartbeatPing {
   isDeviceMoving: boolean;
   timestamp: string;
   deviceFingerprint: string;
+  biometricSignature?: string;  // 🔐 Fingerprint verification signature
   batteryLevel?: number;
   isCharging?: boolean;
   isScreenOn?: boolean;
