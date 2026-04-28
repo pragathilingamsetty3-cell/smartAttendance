@@ -6,12 +6,14 @@
 export class AppError extends Error {
   public readonly code?: string;
   public readonly statusCode?: number;
+  public readonly response?: any; // 🔍 Preserve axios response for detailed error info
 
-  constructor(message: string, code?: string, statusCode?: number) {
+  constructor(message: string, code?: string, statusCode?: number, response?: any) {
     super(message);
     this.name = 'AppError';
     this.code = code;
     this.statusCode = statusCode;
+    this.response = response;
   }
 }
 
@@ -20,8 +22,11 @@ export const handleError = (error: unknown, defaultMessage: string): AppError =>
     return error;
   }
 
+  // 🔍 Preserve axios response data for backend error diagnostics
+  const axiosResponse = (error as any)?.response;
+
   if (error instanceof Error) {
-    return new AppError(error.message, 'UNKNOWN_ERROR');
+    return new AppError(error.message, 'UNKNOWN_ERROR', axiosResponse?.status, axiosResponse);
   }
 
   if (typeof error === 'string') {
@@ -36,6 +41,10 @@ export const createErrorHandler = (serviceName: string) => {
     const appError = handleError(error, defaultMessage);
     // Explicit standard syntax for logging
     console.error(`[${serviceName}] Error:`, appError.message);
+    // 🔍 Log full response data if available
+    if (appError.response?.data) {
+      console.error(`[${serviceName}] Server Response:`, appError.response.data);
+    }
     return appError;
   };
 };
