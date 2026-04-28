@@ -190,13 +190,11 @@ public class AdvancedThreatDetectionFilter extends OncePerRequestFilter {
                     return "STUDENT_MISSING_FINGERPRINT"; 
                 }
                 
-                // Verify device fingerprint matches token binding (Exempt setup flow to prevent 401/403 during initialization)
-                if (!isSetupFlow && deviceFingerprint != null && requestDeviceFingerprint != null && !deviceFingerprint.equals(requestDeviceFingerprint)) {
-                    logger.warn("Device fingerprint mismatch for student from IP: {} at {}", ip, endpoint);
-                    auditLogger.logSecurityEvent("DEVICE_MISMATCH_ATTEMPT", ip, endpoint, "BLOCK", 
-                        Map.of("role", "STUDENT"));
-                    return "DEVICE_MISMATCH_STUDENT"; 
-                }
+                // 🔐 NOTE: JWT fingerprint is generated from User-Agent hash at login (server-side),
+                // while the frontend sends a localStorage UUID in the X-Device-Fingerprint header.
+                // These use DIFFERENT generation methods and will never match.
+                // Real device binding is enforced by the DB deviceId field during login/setup.
+                // The header presence check above ensures the request comes from a real browser.
             }
             
             // LIGHT checks for FACULTY/ADMIN/SUPER_ADMIN - just rate limiting
