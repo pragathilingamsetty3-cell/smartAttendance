@@ -94,7 +94,13 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
         setMarkError(`Verification failed: ${error.response.data.reason}`);
       } else if (error.response?.data?.message) {
         // This catches 500 Internal Server Errors from the backend
-        setMarkError(`System Error: ${error.response.data.message}`);
+        let msg = `System Error: ${error.response.data.message}`;
+        if (error.response.data.stacktrace) msg += ` | ${error.response.data.stacktrace}`;
+        setMarkError(msg);
+      } else if (error.response?.data) {
+        // Catches HTML error pages from Azure/NGINX or other JSON shapes
+        const rawData = typeof error.response.data === 'object' ? JSON.stringify(error.response.data) : String(error.response.data);
+        setMarkError(`HTTP ${error.response.status}: ${rawData.substring(0, 150)}...`);
       } else if (error.message && error.message.includes('Geolocation')) {
          setMarkError('Please enable location services to verify your attendance.');
       } else if (error.message && error.message.includes('denied')) {

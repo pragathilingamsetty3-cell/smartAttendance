@@ -244,9 +244,17 @@ public class AttendanceV1Controller {
                     "timestamp", java.time.Instant.now()
                 ));
         } catch (Exception e) {
+            logger.error("❌ CRITICAL ERROR IN HEARTBEAT ENHANCED:", e);
             java.util.Map<String, Object> errorMap = new java.util.HashMap<>();
             errorMap.put("error", "Failed to process enhanced heartbeat");
-            errorMap.put("message", e.getMessage() != null ? e.getMessage() : "Unknown internal error");
+            errorMap.put("message", e.getClass().getSimpleName() + ": " + e.getMessage());
+            
+            StringBuilder st = new StringBuilder();
+            for (int i = 0; i < Math.min(3, e.getStackTrace().length); i++) {
+                st.append(e.getStackTrace()[i].toString()).append(" | ");
+            }
+            errorMap.put("stacktrace", st.toString());
+            
             return ResponseEntity.status(500).body(errorMap);
         }
     }
