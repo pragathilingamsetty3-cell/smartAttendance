@@ -28,13 +28,24 @@ class AttendanceService {
 
   async sendHeartbeatEnhanced(ping: EnhancedHeartbeatPing): Promise<HeartbeatResponse> {
     try {
+      console.log('🔵 [ATTENDANCE-SVC] sendHeartbeatEnhanced called with sessionId:', ping.sessionId);
       const enhancedPing = await this.prepareSecurePing(ping);
+      console.log('🔵 [ATTENDANCE-SVC] Payload after HMAC signing:', JSON.stringify({
+        studentId: enhancedPing.studentId,
+        sessionId: enhancedPing.sessionId,
+        sequenceId: enhancedPing.sequenceId,
+        signaturePresent: !!enhancedPing.requestSignature,
+        signaturePreview: enhancedPing.requestSignature?.substring(0, 16) + '...',
+      }));
+      console.log('🔵 [ATTENDANCE-SVC] Posting to /api/v1/attendance/heartbeat-enhanced ...');
       const response = await apiClient.post<HeartbeatResponse>('/api/v1/attendance/heartbeat-enhanced', enhancedPing);
+      console.log('🟢 [ATTENDANCE-SVC] Response status:', response.status);
+      console.log('🟢 [ATTENDANCE-SVC] Response data:', JSON.stringify(response.data).substring(0, 300));
       return response.data;
     } catch (error: any) {
       // 🔍 DIAGNOSTIC: Re-throw raw axios error to preserve error.response.data
       // This ensures the frontend can read the backend's detailed error message & stacktrace
-      console.error('[AttendanceService] Heartbeat Enhanced Error:', error?.response?.data || error?.message);
+      console.error('🔴 [ATTENDANCE-SVC] Heartbeat Enhanced Error:', error?.response?.status, error?.response?.data || error?.message);
       throw error;
     }
   }
@@ -46,12 +57,13 @@ class AttendanceService {
   private async prepareSecurePing(ping: EnhancedHeartbeatPing): Promise<EnhancedHeartbeatPing> {
     const user = useAuthStore.getState().user;
     if (!user || !user.secretKey) {
-      console.warn('⚠️ HMAC Signing skipped: User secretKey not found. Identity verification may fail.');
+      console.warn('🟡 [PREPARE-PING] HMAC Signing SKIPPED: secretKey not found. user:', user?.id, 'secretKey:', user?.secretKey ? 'present' : 'MISSING');
       return ping;
     }
 
     // 📈 Add Sequence Tracking
     const sequenceId = securityService.getNextSequenceId(ping.sessionId);
+    console.log('🔵 [PREPARE-PING] Sequence ID:', sequenceId, 'for session:', ping.sessionId);
     
     const enrichedPing = {
       ...ping,
@@ -59,7 +71,9 @@ class AttendanceService {
     };
 
     // 🔐 Generate HMAC-SHA256 Signature
+    console.log('🔵 [PREPARE-PING] Signing HMAC with sessionId:', ping.sessionId, '(THIS IS THE TIMETABLE ID the frontend sends)');
     const requestSignature = await securityService.signHeartbeat(enrichedPing, user.secretKey);
+    console.log('🔵 [PREPARE-PING] HMAC signature generated:', requestSignature.substring(0, 16) + '...');
     
     return {
       ...enrichedPing,

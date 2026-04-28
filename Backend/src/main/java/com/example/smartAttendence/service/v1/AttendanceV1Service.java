@@ -154,43 +154,75 @@ public class AttendanceV1Service {
         UUID sessionId = ping.sessionId();
         UUID studentId = ping.studentId();
 
+        logger.info("🔵 [PROCESS-HB] ====== START processEnhancedHeartbeat ======");
+        logger.info("🔵 [PROCESS-HB] Student: {}, Session: {}", studentId, sessionId);
+
         // 1. Hall Pass Check (Firestore)
-        if (isHallPassActive(sessionId, studentId)) return;
+        if (isHallPassActive(sessionId, studentId)) {
+            logger.warn("🟡 [PROCESS-HB] EARLY RETURN: Hall pass is active for student {}. Skipping.", studentId);
+            return;
+        }
+        logger.info("🔵 [PROCESS-HB] ✓ Check 1 PASSED: No active hall pass");
         
         // 2. Security Handshake
         User student = userRepository.findById(studentId).orElseThrow();
+        logger.info("🔵 [PROCESS-HB] Student found: {} | DeviceID in DB: {} | Incoming fingerprint: {}", 
+                student.getName(), student.getDeviceId(), ping.deviceFingerprint());
         if (!verifyHardwareSignature(student, ping.deviceFingerprint())) {
+            logger.error("🔴 [PROCESS-HB] EARLY RETURN: Hardware signature MISMATCH! DB deviceId='{}', ping fingerprint='{}'", 
+                    student.getDeviceId(), ping.deviceFingerprint());
             handleUnauthorizedDevice(student, sessionId);
             return;
         }
+        logger.info("🔵 [PROCESS-HB] ✓ Check 2 PASSED: Hardware signature verified");
 
         // 📈 RELIABILITY: Sequence Tracking
         // Ignore heartbeats that arrive out-of-order or are delayed duplicates
         if (isOutOfOrderPacket(studentId, sessionId, ping.sequenceId())) {
-            logger.info("📈 RELIABILITY: Packet ignored for user {} (Out-of-order sequence: {})", studentId, ping.sequenceId());
+            logger.warn("🟡 [PROCESS-HB] EARLY RETURN: Out-of-order packet. Student: {}, Sequence: {}", studentId, ping.sequenceId());
             return;
         }
+        logger.info("🔵 [PROCESS-HB] ✓ Check 3 PASSED: Sequence ID ok ({})", ping.sequenceId());
 
         // 3. Biometric Check (Initial)
         boolean isInitial = !attendanceRecordRepository.existsBySession_IdAndStudent_Id(sessionId, studentId);
+        logger.info("🔵 [PROCESS-HB] Is initial heartbeat for this session? {}", isInitial);
         if (isInitial && !verifyBiometricSignature(student, ping.biometricSignature())) {
+            logger.error("🔴 [PROCESS-HB] EARLY RETURN: Biometric signature FAILED on initial heartbeat! " +
+                    "DB biometric='{}', ping biometric='{}'", student.getBiometricSignature(), ping.biometricSignature());
             handleBiometricFailure(student, sessionId);
             return;
         }
+        logger.info("🔵 [PROCESS-HB] ✓ Check 4 PASSED: Biometric check (initial={}, passed)", isInitial);
 
         // 🔐 ELITE SECURITY: HMAC-SHA256 Request Signing
         // Prevent manual spoofing by verifying that the request came from the real mobile app
-        if (!verifyHmacSignature(student, ping)) {
+        boolean hmacValid = verifyHmacSignature(student, ping);
+        logger.info("🔵 [PROCESS-HB] HMAC Verification result: {} | Signature present: {} | SecretKey present: {}", 
+                hmacValid, ping.requestSignature() != null, student.getSecretKey() != null);
+        if (!hmacValid) {
+            logger.error("🔴 [PROCESS-HB] EARLY RETURN: HMAC signature verification FAILED!");
+            logger.error("🔴 [PROCESS-HB] This is likely because the frontend signed with Timetable ID but backend verifies with ClassroomSession ID");
+            logger.error("🔴 [PROCESS-HB] Frontend signed sessionId: (unknown, already resolved) | Current ping sessionId: {}", sessionId);
             logSecurityAlert(student, "SECURITY_HMAC_FAILURE", "Heartbeat signature invalid. Potential manual spoofing attempt.", "CRITICAL", 1.0);
             return;
         }
+        logger.info("🔵 [PROCESS-HB] ✓ Check 5 PASSED: HMAC signature verified");
         
-        if (hasAutomaticBreakPass(sessionId, studentId)) return;
+        if (hasAutomaticBreakPass(sessionId, studentId)) {
+            logger.warn("🟡 [PROCESS-HB] EARLY RETURN: Automatic break pass active for student {}", studentId);
+            return;
+        }
+        logger.info("🔵 [PROCESS-HB] ✓ Check 6 PASSED: No break pass active");
 
         ClassroomSession session = classroomSessionRepository.findById(sessionId).orElseThrow();
+        logger.info("🔵 [PROCESS-HB] Session loaded: subject='{}', active={}, geofence present={}", 
+                session.getSubject(), session.isActive(), session.getGeofencePolygon() != null);
+        
         Point point = GEOMETRY_FACTORY.createPoint(new Coordinate(ping.longitude(), ping.latitude()));
         point.setSRID(SRID_WGS84);
         boolean inside = session.getGeofencePolygon().contains(point);
+        logger.info("🔵 [PROCESS-HB] Geofence check: inside={} | Student location: ({}, {})", inside, ping.latitude(), ping.longitude());
 
         if (!inside) {
             // 🧠 ELITE ACCURACY: Hysteresis (Anti-Jitter)
@@ -199,15 +231,19 @@ public class AttendanceV1Service {
             hysteresisCache.put(studentId, currentFailures);
             
             if (currentFailures >= 3) {
+                logger.warn("🔴 [PROCESS-HB] Student {} OUTSIDE geofence ({}/3 failures). Triggering WALK_OUT.", studentId, currentFailures);
                 handleOutOfBounds(ping, studentId, sessionId);
             } else {
-                logger.info("🧠 HYSTERESIS: Student {} drifted (Count: {}/3). Holding status.", studentId, currentFailures);
+                logger.info("🟡 [PROCESS-HB] Student {} drifted (Count: {}/3). Holding status.", studentId, currentFailures);
             }
         } else {
             // Reset failure count on successful geofence check
             hysteresisCache.invalidate(studentId);
+            logger.info("🟢 [PROCESS-HB] Student {} is INSIDE geofence. Processing attendance record.", studentId);
             handleInBounds(ping, student, session);
         }
+        
+        logger.info("🟢 [PROCESS-HB] ====== END processEnhancedHeartbeat ======");
     }
 
     private boolean isHallPassActive(UUID sessionId, UUID studentId) {
@@ -273,10 +309,17 @@ public class AttendanceV1Service {
         String driftKey = driftKey(session.getId(), student.getId());
         firestore.collection("drift_tracking").document(driftKey).delete();
 
+        logger.info("🔵 [IN-BOUNDS] Looking for existing record: student={}, session={}", student.getId(), session.getId());
         attendanceRecordRepository.findFirstByStudent_IdAndSession_IdOrderByRecordedAtDesc(student.getId(), session.getId())
             .ifPresentOrElse(
-                record -> updateExistingRecord(record, ping, session),
-                () -> createNewRecord(student, session, ping)
+                record -> {
+                    logger.info("🔵 [IN-BOUNDS] Found existing record ID={}, status={}", record.getId(), record.getStatus());
+                    updateExistingRecord(record, ping, session);
+                },
+                () -> {
+                    logger.info("🔵 [IN-BOUNDS] No existing record found. Creating NEW record.");
+                    createNewRecord(student, session, ping);
+                }
             );
     }
 
@@ -293,12 +336,13 @@ public class AttendanceV1Service {
         if (!statusChanged && lastWrite != null && lastWrite.isAfter(Instant.now().minus(java.time.Duration.ofMinutes(5)))) {
             double dist = calculateDistance(record.getLatitude(), record.getLongitude(), ping.latitude(), ping.longitude());
             if (dist < 2.0) {
-                // Routine ping - skip heavy DB transaction
+                logger.info("🟡 [UPDATE-RECORD] Skipped DB write (buffered, same status '{}', dist={}m)", record.getStatus(), String.format("%.1f", dist));
                 return;
             }
         }
 
         if (statusChanged) {
+            logger.info("🟢 [UPDATE-RECORD] Status changed: {} → {}", record.getStatus(), newStatus);
             record.setStatus(newStatus);
         }
         record.setRecordedAt(Instant.now());
@@ -309,6 +353,7 @@ public class AttendanceV1Service {
         
         attendanceRecordRepository.save(record);
         heartbeatBuffer.put(record.getStudent().getId(), Instant.now());
+        logger.info("🟢 [UPDATE-RECORD] Record SAVED: id={}, status={}, student={}", record.getId(), record.getStatus(), record.getStudent().getId());
     }
 
     private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
@@ -323,17 +368,22 @@ public class AttendanceV1Service {
     }
 
     private void createNewRecord(User student, ClassroomSession session, EnhancedHeartbeatPing ping) {
+        String status = determineStatus(session, Instant.now());
+        logger.info("🟢 [CREATE-RECORD] Creating NEW attendance record: student={}, session={}, status={}", 
+                student.getId(), session.getId(), status);
+        
         AttendanceRecord record = new AttendanceRecord();
         record.setStudent(student);
         record.setSession(session);
-        record.setStatus(determineStatus(session, Instant.now()));
+        record.setStatus(status);
         record.setRecordedAt(Instant.now());
         record.setLatitude(ping.latitude());
         record.setLongitude(ping.longitude());
         record.setDeviceSignature(ping.deviceFingerprint());
         record.setSequenceId(ping.sequenceId()); // 📈 Set initial sequence
-        attendanceRecordRepository.save(record);
+        AttendanceRecord saved = attendanceRecordRepository.save(record);
         heartbeatBuffer.put(student.getId(), Instant.now());
+        logger.info("🟢 [CREATE-RECORD] ✓ Record SAVED to DB: id={}, status={}", saved.getId(), saved.getStatus());
     }
 
     private void handleUnauthorizedDevice(User student, UUID sessionId) {
@@ -434,7 +484,12 @@ public class AttendanceV1Service {
      * Verifies that the heartbeat was signed with the user's private secretKey.
      */
     private boolean verifyHmacSignature(User user, EnhancedHeartbeatPing ping) {
-        if (ping.requestSignature() == null || user.getSecretKey() == null) return false;
+        if (ping.requestSignature() == null || user.getSecretKey() == null) {
+            logger.warn("🔴 [HMAC] Pre-check FAILED: requestSignature={}, secretKey={}", 
+                    ping.requestSignature() != null ? "present" : "NULL", 
+                    user.getSecretKey() != null ? "present" : "NULL");
+            return false;
+        }
         
         try {
             // 1. Construct payload string (Match mobile app logic exactly)
@@ -446,6 +501,7 @@ public class AttendanceV1Service {
                 ping.stepCount(),
                 ping.batteryLevel()
             );
+            logger.info("🔵 [HMAC] Payload for verification: '{}'", payload);
             
             // 2. Generate HMAC-SHA256
             javax.crypto.spec.SecretKeySpec secretKeySpec = new javax.crypto.spec.SecretKeySpec(
@@ -458,9 +514,14 @@ public class AttendanceV1Service {
             
             String serverGeneratedSignature = java.util.HexFormat.of().formatHex(rawHmac);
             
-            return serverGeneratedSignature.equalsIgnoreCase(ping.requestSignature());
+            boolean match = serverGeneratedSignature.equalsIgnoreCase(ping.requestSignature());
+            logger.info("🔵 [HMAC] Server signature: {}...", serverGeneratedSignature.substring(0, Math.min(16, serverGeneratedSignature.length())));
+            logger.info("🔵 [HMAC] Client signature: {}...", ping.requestSignature().substring(0, Math.min(16, ping.requestSignature().length())));
+            logger.info("🔵 [HMAC] Match: {}", match);
+            
+            return match;
         } catch (Exception e) {
-            logger.error("HMAC Verification Error: {}", e.getMessage());
+            logger.error("🔴 [HMAC] Verification Error: {}", e.getMessage());
             return false;
         }
     }

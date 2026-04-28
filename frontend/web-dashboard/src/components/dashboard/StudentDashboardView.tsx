@@ -31,15 +31,27 @@ interface StudentDashboardViewProps {
 export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stats, loading, user }) => {
   const [isMarking, setIsMarking] = useState(false);
   const [markError, setMarkError] = useState<string | null>(null);
+  const [markSuccess, setMarkSuccess] = useState<string | null>(null);
 
   const handleMarkAttendance = async () => {
-    if (!stats?.activeSession || !user?.id) return;
+    console.log('🔵 [MARK-ATTENDANCE] ====== BUTTON CLICKED ======');
+    console.log('🔵 [MARK-ATTENDANCE] User ID:', user?.id);
+    console.log('🔵 [MARK-ATTENDANCE] Active Session:', JSON.stringify(stats?.activeSession, null, 2));
+    console.log('🔵 [MARK-ATTENDANCE] Attendance Already Marked?:', stats?.attendanceMarked);
+    
+    if (!stats?.activeSession || !user?.id) {
+      const reason = !stats?.activeSession ? 'No active session found' : 'No user ID';
+      console.error('🔴 [MARK-ATTENDANCE] ABORTED — Guard condition failed:', reason);
+      setMarkError(`Cannot mark attendance: ${reason}`);
+      return;
+    }
     
     setIsMarking(true);
     setMarkError(null);
+    setMarkSuccess(null);
     
     try {
-      // Get basic battery info if available
+      // Step 1: Get battery info
       let batteryLevel = 100;
       let isCharging = false;
       try {
@@ -49,10 +61,12 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
           isCharging = battery.charging;
         }
       } catch (e) {
-        console.warn('Battery API not available');
+        console.warn('🟡 [MARK-ATTENDANCE] Battery API not available');
       }
+      console.log('🔵 [MARK-ATTENDANCE] Step 1 ✓ Battery:', batteryLevel, '% | Charging:', isCharging);
 
-      // Get geolocation
+      // Step 2: Get geolocation
+      console.log('🔵 [MARK-ATTENDANCE] Step 2: Requesting geolocation...');
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         if (!navigator.geolocation) {
           reject(new Error('Geolocation is not supported by your browser'));
@@ -64,8 +78,10 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
           maximumAge: 0
         });
       });
+      console.log('🔵 [MARK-ATTENDANCE] Step 2 ✓ Location:', position.coords.latitude, position.coords.longitude, '| Accuracy:', position.coords.accuracy, 'm');
 
-      await attendanceService.sendHeartbeatEnhanced({
+      // Step 3: Build payload
+      const payload = {
         studentId: user.id,
         sessionId: stats.activeSession.id,
         deviceFingerprint: localStorage.getItem('X-Device-Fingerprint') || 'UNKNOWN',
@@ -80,27 +96,40 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
         batteryLevel,
         isCharging,
         isScreenOn: true,
-        deviceState: 'STATIONARY',
+        deviceState: 'STATIONARY' as const,
         nextHeartbeatInterval: 30000
-      });
+      };
+      console.log('🔵 [MARK-ATTENDANCE] Step 3 ✓ Payload built:', JSON.stringify(payload, null, 2));
 
-      // Force a page reload to fetch updated stats (which will now have attendanceMarked = true)
-      window.location.reload();
+      // Step 4: Send heartbeat
+      console.log('🔵 [MARK-ATTENDANCE] Step 4: Sending heartbeat-enhanced to backend...');
+      const response = await attendanceService.sendHeartbeatEnhanced(payload);
+      console.log('🟢 [MARK-ATTENDANCE] Step 4 ✓ Backend Response:', JSON.stringify(response, null, 2));
+
+      // Step 5: Show success and reload after delay
+      setMarkSuccess(`✅ Attendance heartbeat sent successfully! Response: ${JSON.stringify(response).substring(0, 200)}`);
+      console.log('🟢 [MARK-ATTENDANCE] ====== SUCCESS — Reloading in 2s ======');
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
       
     } catch (error: any) {
-      console.error('Failed to mark attendance:', error);
+      console.error('🔴 [MARK-ATTENDANCE] ====== FAILED ======');
+      console.error('🔴 [MARK-ATTENDANCE] Error object:', error);
+      console.error('🔴 [MARK-ATTENDANCE] Response status:', error.response?.status);
+      console.error('🔴 [MARK-ATTENDANCE] Response data:', JSON.stringify(error.response?.data, null, 2));
+      console.error('🔴 [MARK-ATTENDANCE] Error message:', error.message);
       
       if (error.response?.data?.reason) {
         setMarkError(`Verification failed: ${error.response.data.reason}`);
       } else if (error.response?.data?.message) {
-        // This catches 500 Internal Server Errors from the backend
         let msg = `System Error: ${error.response.data.message}`;
         if (error.response.data.stacktrace) msg += ` | ${error.response.data.stacktrace}`;
         setMarkError(msg);
       } else if (error.response?.data) {
-        // Catches HTML error pages from Azure/NGINX or other JSON shapes
         const rawData = typeof error.response.data === 'object' ? JSON.stringify(error.response.data) : String(error.response.data);
-        setMarkError(`HTTP ${error.response.status}: ${rawData.substring(0, 150)}...`);
+        setMarkError(`HTTP ${error.response.status}: ${rawData.substring(0, 250)}`);
       } else if (error.message && error.message.includes('Geolocation')) {
          setMarkError('Please enable location services to verify your attendance.');
       } else if (error.message && error.message.includes('denied')) {
@@ -110,7 +139,6 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
       } else if (error.message && error.message.includes('Network Error')) {
          setMarkError('Network connection failed. Please check your internet.');
       } else {
-        // Fallback to show the actual raw error message instead of hiding it
         setMarkError(`Error: ${error.message || 'Unknown error occurred. Are you currently in the classroom?'}`);
       }
     } finally {
@@ -332,8 +360,13 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
                                     )}
                                 </Button>
                             </div>
+                            {markSuccess && (
+                                <div className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20 text-center">
+                                    {markSuccess}
+                                </div>
+                            )}
                             {markError && (
-                                <div className="text-[10px] font-bold text-red-400 bg-red-500/10 p-3 rounded-xl border border-red-500/20 text-center">
+                                <div className="text-[10px] font-bold text-red-400 bg-red-500/10 p-3 rounded-xl border border-red-500/20 text-center break-all">
                                     {markError}
                                 </div>
                             )}

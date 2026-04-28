@@ -128,12 +128,22 @@ public class AttendanceV1Controller {
             @RequestBody EnhancedHeartbeatPing ping,
             HttpServletRequest httpServletRequest
     ) {
+        logger.info("🔵 [HB-ENHANCED] ====== INCOMING REQUEST ======");
+        logger.info("🔵 [HB-ENHANCED] Student ID: {}", ping.studentId());
+        logger.info("🔵 [HB-ENHANCED] Session ID (from frontend): {}", ping.sessionId());
+        logger.info("🔵 [HB-ENHANCED] Location: {}, {}", ping.latitude(), ping.longitude());
+        logger.info("🔵 [HB-ENHANCED] Device Fingerprint: {}", ping.deviceFingerprint());
+        logger.info("🔵 [HB-ENHANCED] HMAC Signature present: {}", ping.requestSignature() != null);
+        logger.info("🔵 [HB-ENHANCED] Sequence ID: {}", ping.sequenceId());
+        logger.info("🔵 [HB-ENHANCED] Battery: {}% | Charging: {}", ping.batteryLevel(), ping.isCharging());
+
         Object isCellularAttr = httpServletRequest.getAttribute("isCellularData");
         boolean isCellular = isCellularAttr instanceof Boolean && (Boolean) isCellularAttr;
 
         // 🛡️ SMART SECURITY: Individual Student Throttling (Prevents spam from single user)
         String userRateKey = "pulse:" + ping.studentId();
         if (pulseThrottleCache.getIfPresent(userRateKey) != null) {
+            logger.warn("🟡 [HB-ENHANCED] THROTTLED: Student {} hit rate limit", ping.studentId());
             return ResponseEntity.status(429).body(Map.of(
                 "error", "Too many requests from your device",
                 "message", "Please wait for the current heartbeat window to complete."
@@ -145,7 +155,10 @@ public class AttendanceV1Controller {
         try {
             // 🔧 SESSION RESOLVER: The dashboard sends Timetable IDs, but sensor_readings
             // requires ClassroomSession IDs. Resolve or auto-create the session first.
+            logger.info("🔵 [HB-ENHANCED] Step 1: Resolving session ID...");
             java.util.UUID resolvedSessionId = attendanceService.resolveOrCreateSession(ping.sessionId());
+            logger.info("🔵 [HB-ENHANCED] Step 1 ✓ Resolved Session ID: {} (original was: {})", resolvedSessionId, ping.sessionId());
+            logger.info("🔵 [HB-ENHANCED] Step 1 ✓ IDs match? {}", resolvedSessionId.equals(ping.sessionId()));
             
             // Create a new ping with the resolved ClassroomSession ID
             EnhancedHeartbeatPing resolvedPing = new EnhancedHeartbeatPing(
@@ -158,10 +171,12 @@ public class AttendanceV1Controller {
             );
 
             // Process sensor fusion and spoofing detection
+            logger.info("🔵 [HB-ENHANCED] Step 2: Processing sensor fusion...");
             sensorFusionService.processEnhancedHeartbeat(resolvedPing);            
             // Get recent readings for spoofing detection
             var recentReadings = sensorFusionService.getRecentReadings(resolvedPing.studentId(), resolvedPing.sessionId(), 10);
             boolean spoofingDetected = sensorFusionService.detectSpoofing(recentReadings);
+            logger.info("🔵 [HB-ENHANCED] Step 2 ✓ Spoofing detected: {}", spoofingDetected);
             
             if (spoofingDetected) {
                 // 🔐 SECURITY: Log spoofing attempt securely
@@ -202,7 +217,9 @@ public class AttendanceV1Controller {
             var aiOptimization = aiLearningOptimizer.optimizeForStudent(resolvedPing);
             
             // Process enhanced heartbeat with time-based smoothing
+            logger.info("🔵 [HB-ENHANCED] Step 3: Calling processEnhancedHeartbeat with resolved session {}...", resolvedSessionId);
             attendanceService.processEnhancedHeartbeat(resolvedPing, isCellular);
+            logger.info("🟢 [HB-ENHANCED] Step 3 ✓ processEnhancedHeartbeat completed (no exception thrown)");
 
             java.util.Map<String, Object> response = new java.util.HashMap<>();
             response.put("message", "Enhanced heartbeat processed successfully");
@@ -246,9 +263,11 @@ public class AttendanceV1Controller {
             aiOpt.put("learningStatus", aiOptimization.confidence() > 0.8 ? "HIGH_CONFIDENCE" : "LEARNING");
             response.put("aiLearning", aiOpt);
 
+            logger.info("🟢 [HB-ENHANCED] ====== RETURNING 200 OK ======");
             return ResponseEntity.ok(response);
 
         } catch (SpoofingException e) {
+            logger.warn("🔴 [HB-ENHANCED] SpoofingException: {}", e.getReason());
             return ResponseEntity.status(403)
                 .body(Map.of(
                     "error", "Spoofing detected",
@@ -257,7 +276,7 @@ public class AttendanceV1Controller {
                     "timestamp", java.time.Instant.now()
                 ));
         } catch (Exception e) {
-            logger.error("❌ CRITICAL ERROR IN HEARTBEAT ENHANCED:", e);
+            logger.error("🔴 [HB-ENHANCED] ====== CRITICAL ERROR ======", e);
             java.util.Map<String, Object> errorMap = new java.util.HashMap<>();
             errorMap.put("error", "Failed to process enhanced heartbeat");
             errorMap.put("message", e.getClass().getSimpleName() + ": " + e.getMessage());
