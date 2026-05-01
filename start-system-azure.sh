@@ -51,17 +51,8 @@ echo "🚀 Starting ULTIMATE BEAST MODE Backend (4GB RAM)..."
 nohup java -Xmx4096m -XX:+UseG1GC -XX:+ParallelRefProcEnabled -jar "$JAR_FILE" > logs/backend.log 2>&1 &
 BACKEND_PID=$!
 
-# 4. Start Cloudflare Tunnel (API only)
-echo "[3/3] Generating Secure Backend Link..."
-if ! command -v cloudflared &> /dev/null; then
-    curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64.deb
-    sudo dpkg -i cloudflared.deb
-fi
-
-nohup cloudflared tunnel --url http://localhost:10000 > logs/tunnel-backend.log 2>&1 &
-TUNNEL_PID=$!
-
 echo "--------------------------------------------------"
-echo "💎 ULTIMATE BEAST MODE IS LIVE! (8GB Hardware)"
+echo "💎 ULTIMATE BEAST MODE IS LIVE (Via Nginx)!"
 echo "--------------------------------------------------"
-echo "💡 To stop: kill $BACKEND_PID $TUNNEL_PID"
+echo "💡 To stop: kill $BACKEND_PID"
+echo "🌐 URL: https://4.188.248.38.nip.io"
