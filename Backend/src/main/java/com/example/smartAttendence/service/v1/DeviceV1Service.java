@@ -115,7 +115,14 @@ public class DeviceV1Service {
     private Map<String, Object> processOfflineRecord(OfflineSyncRequest.OfflineAttendanceRecord record, String ipAddress) {
         // Check if attendance already exists
         UUID sessionId = UUID.fromString(record.sessionId());
-        UUID studentId = UUID.fromString("student-id-from-auth"); // Get from auth context
+        UUID studentId = record.studentId() != null ? UUID.fromString(record.studentId()) : null;
+        if (studentId == null) {
+            return Map.of(
+                    "sessionId", record.sessionId(),
+                    "status", "FAILED",
+                    "message", "Student ID is required for offline sync"
+            );
+        }
         
         if (attendanceRecordRepository.existsBySession_IdAndStudent_Id(sessionId, studentId)) {
             return Map.of(
@@ -161,14 +168,30 @@ public class DeviceV1Service {
         }
 
         // Create attendance record
+        User student = userV1Repository.findById(studentId)
+                .orElseThrow(() -> new IllegalArgumentException("Student not found: " + studentId));
+        
+        // 🚀 SECURITY FIX: Verify client timestamp is within session boundaries
+        Instant clientTime = record.clientTimestamp();
+        if (clientTime.isBefore(sessionOpt.get().getStartTime()) || clientTime.isAfter(sessionOpt.get().getEndTime())) {
+            log.warn("🚨 OFFLINE SYNC FRAUD: Student {} attempted sync for session {} with invalid timestamp: {}", 
+                    studentId, sessionId, clientTime);
+            return Map.of(
+                    "sessionId", record.sessionId(),
+                    "status", "FAILED",
+                    "message", "Attendance timestamp is outside of session boundaries"
+            );
+        }
+
         AttendanceRecord attendanceRecord = new AttendanceRecord();
         attendanceRecord.setSession(sessionOpt.get());
-        // attendanceRecord.setStudent(student); // Set from auth context
+        attendanceRecord.setStudent(student);
         attendanceRecord.setStatus("PRESENT");
         attendanceRecord.setIpAddress(ipAddress);
-        attendanceRecord.setRecordedAt(record.clientTimestamp());
+        attendanceRecord.setRecordedAt(clientTime);
         attendanceRecord.setBiometricSignature(record.biometricSignature());
         attendanceRecord.setMocked(false);
+        attendanceRecord.setNote("Synced from offline cache");
 
         attendanceRecordRepository.save(attendanceRecord);
 

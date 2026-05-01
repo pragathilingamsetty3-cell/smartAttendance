@@ -143,6 +143,7 @@ public class NotificationService {
             Map<String, String> data = new HashMap<>();
             data.put("subject", subject);
             data.put("room", roomName);
+            data.put("sessionId", session.getId().toString());
             data.put("action", "CHECK_IN");
 
             firebaseService.sendCustomNotification(
@@ -248,12 +249,13 @@ public class NotificationService {
             Map<String, String> data = new HashMap<>();
             data.put("type", "CLASS_START");
             data.put("subject", subject);
+            data.put("sessionId", "session_notif_" + subject + "_" + System.currentTimeMillis()); // Unique tag for each session
             
             firebaseService.sendCustomNotification(
                 "🚀 Class Starting: " + subject,
                 String.format("Your class is live in %s. Join now! (Starts: %s)", roomName, startTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))),
                 data,
-                "hall_pass_" + studentId
+                "student_" + studentId
             );
         }
     }
@@ -273,7 +275,7 @@ public class NotificationService {
                 "⏰ Class Reminder: " + subject,
                 String.format("Reminder: Your class starts @ %s in %s.", startTime.toString(), roomName),
                 data,
-                "hall_pass_" + studentId
+                "student_" + studentId
             );
         }
     }

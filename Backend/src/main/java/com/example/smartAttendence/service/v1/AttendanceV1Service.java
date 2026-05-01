@@ -14,6 +14,7 @@ import com.example.smartAttendence.repository.v1.ClassroomSessionV1Repository;
 import com.example.smartAttendence.repository.v1.SecurityAlertV1Repository;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
 import com.example.smartAttendence.service.ai.AILearningOptimizer;
+import com.example.smartAttendence.service.ai.AISpatialMonitoringEngine;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.FieldValue;
@@ -59,6 +60,7 @@ public class AttendanceV1Service {
     private final AILearningOptimizer aiLearningOptimizer;
     private final SecurityAlertV1Repository securityAlertRepository;
     private final TimetableRepository timetableRepository;
+    private final AISpatialMonitoringEngine spatialEngine;
     
     // 🧠 ELITE ACCURACY: Hysteresis Cache
     // Tracks consecutive out-of-range readings to prevent geofencing jitter.
@@ -86,7 +88,8 @@ public class AttendanceV1Service {
             ApplicationEventPublisher eventPublisher,
             AILearningOptimizer aiLearningOptimizer,
             SecurityAlertV1Repository securityAlertRepository,
-            TimetableRepository timetableRepository
+            TimetableRepository timetableRepository,
+            AISpatialMonitoringEngine spatialEngine
     ) {
         this.classroomSessionRepository = classroomSessionRepository;
         this.attendanceRecordRepository = attendanceRecordRepository;
@@ -96,48 +99,12 @@ public class AttendanceV1Service {
         this.aiLearningOptimizer = aiLearningOptimizer;
         this.securityAlertRepository = securityAlertRepository;
         this.timetableRepository = timetableRepository;
+        this.spatialEngine = spatialEngine;
     }
 
-    /**
-     * 🤖 AI AUTONOMOUS WATCHER
-     * Runs every 30 seconds (High RAM Unlock) to enforce security grace periods.
-     */
-    @org.springframework.scheduling.annotation.Scheduled(fixedRate = 30000)
-    @Transactional
-    public void monitorGracePeriods() {
-        try {
-            List<ClassroomSession> activeSessions = classroomSessionRepository.findByActiveTrue();
-            Instant now = Instant.now();
-
-            for (ClassroomSession session : activeSessions) {
-                List<AttendanceRecord> latestRecords = attendanceRecordRepository.findBySessionIdOrderByRecordedAtDesc(session.getId());
-                java.util.Set<UUID> processedStudents = new java.util.HashSet<>();
-
-                for (AttendanceRecord record : latestRecords) {
-                    UUID studentId = record.getStudent().getId();
-                    if (processedStudents.contains(studentId)) continue;
-                    processedStudents.add(studentId);
-
-                    if ("ABSENT".equalsIgnoreCase(record.getStatus())) continue;
-                    if (!"WALK_OUT".equalsIgnoreCase(record.getStatus())) continue;
-
-                    Instant lastSeen = record.getRecordedAt();
-                    int threshold = getWalkOutThresholdSeconds(session.getId());
-
-                    if (now.isAfter(lastSeen.plusSeconds(threshold + 60))) { 
-                        record.setStatus("ABSENT");
-                        record.setRecordedAt(now);
-                        record.setNote("AI Watcher: Grace period expired for Walk-out student.");
-                        attendanceRecordRepository.save(record);
-                        
-                        logger.warn("🤖 AI WATCHER [EXIT-ENFORCED]: Student {} marked ABSENT after Walk-out timeout.", studentId);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            logger.error("AI Watcher Error: {}", e.getMessage());
-        }
-    }
+    // NOTE: Walk-out → Absent enforcement is handled by AIAttendanceMonitorService.enforceWalkoutRules()
+    // which uses Firestore drift_tracking timestamps for accurate 5-minute timeout detection.
+    // The previous monitorGracePeriods() method was removed to avoid duplicate processing.
 
     @Transactional
     public void grantHallPass(HallPassRequestDTO request) {
@@ -254,6 +221,12 @@ public class AttendanceV1Service {
             hysteresisCache.put(studentId, currentFailures);
             
             if (currentFailures >= 3) {
+                // 🚀 NEW: Check if room transition is in progress for this student's section
+                if (spatialEngine.isRoomTransitionInProgress(student.getSectionId())) {
+                    logger.info("🟡 [PROCESS-HB] Student {} outside geofence but room transition is active. Holding status.", studentId);
+                    return null;
+                }
+
                 logger.warn("🔴 [PROCESS-HB] Student {} OUTSIDE geofence ({}/3 failures). Triggering WALK_OUT.", studentId, currentFailures);
                 handleOutOfBounds(ping, studentId, sessionId);
                 return "You are outside the classroom boundary. Please return to the classroom.";
@@ -288,10 +261,21 @@ public class AttendanceV1Service {
         DocumentReference driftDoc = firestore.collection("drift_tracking").document(driftKey);
         
         try {
-            Map<String, Object> data = new HashMap<>();
-            data.put("lastSeen", Instant.now().toString());
-            data.put("firstDrift", FieldValue.serverTimestamp());
-            driftDoc.set(data, SetOptions.merge());
+            // Check if drift tracking already exists for this student+session
+            var existingDoc = driftDoc.get().get();
+            
+            if (existingDoc.exists()) {
+                // Document already exists - ONLY update lastSeen, preserve firstDrift
+                Map<String, Object> updateData = new HashMap<>();
+                updateData.put("lastSeen", Instant.now().toString());
+                driftDoc.set(updateData, SetOptions.merge());
+            } else {
+                // First drift detection - set firstDrift as server timestamp
+                Map<String, Object> data = new HashMap<>();
+                data.put("lastSeen", Instant.now().toString());
+                data.put("firstDrift", FieldValue.serverTimestamp());
+                driftDoc.set(data);
+            }
             
             // Provisional Walk-out logic
             attendanceRecordRepository.findFirstByStudent_IdAndSession_IdOrderByRecordedAtDesc(studentId, sessionId)
@@ -305,12 +289,15 @@ public class AttendanceV1Service {
                     attendanceRecordRepository.save(record);
                 });
 
-            // check timeout
-            Map<String, Object> driftData = driftDoc.get().get().getData();
+            // Re-read the doc to check timeout (firstDrift may have just been set as server timestamp)
+            var driftData = driftDoc.get().get().getData();
             if (driftData != null && driftData.containsKey("firstDrift")) {
-                Instant firstDrift = ((com.google.cloud.Timestamp) driftData.get("firstDrift")).toDate().toInstant();
-                if (Instant.now().isAfter(firstDrift.plusSeconds(getWalkOutThresholdSeconds(sessionId)))) {
-                    markAbsent(studentId, sessionId);
+                Object firstDriftObj = driftData.get("firstDrift");
+                if (firstDriftObj instanceof com.google.cloud.Timestamp) {
+                    Instant firstDrift = ((com.google.cloud.Timestamp) firstDriftObj).toDate().toInstant();
+                    if (Instant.now().isAfter(firstDrift.plusSeconds(getWalkOutThresholdSeconds(sessionId)))) {
+                        markAbsent(studentId, sessionId);
+                    }
                 }
             }
         } catch (Exception e) {
@@ -357,8 +344,10 @@ public class AttendanceV1Service {
         // 1. Status is the same
         // 2. Student is roughly in the same spot (delta < 2m)
         // 3. Last write was less than 5 minutes ago
+        // 4. Previous record has valid coordinates (null after security violations)
         Instant lastWrite = heartbeatBuffer.getIfPresent(record.getStudent().getId());
-        if (!statusChanged && lastWrite != null && lastWrite.isAfter(Instant.now().minus(java.time.Duration.ofMinutes(5)))) {
+        if (!statusChanged && lastWrite != null && lastWrite.isAfter(Instant.now().minus(java.time.Duration.ofMinutes(5)))
+                && record.getLatitude() != null && record.getLongitude() != null) {
             double dist = calculateDistance(record.getLatitude(), record.getLongitude(), ping.latitude(), ping.longitude());
             if (dist < 2.0) {
                 logger.info("🟡 [UPDATE-RECORD] Skipped DB write (buffered, same status '{}', dist={}m)", record.getStatus(), String.format("%.1f", dist));
@@ -434,7 +423,9 @@ public class AttendanceV1Service {
     public ClassroomSession getActiveSessionForUser(UUID userId) {
         User user = userRepository.findById(userId).orElseThrow();
         return classroomSessionRepository.findActiveSessionsForSection(user.getSectionId(), Instant.now())
-                .stream().findFirst().orElseGet(() -> classroomSessionRepository.findByActiveTrue().get(0));
+                .stream().findFirst()
+                .or(() -> classroomSessionRepository.findByActiveTrue().stream().findFirst())
+                .orElseThrow(() -> new IllegalStateException("No active session found. Classes may not be in session right now."));
     }
 
     @Transactional
@@ -449,6 +440,9 @@ public class AttendanceV1Service {
     }
 
     private String determineStatus(ClassroomSession session, Instant now) {
+        if (now.isAfter(session.getEndTime())) {
+            return "ABSENT";
+        }
         return now.isAfter(session.getStartTime().plusSeconds(600)) ? "LATE" : "PRESENT";
     }
 

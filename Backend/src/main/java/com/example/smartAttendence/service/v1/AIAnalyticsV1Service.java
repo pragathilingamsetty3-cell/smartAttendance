@@ -400,9 +400,8 @@ public class AIAnalyticsV1Service {
      * Get real spatial behavior patterns for all students in a session
      */
     public List<Map<String, Object>> getSessionSpatialBehavior(UUID sessionId) {
-        // Use the optimized query to get only the LATEST record per student in this session
-        return attendanceRepository.findActiveSpatialRecords(null, null, org.springframework.data.domain.PageRequest.of(0, 100)).stream()
-                .filter(r -> r.getSession().getId().equals(sessionId))
+        // Use the direct session-filtered query to get the LATEST record per student
+        return attendanceRepository.findLatestRecordsBySessionId(sessionId).stream()
                 .map(record -> {
                     String status = record.getStatus();
                     String pattern = "STATIONARY";

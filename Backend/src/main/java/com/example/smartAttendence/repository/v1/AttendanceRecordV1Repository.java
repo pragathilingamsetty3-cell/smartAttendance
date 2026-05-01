@@ -165,6 +165,15 @@ public interface AttendanceRecordV1Repository extends JpaRepository<AttendanceRe
            ") sub GROUP BY sub.section_id", nativeQuery = true)
     List<Object[]> getAggregatedStatusPerSection(@Param("since") java.time.Instant since);
 
+    @Query("SELECT ar FROM AttendanceRecord ar " +
+           "JOIN FETCH ar.student s " +
+           "LEFT JOIN FETCH s.section sect " +
+           "LEFT JOIN FETCH sect.department d " +
+           "WHERE ar.session.id = :sessionId " +
+           "AND ar.recordedAt = (SELECT MAX(ar2.recordedAt) FROM AttendanceRecord ar2 WHERE ar2.student.id = s.id AND ar2.session.id = :sessionId) " +
+           "ORDER BY ar.recordedAt DESC")
+    List<AttendanceRecord> findLatestRecordsBySessionId(@Param("sessionId") UUID sessionId);
+
     @Query(value = "SELECT DATE(ar.recorded_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') as day, " +
            "CAST(COUNT(CASE WHEN ar.status IN ('PRESENT', 'LATE') THEN 1 END) AS FLOAT) * 100.0 / NULLIF(COUNT(*), 0) as rate " +
            "FROM attendance_records ar " +

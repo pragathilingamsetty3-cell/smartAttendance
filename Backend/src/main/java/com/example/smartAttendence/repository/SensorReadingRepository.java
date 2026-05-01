@@ -117,4 +117,11 @@ public interface SensorReadingRepository extends JpaRepository<SensorReading, UU
      * Find readings by device fingerprint
      */
     List<SensorReading> findByDeviceFingerprintOrderByReadingTimestampDesc(String deviceFingerprint);
+
+    /**
+     * Count distinct students with sensor readings after a given timestamp.
+     * Used by AILearningOptimizer.isGlobalNetworkGlitch() to avoid full table scans.
+     */
+    @Query("SELECT COUNT(DISTINCT sr.studentId) FROM SensorReading sr WHERE sr.readingTimestamp > :since")
+    long countDistinctStudentsWithReadingsAfter(@Param("since") Instant since);
 }

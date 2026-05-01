@@ -4,23 +4,30 @@ import com.example.smartAttendence.dto.v1.HallPassRequestDTO;
 import com.example.smartAttendence.dto.v1.HallPassApprovalRequest;
 import com.example.smartAttendence.dto.v1.HallPassDenialRequest;
 import com.example.smartAttendence.dto.v1.HallPassStatusDTO;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.google.cloud.firestore.Firestore;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 @Transactional
+@Slf4j
 public class FacultyHallPassService {
 
     // In-memory storage for demo - in production, this would be a database table
     private final List<HallPassStatusDTO> hallPassRequests = new ArrayList<>();
+    private final Firestore firestore;
 
-    public FacultyHallPassService() {
+    public FacultyHallPassService(@Nullable Firestore firestore) {
+        this.firestore = firestore;
         seedInitialData();
     }
 
@@ -124,6 +131,9 @@ public class FacultyHallPassService {
         // Update in list (in production, this would be database update)
         hallPassRequests.remove(pendingRequest);
         hallPassRequests.add(approvedRequest);
+        
+        // 🔥 SYNC TO FIRESTORE: Write hall pass doc so walkout enforcement can find it
+        syncHallPassToFirestore(request.sessionId(), request.studentId(), request.approvedMinutes());
     }
 
     /**
@@ -186,5 +196,29 @@ public class FacultyHallPassService {
                 .sorted((a, b) -> b.requestedAt().compareTo(a.requestedAt()))
                 .findFirst()
                 .orElse(null);
+    }
+
+    /**
+     * 🔥 Sync approved hall pass to Firestore so walkout enforcement can find it.
+     * Uses the canonical key format: "hallpass:sessionId:studentId"
+     */
+    private void syncHallPassToFirestore(UUID sessionId, UUID studentId, int approvedMinutes) {
+        if (firestore == null) {
+            log.warn("⚠️ Firestore not initialized. Hall pass NOT synced to enforcement layer.");
+            return;
+        }
+        try {
+            String hallPassKey = "hallpass:" + sessionId + ":" + studentId;
+            Map<String, Object> data = new HashMap<>();
+            data.put("status", "ACTIVE");
+            data.put("approvedMinutes", approvedMinutes);
+            data.put("approvedAt", Instant.now().toString());
+            data.put("expiresAt", Instant.now().plusSeconds(approvedMinutes * 60L).toString());
+
+            firestore.collection("hall_passes").document(hallPassKey).set(data);
+            log.info("✅ Hall pass synced to Firestore: key={}, duration={}min", hallPassKey, approvedMinutes);
+        } catch (Exception e) {
+            log.error("❌ Failed to sync hall pass to Firestore: {}", e.getMessage());
+        }
     }
 }

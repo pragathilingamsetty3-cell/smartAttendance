@@ -102,9 +102,32 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
       
       const predictionPromises = activeStudents.map(async (student) => {
         try {
-          // In global mode, we need to find the student's actual session from their record
-          // but for now, we'll try with the current sessionId or any session the AI finds
-          const predictionData = await aiAnalyticsService.predictWalkOut(student.studentId, sessionId || '');
+          let predictionData;
+          
+          if (sessionId) {
+            // Session mode: Use the real backend prediction API
+            predictionData = await aiAnalyticsService.predictWalkOut(student.studentId, sessionId);
+          } else {
+            // Global/campus mode: Derive risk from spatial behavior data already fetched
+            // (Avoids sending empty sessionId which causes backend 500 error)
+            const isWalkOut = student.status === 'WALK_OUT';
+            const isErratic = student.pattern === 'ERRATIC';
+            const isMoving = student.pattern === 'WALKING' || student.pattern === 'RUNNING';
+            
+            let prob = 0.10;
+            if (isWalkOut) prob = 0.95;
+            else if (isErratic) prob = 0.75;
+            else if (isMoving) prob = 0.40;
+            
+            predictionData = {
+              willWalkOut: prob >= 0.6,
+              probability: prob,
+              reason: isWalkOut ? 'Student is currently outside classroom boundary' :
+                      isErratic ? 'Erratic movement pattern detected' :
+                      isMoving ? 'Active movement detected' : 'Normal behavior pattern'
+            };
+          }
+          
           if (predictionData && predictionData.probability >= riskThreshold * 0.5) {
             return {
               alertId: `alert-${Date.now()}-${student.studentId}`,

@@ -13,7 +13,6 @@ import com.example.smartAttendence.repository.TimetableRepository;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
 import com.example.smartAttendence.service.v1.NotificationService;
 import com.google.cloud.firestore.Firestore;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +40,7 @@ public class AIAttendanceMonitorService {
     private final AcademicCalendarV1Repository calendarRepository;
     private final AISpatialMonitoringEngine spatialEngine;
     private final AILearningOptimizer learningOptimizer;
+    private final com.example.smartAttendence.repository.EmergencySessionChangeRepository emergencyRepository;
     @Nullable
     private final Firestore firestore;
 
@@ -86,6 +86,13 @@ public class AIAttendanceMonitorService {
                     continue;
                 }
             }
+
+            // 🚀 EMERGENCY OVERRIDE: Check if this slot was cancelled or modified
+            if (isSessionCancelled(slot, now)) {
+                log.info("🤖 AI MONITOR [CANCELLED]: Session '{}' was cancelled via Emergency Override. Skipping.", slot.getSubject());
+                continue;
+            }
+
             processActiveSlot(slot, now);
         }
 
@@ -103,11 +110,37 @@ public class AIAttendanceMonitorService {
         ClassroomSession session = sessionRepository.findByTimetableIdAndDateRange(slot.getId(), startOfDay, endOfDay)
                 .orElse(null);
 
+        boolean justCreated = false;
         if (session == null) {
             session = createAutomaticSession(slot, now);
+            justCreated = true;
         } else if (!session.isActive()) {
-            session.setActive(true);
-            session = sessionRepository.save(session);
+            // 🚀 SMART REACTIVATION: 
+            // Only reactivate if it's before the scheduled endTime and it WASN'T explicitly ended early.
+            // If now is > endTime, it's being/has been processed by AIAbsentMarkerJob (grace period check).
+            Instant nowInstant = now.toInstant();
+            if (nowInstant.isBefore(session.getEndTime())) {
+                // If a human ended it early, we respect that. 
+                // We assume it's a glitch and reactivate only if it was auto-generated and active within the last scan.
+                // For now, let's just avoid re-activating sessions that are inactive during their scheduled time
+                // to allow Faculty to end classes early if they finish the lecture.
+                log.info("🤖 AI MONITOR: Session '{}' is inactive during its scheduled time. Respecting current state (Faculty may have ended it).", slot.getSubject());
+            } else {
+                Instant graceThreshold = session.getEndTime().plus(10, java.time.temporal.ChronoUnit.MINUTES);
+                if (nowInstant.isBefore(graceThreshold)) {
+                    session.setActive(true);
+                    session = sessionRepository.save(session);
+                    log.info("🤖 AI MONITOR: Reactivated session '{}' (within grace period).", slot.getSubject());
+                }
+            }
+            return; // Stop processing this slot for now
+        }
+
+        // Send "Mark Attendance" notification if not already sent for this session.
+        // This covers sessions pre-created by resolveOrCreateSession() (heartbeat path)
+        // which doesn't send notifications.
+        if (!justCreated) {
+            sendNotificationIfNotAlreadySent(session);
         }
 
         if (timeIsAfterThreshold(slot.getStartTime(), now.toLocalDateTime(), 10)) {
@@ -140,6 +173,7 @@ public class AIAttendanceMonitorService {
         
         ClassroomSession savedSession = sessionRepository.save(session);
         notifySectionOnSessionStart(savedSession);
+        markNotificationSent(savedSession);
         return savedSession;
     }
 
@@ -152,11 +186,44 @@ public class AIAttendanceMonitorService {
         
         for (User student : students) {
             notificationService.sendSessionStartPrompt(student, session);
-            // Also send the Class Start notification for redundancy/clarity
             notificationService.sendClassStartNotification(
                 student.getId(), session.getSubject(), session.getRoom().getName(),
                 LocalDateTime.ofInstant(session.getStartTime(), IST)
             );
+        }
+    }
+
+    /**
+     * Track whether we already sent "Mark Attendance" notification for this session.
+     * Uses Firestore so the flag survives server restarts.
+     */
+    private void markNotificationSent(ClassroomSession session) {
+        if (firestore == null) return;
+        try {
+            java.util.Map<String, Object> data = new java.util.HashMap<>();
+            data.put("sentAt", Instant.now().toString());
+            data.put("subject", session.getSubject());
+            firestore.collection("session_notifications").document(session.getId().toString()).set(data);
+        } catch (Exception e) {
+            log.error("Failed to mark notification sent for session {}: {}", session.getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * For sessions created by resolveOrCreateSession (heartbeat path),
+     * check if notification was already sent. If not, send it now.
+     */
+    private void sendNotificationIfNotAlreadySent(ClassroomSession session) {
+        if (firestore == null) return;
+        try {
+            var doc = firestore.collection("session_notifications").document(session.getId().toString()).get().get();
+            if (!doc.exists()) {
+                log.info("📢 NOTIFY: Session {} was pre-created without notification. Sending now.", session.getId());
+                notifySectionOnSessionStart(session);
+                markNotificationSent(session);
+            }
+        } catch (Exception e) {
+            log.error("Failed to check notification status for session {}: {}", session.getId(), e.getMessage());
         }
     }
 
@@ -231,10 +298,9 @@ public class AIAttendanceMonitorService {
     }
 
     private boolean shouldBypassEnforcement(User student, ClassroomSession session) {
-        // A. Digital Hall Pass Bypass (Firestore Persistent)
+        // A. Digital Hall Pass Bypass (check expiry, not just existence)
         try {
-            String docId = session.getId() + "_" + student.getId();
-            if (firestore != null && firestore.collection("hall_passes").document(docId).get().get().exists()) return true;
+            if (isHallPassActive(session.getId(), student.getId())) return true;
         } catch (Exception e) { log.error("Hall pass check fail: {}", e.getMessage()); }
 
         // B. Transition Bypass
@@ -272,14 +338,14 @@ public class AIAttendanceMonitorService {
 
         for (AttendanceRecord record : walkouts) {
             User student = record.getStudent();
-            String docId = session.getId() + "_" + student.getId();
+            String hallPassKey = "hallpass:" + session.getId() + ":" + student.getId();
             // Also check drift_tracking (written by AttendanceV1Service.handleOutOfBounds)
             String driftDocId = session.getId() + ":" + student.getId();
 
             try {
                 if (firestore != null) {
                     // Check walkout_timers first (legacy)
-                    var timerDoc = firestore.collection("walkout_timers").document(docId).get().get();
+                    var timerDoc = firestore.collection("walkout_timers").document(driftDocId).get().get();
                     
                     // If not found, check drift_tracking (used by heartbeat handler)
                     if (!timerDoc.exists()) {
@@ -291,7 +357,13 @@ public class AIAttendanceMonitorService {
                             if (firstDriftObj instanceof com.google.cloud.Timestamp) {
                                 Instant walkoutStart = ((com.google.cloud.Timestamp) firstDriftObj).toDate().toInstant();
                                 if (Duration.between(walkoutStart, Instant.now()).toMinutes() >= 5) {
-                                    if (!firestore.collection("hall_passes").document(docId).get().get().exists()) {
+                                    // 🚀 TRANSITION PROTECTION: Don't mark absent if a room move is in progress
+                                    if (spatialEngine.isRoomTransitionInProgress(session.getSection().getId())) {
+                                        log.info("🟡 [WALKOUT_EXPIRED] Student {} - Move in progress. Holding status.", student.getName());
+                                        continue;
+                                    }
+
+                                    if (!isHallPassActive(session.getId(), student.getId())) {
                                         log.warn("🤖 AI MONITOR [WALKOUT_EXPIRED]: Student {} - No return/pass after {}min. Revoking.", 
                                                 student.getName(), Duration.between(walkoutStart, Instant.now()).toMinutes());
                                         record.setStatus("ABSENT");
@@ -311,7 +383,7 @@ public class AIAttendanceMonitorService {
 
                     Instant walkoutStart = Instant.parse(timerDoc.getString("startTime"));
                     if (Duration.between(walkoutStart, Instant.now()).toMinutes() >= 5) {
-                        if (!firestore.collection("hall_passes").document(docId).get().get().exists()) {
+                        if (!isHallPassActive(session.getId(), student.getId())) {
                             log.warn("🤖 AI MONITOR [WALKOUT_EXPIRED]: Student {} - No return/pass. Revoking.", student.getName());
                             record.setStatus("ABSENT");
                             record.setAiDecision(true);
@@ -326,11 +398,53 @@ public class AIAttendanceMonitorService {
                             alert.setSeverity("HIGH");
                             alertRepository.save(alert);
 
-                            firestore.collection("walkout_timers").document(docId).delete();
+                            firestore.collection("walkout_timers").document(driftDocId).delete();
                         }
                     }
                 }
             } catch (Exception e) { log.error("Walkout enforcement fail for {}: {}", student.getName(), e.getMessage()); }
         }
+    }
+
+    /**
+     * Checks if a hall pass is both present AND not expired.
+     * Fixes the bug where only document existence was checked, ignoring expiresAt.
+     */
+    private boolean isHallPassActive(UUID sessionId, UUID studentId) {
+        if (firestore == null) return false;
+        try {
+            String hallPassKey = "hallpass:" + sessionId + ":" + studentId;
+            var doc = firestore.collection("hall_passes").document(hallPassKey).get().get();
+            if (!doc.exists()) return false;
+            
+            var data = doc.getData();
+            if (data == null || !data.containsKey("expiresAt")) return false;
+            
+            Instant expiresAt = Instant.parse((String) data.get("expiresAt"));
+            boolean active = Instant.now().isBefore(expiresAt);
+            if (!active) {
+                log.info("🕐 Hall pass EXPIRED for student {} in session {} (expired at {})", studentId, sessionId, expiresAt);
+            }
+            return active;
+        } catch (Exception e) {
+            log.error("Hall pass active check failed: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    private boolean isSessionCancelled(Timetable slot, ZonedDateTime now) {
+        // 🚀 AI EMERGENCY BRAKE: Check for cancellation overrides
+        // We look for any CANCELLATION type changes effective today for this section/subject
+        Instant startOfDay = now.toLocalDate().atStartOfDay(IST).toInstant();
+        Instant endOfDay = now.toLocalDate().plusDays(1).atStartOfDay(IST).toInstant();
+        
+        return emergencyRepository.findAll().stream()
+                .filter(esc -> esc.getChangeType() == com.example.smartAttendence.entity.EmergencySessionChange.EmergencyChangeType.CANCELLATION)
+                .filter(esc -> esc.getEffectiveTimestamp().isAfter(startOfDay) && esc.getEffectiveTimestamp().isBefore(endOfDay))
+                .anyMatch(esc -> {
+                    ClassroomSession s = esc.getSession();
+                    return s != null && s.getSection().getId().equals(slot.getSection().getId()) 
+                            && s.getSubject().equalsIgnoreCase(slot.getSubject());
+                });
     }
 }

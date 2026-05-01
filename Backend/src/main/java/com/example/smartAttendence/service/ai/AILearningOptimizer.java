@@ -422,21 +422,22 @@ public class AILearningOptimizer {
      * Replaces individual "Absent" marking with a "System Glitch" warning
      */
     public boolean isGlobalNetworkGlitch(UUID sectionId) {
-        // Logic: Query recent SensorReadings for the section
-        // If > 70% of students have no heartbeats in the last 5 minutes, 
-        // but were recently active, classify as a glitch.
-        
-        // For now, implement as a smart threshold check
-        long activeStudents = userRepository.countBySectionIdAndRole(sectionId, com.example.smartAttendence.enums.Role.STUDENT);
+        // 🚀 ROLE FIX: Count all student roles (STUDENT, CR, LR)
+        List<com.example.smartAttendence.enums.Role> studentRoles = List.of(
+            com.example.smartAttendence.enums.Role.STUDENT, 
+            com.example.smartAttendence.enums.Role.CR, 
+            com.example.smartAttendence.enums.Role.LR
+        );
+        long activeStudents = userRepository.countBySectionIdInRoleAndStatus(
+            List.of(sectionId), 
+            studentRoles, 
+            com.example.smartAttendence.domain.UserStatus.ACTIVE
+        );
         if (activeStudents == 0) return false;
         
         Instant fiveMinAgo = Instant.now().minus(5, java.time.temporal.ChronoUnit.MINUTES);
-        // Optimized: Count unique student IDs directly if possible, or use a filtered query
-        long recentHeartbeats = sensorReadingRepository.findAll().stream() // Still needs optimization if table is massive
-                .filter(r -> r.getReadingTimestamp().isAfter(fiveMinAgo))
-                .map(r -> r.getStudentId())
-                .distinct()
-                .count();
+        // Optimized: Use database-level COUNT(DISTINCT) instead of loading all rows into memory
+        long recentHeartbeats = sensorReadingRepository.countDistinctStudentsWithReadingsAfter(fiveMinAgo);
                 
         // If less than 15% are reporting, it's likely a network issue
         return (double) recentHeartbeats / activeStudents < 0.15;

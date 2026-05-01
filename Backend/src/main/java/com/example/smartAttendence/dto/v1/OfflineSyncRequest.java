@@ -12,6 +12,9 @@ public record OfflineSyncRequest(
     public record OfflineAttendanceRecord(
         @NotNull(message = "Session ID is required")
         String sessionId,
+
+        @NotNull(message = "Student ID is required")
+        String studentId,
         
         @NotNull(message = "Client timestamp is required")
         Instant clientTimestamp,

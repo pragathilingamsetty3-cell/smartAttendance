@@ -12,6 +12,7 @@ import com.example.smartAttendence.repository.v1.UserV1Repository;
 import com.example.smartAttendence.repository.RoomRepository;
 import com.example.smartAttendence.service.v1.NotificationService;
 import com.example.smartAttendence.service.EmailService;
+import com.example.smartAttendence.service.ai.AISpatialMonitoringEngine;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ public class EmergencySessionService {
     private final RoomRepository roomRepository;
     private final NotificationService notificationService;
     private final EmailService emailService;
+    private final AISpatialMonitoringEngine spatialEngine;
     
     public EmergencySessionService(
             EmergencySessionChangeRepository emergencyChangeRepository,
@@ -37,13 +39,15 @@ public class EmergencySessionService {
             UserV1Repository userRepository,
             RoomRepository roomRepository,
             NotificationService notificationService,
-            EmailService emailService) {
+            EmailService emailService,
+            AISpatialMonitoringEngine spatialEngine) {
         this.emergencyChangeRepository = emergencyChangeRepository;
         this.sessionRepository = sessionRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
         this.notificationService = notificationService;
         this.emailService = emailService;
+        this.spatialEngine = spatialEngine;
     }
     
     /**
@@ -182,6 +186,12 @@ public class EmergencySessionService {
         
         // Update geofence to new room location
         session.setGeofencePolygon(newRoom.getBoundaryPolygon());
+
+        // 🚀 AI INTEGRATION: Start a 15-minute room transition grace period
+        // This prevents students from being flagged as WALK_OUT while moving to the new room.
+        if (session.getSection() != null) {
+            spatialEngine.startRoomTransitionWindow(session.getSection().getId());
+        }
     }
     
     private void handleTimeChange(ClassroomSession session, EmergencySessionChangeRequest request, EmergencySessionChange change) {

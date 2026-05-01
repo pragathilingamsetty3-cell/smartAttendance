@@ -8,6 +8,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.Instant;
 import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
@@ -15,6 +16,9 @@ import org.hibernate.annotations.UuidGenerator;
 
 @Entity
 @Table(name = "attendance_records",
+       uniqueConstraints = {
+           @UniqueConstraint(name = "uk_attendance_student_session", columnNames = {"student_id", "session_id"})
+       },
        indexes = {
            @Index(name = "idx_attendance_student", columnList = "student_id"),
            @Index(name = "idx_attendance_session", columnList = "session_id"),

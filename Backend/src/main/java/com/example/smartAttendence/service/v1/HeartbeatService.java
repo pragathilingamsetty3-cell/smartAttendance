@@ -44,7 +44,7 @@ public class HeartbeatService {
         String docId = sessionId + "_" + studentId;
         DocumentReference docRef = firestore.collection(COLLECTION_NAME).document(docId);
 
-        String pingValue = ping.latitude() + "," + ping.longitude();
+        String pingValue = ping.latitude() + "," + ping.longitude() + "," + System.currentTimeMillis();
 
         try {
             // 🔥 MODERN ASYNC: Use ApiFutures.addCallback correctly

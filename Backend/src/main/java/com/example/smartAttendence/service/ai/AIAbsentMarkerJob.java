@@ -92,7 +92,18 @@ public class AIAbsentMarkerJob {
         }
 
         // Get all students in this section
-        List<User> expectedStudents = userRepository.findBySectionIdAndRole(session.getSection().getId(), Role.STUDENT);
+        // Get all students in this section (Including CR and LR)
+        List<com.example.smartAttendence.enums.Role> studentRoles = List.of(
+            com.example.smartAttendence.enums.Role.STUDENT, 
+            com.example.smartAttendence.enums.Role.CR, 
+            com.example.smartAttendence.enums.Role.LR
+        );
+        List<User> expectedStudents = userRepository.findStudentsBySections(List.of(session.getSection().getId()));
+        // Note: findStudentsBySections is hardcoded for 'STUDENT' in repository, let's use a more general one or assume the repo finds all student-like users.
+        // Actually, let's use the explicit role filter for safety.
+        expectedStudents = userRepository.findBySectionId(session.getSection().getId()).stream()
+                .filter(u -> studentRoles.contains(u.getRole()))
+                .collect(Collectors.toList());
         logger.info("📊 Processing session '{}' ({}): section={}, expectedStudents={}", 
                 session.getSubject(), session.getId(), session.getSection().getName(), expectedStudents.size());
         
@@ -105,10 +116,11 @@ public class AIAbsentMarkerJob {
         }
         
         Set<java.util.UUID> attendedStudentIds = records.stream()
-                .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()))
+                .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()) 
+                           || "WALK_OUT".equals(r.getStatus()) || "ABSENT".equals(r.getStatus()))
                 .map(r -> r.getStudent().getId())
                 .collect(Collectors.toSet());
-        logger.info("   ✅ Students who attended (PRESENT/LATE): {}", attendedStudentIds.size());
+        logger.info("   ✅ Students with existing records (PRESENT/LATE/WALK_OUT/ABSENT): {}", attendedStudentIds.size());
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy").withZone(ZoneId.of("Asia/Kolkata"));
         String dateStr = formatter.format(session.getStartTime());

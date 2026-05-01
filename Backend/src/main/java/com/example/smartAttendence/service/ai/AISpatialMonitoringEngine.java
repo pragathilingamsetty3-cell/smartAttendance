@@ -1,6 +1,8 @@
 package com.example.smartAttendence.service.ai;
 
+import com.example.smartAttendence.domain.AttendanceRecord;
 import com.example.smartAttendence.domain.User;
+import com.example.smartAttendence.repository.v1.AttendanceRecordV1Repository;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
@@ -23,14 +25,18 @@ public class AISpatialMonitoringEngine {
 
     private static final Logger logger = LoggerFactory.getLogger(AISpatialMonitoringEngine.class);
     private final UserV1Repository userRepository;
+    private final AttendanceRecordV1Repository attendanceRecordRepository;
     private final Firestore firestore;
 
     // 🚀 HIGH RAM FEATURE: In-memory buffer for real-time movement analysis
     // Stores the last 5 coordinates for active students to detect spoofing/drift
     private final Map<UUID, StudentMovementBuffer> movementHistory = new java.util.concurrent.ConcurrentHashMap<>();
 
-    public AISpatialMonitoringEngine(UserV1Repository userRepository, @Nullable Firestore firestore) {
+    public AISpatialMonitoringEngine(UserV1Repository userRepository,
+                                     AttendanceRecordV1Repository attendanceRecordRepository,
+                                     @Nullable Firestore firestore) {
         this.userRepository = userRepository;
+        this.attendanceRecordRepository = attendanceRecordRepository;
         this.firestore = firestore;
     }
 
@@ -78,9 +84,11 @@ public class AISpatialMonitoringEngine {
     }
 
     public WalkOutPredictionResult predictWalkOut(UUID studentId, UUID sessionId) {
-        boolean willWalkOut = predictWalkOutBehavior(studentId, sessionId);
-        double probability = willWalkOut ? 0.75 : 0.25;
-        String reason = willWalkOut ? "Pattern indicates potential walk-out" : "Normal behavior pattern";
+        PredictionSignals signals = gatherPredictionSignals(studentId, sessionId);
+        
+        double probability = calculateWalkOutProbability(signals);
+        boolean willWalkOut = probability >= 0.6;
+        String reason = buildPredictionReason(signals, probability);
 
         return new WalkOutPredictionResult(
             studentId,
@@ -106,7 +114,7 @@ public class AISpatialMonitoringEngine {
             boolean isMoving = lastReading.contains("WALKING") || lastReading.contains("RUNNING");
             boolean nearBoundary = lastReading.contains("DRIFT") || Math.random() > 0.8;
             
-            String hallPassDocId = sessionId.toString() + "_" + studentId.toString();
+            String hallPassDocId = "hallpass:" + sessionId.toString() + ":" + studentId.toString();
             var hallPassSnapshot = firestore.collection("hall_passes").document(hallPassDocId).get().get();
             boolean hasHallPass = hallPassSnapshot.exists();
             
@@ -221,8 +229,167 @@ public class AISpatialMonitoringEngine {
         firestore.collection("room_transitions").document(sectionId.toString()).set(data);
     }
 
-    private boolean predictWalkOutBehavior(UUID studentId, UUID sessionId) {
-        return Math.random() < 0.05;
+    // ═══════════════════════════════════════════════════════════════
+    // 🧠 REAL WALK-OUT PREDICTION ENGINE (Replaced random stub)
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * Gathers all available signals for walk-out prediction.
+     */
+    private PredictionSignals gatherPredictionSignals(UUID studentId, UUID sessionId) {
+        PredictionSignals signals = new PredictionSignals();
+
+        // Signal 1: Current attendance status (is the student already in WALK_OUT?)
+        try {
+            attendanceRecordRepository.findFirstByStudent_IdAndSession_IdOrderByRecordedAtDesc(studentId, sessionId)
+                .ifPresent(record -> {
+                    signals.currentStatus = record.getStatus();
+                    signals.hasRecord = true;
+                });
+        } catch (Exception e) {
+            logger.debug("Prediction: Could not fetch current record for {}: {}", studentId, e.getMessage());
+        }
+
+        // Signal 2: Active drift tracking in Firestore
+        if (firestore != null) {
+            try {
+                String driftKey = sessionId + ":" + studentId;
+                var driftDoc = firestore.collection("drift_tracking").document(driftKey).get().get();
+                if (driftDoc.exists()) {
+                    signals.hasActiveDrift = true;
+                    Object firstDriftObj = driftDoc.get("firstDrift");
+                    if (firstDriftObj instanceof com.google.cloud.Timestamp) {
+                        signals.driftDurationMinutes = Duration.between(
+                            ((com.google.cloud.Timestamp) firstDriftObj).toDate().toInstant(),
+                            Instant.now()
+                        ).toMinutes();
+                    }
+                }
+            } catch (Exception e) {
+                logger.debug("Prediction: Drift check failed for {}: {}", studentId, e.getMessage());
+            }
+        }
+
+        // Signal 3: In-memory movement buffer analysis (Velocity-Aware)
+        StudentMovementBuffer buffer = movementHistory.get(studentId);
+        if (buffer != null && buffer.coords.size() >= 2) {
+            signals.hasMovementData = true;
+            double totalDist = 0;
+            double maxVelocity = 0;
+            
+            for (int i = 1; i < buffer.coords.size(); i++) {
+                Coordinate c1 = buffer.coords.get(i-1);
+                Coordinate c2 = buffer.coords.get(i);
+                
+                double dist = calculateDistance(c1, c2);
+                long seconds = Duration.between(c1.timestamp(), c2.timestamp()).toSeconds();
+                
+                if (seconds > 0) {
+                    double velocity = dist / seconds;
+                    if (velocity > maxVelocity) maxVelocity = velocity;
+                }
+                totalDist += dist;
+            }
+            signals.avgMovementMeters = totalDist / (buffer.coords.size() - 1);
+            signals.maxVelocityMetersPerSecond = maxVelocity;
+        }
+
+        // Signal 4: Historical walk-out frequency (last 7 days)
+        try {
+            Instant sevenDaysAgo = Instant.now().minus(Duration.ofDays(7));
+            signals.walkOutCountLast7Days = attendanceRecordRepository.countWalkOutsByStudentSince(studentId, sevenDaysAgo);
+        } catch (Exception e) {
+            logger.debug("Prediction: History check failed for {}: {}", studentId, e.getMessage());
+        }
+
+        return signals;
+    }
+
+    /**
+     * Calculates walk-out probability from gathered signals (0.0 to 1.0).
+     */
+    private double calculateWalkOutProbability(PredictionSignals signals) {
+        // Already walked out → certainty
+        if ("WALK_OUT".equalsIgnoreCase(signals.currentStatus)) {
+            return 0.95;
+        }
+
+        // Already absent → not relevant for walk-out prediction
+        if ("ABSENT".equalsIgnoreCase(signals.currentStatus)) {
+            return 0.05;
+        }
+
+        double probability = 0.10; // Base probability for any active student
+
+        // Active drift tracking is a strong signal
+        if (signals.hasActiveDrift) {
+            probability += 0.40;
+            // Longer drift = higher risk
+            if (signals.driftDurationMinutes >= 3) {
+                probability += 0.20;
+            } else if (signals.driftDurationMinutes >= 1) {
+                probability += 0.10;
+            }
+        }
+
+        // Velocity-Aware Erratic Movement check
+        // Speed > 1.2 m/s (walking) AND Distance > 10m is highly suspicious for "In-Class" status
+        if (signals.hasMovementData && signals.maxVelocityMetersPerSecond > 1.2 && signals.avgMovementMeters > 10.0) {
+            probability += 0.20;
+        } else if (signals.hasMovementData && signals.avgMovementMeters > 20.0) {
+            // Even if slow, large jumps are suspicious
+            probability += 0.10;
+        }
+
+        // Historical repeat offender risk
+        if (signals.walkOutCountLast7Days >= 3) {
+            probability += 0.15; // Frequent walker
+        } else if (signals.walkOutCountLast7Days >= 1) {
+            probability += 0.08; // Occasional
+        }
+
+        return Math.min(probability, 0.98); // Cap at 98%
+    }
+
+    /**
+     * Builds a human-readable reason string from the signals.
+     */
+    private String buildPredictionReason(PredictionSignals signals, double probability) {
+        if ("WALK_OUT".equalsIgnoreCase(signals.currentStatus)) {
+            return "Student is currently outside classroom boundary (WALK_OUT status active)";
+        }
+        if ("ABSENT".equalsIgnoreCase(signals.currentStatus)) {
+            return "Student is already marked ABSENT";
+        }
+
+        StringBuilder reason = new StringBuilder();
+
+        if (signals.hasActiveDrift) {
+            reason.append("GPS drift detected (").append(signals.driftDurationMinutes).append("min). ");
+        }
+        if (signals.hasMovementData && signals.avgMovementMeters > 10.0) {
+            reason.append(String.format("Erratic movement (%.1fm avg). ", signals.avgMovementMeters));
+        }
+        if (signals.walkOutCountLast7Days >= 1) {
+            reason.append(signals.walkOutCountLast7Days).append(" walk-out(s) in last 7 days. ");
+        }
+
+        if (reason.length() == 0) {
+            return probability > 0.4 ? "Moderate risk indicators present" : "Normal behavior pattern";
+        }
+
+        return reason.toString().trim();
+    }
+
+    private static class PredictionSignals {
+        String currentStatus = null;
+        boolean hasRecord = false;
+        boolean hasActiveDrift = false;
+        long driftDurationMinutes = 0;
+        boolean hasMovementData = false;
+        double avgMovementMeters = 0;
+        double maxVelocityMetersPerSecond = 0;
+        long walkOutCountLast7Days = 0;
     }
 
     // Result Records
@@ -258,3 +425,4 @@ public class AISpatialMonitoringEngine {
         String reason
     ) {}
 }
+

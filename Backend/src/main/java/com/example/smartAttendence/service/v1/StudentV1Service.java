@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Comparator;
 
 import java.time.DayOfWeek;
 import java.time.Instant;
@@ -51,6 +52,12 @@ public class StudentV1Service {
         
         // 1. Calculate Attendance Metrics (Overall)
         List<AttendanceRecord> allRecords = attendanceRecordRepository.findByStudentIdAndRecordedAtAfter(studentId, Instant.EPOCH);
+        
+        // 🚀 OPTIMIZATION: Only use today's records for the dashboard "Marked" check
+        java.time.Instant startOfToday = now.toLocalDate().atStartOfDay(IST).toInstant();
+        List<AttendanceRecord> todayRecords = allRecords.stream()
+                .filter(r -> r.getRecordedAt().isAfter(startOfToday))
+                .collect(Collectors.toList());
         
         long attendedCount = allRecords.stream()
                 .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()))
@@ -145,7 +152,7 @@ public class StudentV1Service {
                     LocalTime end = t.getEndTime();
                     return !nowTime.isBefore(start) && !nowTime.isAfter(end);
                 })
-                .findFirst()
+                .max(Comparator.comparing(Timetable::getStartTime)) // 🚀 FIX: If overlapping, pick the one that started latest
                 .orElse(null);
 
         TimetableResponseDTO activeSession = mapToTimetableResponse(activeSessionEntity);
@@ -153,12 +160,15 @@ public class StudentV1Service {
         // 3b. Check if student already marked attendance for the active session today
         boolean attendanceMarked = false;
         if (activeSessionEntity != null) {
-            // Check for any PRESENT record by this student today (within active session time window)
-            Instant todayStart = now.toLocalDate().atStartOfDay(IST).toInstant();
-            attendanceMarked = allRecords.stream()
-                    .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()))
-                    .anyMatch(r -> r.getRecordedAt() != null && r.getRecordedAt().isAfter(todayStart));
-            log.info("📋 ATTENDANCE CHECK: Student {} attendance marked today = {}", student.getName(), attendanceMarked);
+            // Check for PRESENT/LATE record specifically for this active session's timetable
+            final UUID activeTimetableId = activeSessionEntity.getId();
+            attendanceMarked = todayRecords.stream()
+                    .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()) || "WALK_OUT".equals(r.getStatus()))
+                    .anyMatch(r -> r.getSession() != null 
+                            && r.getSession().getTimetable() != null
+                            && activeTimetableId.equals(r.getSession().getTimetable().getId()));
+            log.info("📋 ATTENDANCE CHECK: Student {} attendance marked for active session (timetable={}) = {}", 
+                    student.getName(), activeTimetableId, attendanceMarked);
         }
 
         // 4. Attendance Trend (Last 7 Days)
