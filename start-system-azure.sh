@@ -1,18 +1,18 @@
 #!/bin/bash
 
 # ======================================================
-# 🚀 SMART ATTENDANCE - ULTRA-LIGHT AZURE DEPLOYMENT
+# 🔥 SMART ATTENDANCE - ULTIMATE 8GB BEAST MODE
+# Optimized for: 2 vCPU / 8GB RAM / Premium SSD
 # ======================================================
 
-# 1. RAM Safety Net: Check/Create Swap (2GB)
+# 1. RAM Safety Net: Keep 2GB Swap for extra stability
 if ! swapon --show | grep -q "/swapfile"; then
-    echo "🧠 Creating 2GB Swap File (RAM Safety Net)..."
+    echo "🧠 Ensuring 2GB Swap File (Safety Net)..."
     sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
     sudo chmod 600 /swapfile
     sudo mkswap /swapfile
     sudo swapon /swapfile
     echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
-    echo "✅ Swap File Created."
 fi
 
 # Run environment pre-check
@@ -21,7 +21,7 @@ if [ -f "./azure-pre-check.sh" ]; then
     ./azure-pre-check.sh
 fi
 
-echo "[1/4] Setting Environment Variables..."
+echo "[1/3] Setting Environment Variables..."
 export DB_HOST=localhost
 export DB_PORT=5432
 export DB_NAME=smart_attendance
@@ -35,49 +35,33 @@ export SPRING_PROFILES_ACTIVE=local
 export EMAIL_USERNAME=pragathilingamsetty3@gmail.com
 export EMAIL_PASSWORD=znvnakotauabooxt
 
-# 2. Start Cloudflare (Arm64)
+# 2. Pull latest code from Git
+echo "[2/3] Updating Backend Code..."
+mkdir -p logs
+git pull origin main
+
+# 3. Build & Run Backend (Optimized for 4GB Heap)
+echo "🔨 Building backend..."
+cd Backend && ./mvnw clean package -DskipTests && cd ..
+JAR_FILE=$(ls Backend/target/*.jar 2>/dev/null | grep -v '\.original' | head -n 1)
+
+echo "🚀 Starting ULTIMATE BEAST MODE Backend (4GB RAM)..."
+# -Xmx4096m: 4GB Heap (Leaving 4GB for OS and Database)
+# -XX:+UseG1GC: High-performance Garbage Collector
+nohup java -Xmx4096m -XX:+UseG1GC -XX:+ParallelRefProcEnabled -jar "$JAR_FILE" > logs/backend.log 2>&1 &
+BACKEND_PID=$!
+
+# 4. Start Cloudflare Tunnel (API only)
+echo "[3/3] Generating Secure Backend Link..."
 if ! command -v cloudflared &> /dev/null; then
-    echo "📦 Installing Cloudflare Tunnel..."
     curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-arm64.deb
     sudo dpkg -i cloudflared.deb
 fi
 
-# 3. Pull latest code from Git and always rebuild Backend
-echo "[2/4] Starting Backend Engine (384MB Mode)..."
-mkdir -p logs
-
-echo "📦 Pulling latest code from Git..."
-git pull origin main 2>&1 | tee -a logs/backend.log
-
-echo "🔨 Building backend with latest changes..."
-cd Backend && ./mvnw clean package -DskipTests 2>&1 | tail -n 5 && cd ..
-JAR_FILE=$(ls Backend/target/*.jar 2>/dev/null | grep -v '\.original' | head -n 1)
-
-nohup java -Xmx384m -jar "$JAR_FILE" > logs/backend.log 2>&1 &
-BACKEND_PID=$!
-
-# 4. Start Frontend (Production Mode)
-echo "[3/4] Starting Frontend Dashboard (Production Mode)..."
-cd frontend/web-dashboard
-if [ ! -d "node_modules" ]; then pnpm install; fi
-if [ ! -d ".next" ]; then
-    echo "🏗️ Building Frontend (This may take 2-3 mins on 1GB RAM)..."
-    pnpm run build
-fi
-export NEXT_PUBLIC_API_URL=http://4.188.248.38:10000
-nohup pnpm run start --port 3000 --hostname 0.0.0.0 > ../../logs/frontend.log 2>&1 &
-FRONTEND_PID=$!
-cd ../..
-
-# 5. Start Cloudflare Tunnels
-echo "[4/4] Generating Secure HTTPS Links..."
 nohup cloudflared tunnel --url http://localhost:10000 > logs/tunnel-backend.log 2>&1 &
-TUNNEL_BACKEND_PID=$!
-nohup cloudflared tunnel --url http://localhost:3000 > logs/tunnel-frontend.log 2>&1 &
-TUNNEL_FRONTEND_PID=$!
+TUNNEL_PID=$!
 
 echo "--------------------------------------------------"
-echo "🚀 SECURE DEPLOYMENT IS ACTIVE!"
+echo "💎 ULTIMATE BEAST MODE IS LIVE! (8GB Hardware)"
 echo "--------------------------------------------------"
-echo "⏳ Waiting for tunnels... (run 'cat logs/tunnel-frontend.log | grep trycloudflare' in 10s)"
-echo "💡 To stop: kill $BACKEND_PID $FRONTEND_PID $TUNNEL_BACKEND_PID $TUNNEL_FRONTEND_PID"
+echo "💡 To stop: kill $BACKEND_PID $TUNNEL_PID"
