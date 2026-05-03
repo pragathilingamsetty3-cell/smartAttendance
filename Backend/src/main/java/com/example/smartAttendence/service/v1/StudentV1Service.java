@@ -50,20 +50,34 @@ public class StudentV1Service {
 
         java.time.ZonedDateTime now = java.time.ZonedDateTime.now(IST);
         
-        // 1. Calculate Attendance Metrics (Overall)
-        List<AttendanceRecord> allRecords = attendanceRecordRepository.findByStudentIdAndRecordedAtAfter(studentId, Instant.EPOCH);
+        // 1. Calculate Attendance Metrics
+        List<AttendanceRecord> allRecordsRaw = attendanceRecordRepository.findByStudentIdAndRecordedAtAfter(studentId, Instant.EPOCH);
+        
+        // 🚀 ONLY USE COMPLETED SESSIONS (active = false)
+        List<AttendanceRecord> allRecords = allRecordsRaw.stream()
+                .filter(r -> r.getSession() != null && !r.getSession().isActive())
+                .collect(Collectors.toList());
+        
+        java.time.Instant startOfMonth = now.toLocalDate().withDayOfMonth(1).atStartOfDay(IST).toInstant();
+        List<AttendanceRecord> monthRecords = allRecords.stream()
+                .filter(r -> r.getRecordedAt().isAfter(startOfMonth))
+                .collect(Collectors.toList());
         
         // 🚀 OPTIMIZATION: Only use today's records for the dashboard "Marked" check
         java.time.Instant startOfToday = now.toLocalDate().atStartOfDay(IST).toInstant();
-        List<AttendanceRecord> todayRecords = allRecords.stream()
+        List<AttendanceRecord> todayRecords = allRecordsRaw.stream() // Use raw to include active session
                 .filter(r -> r.getRecordedAt().isAfter(startOfToday))
                 .collect(Collectors.toList());
         
-        long attendedCount = allRecords.stream()
+        long attendedAllTime = allRecords.stream()
+                .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()))
+                .count();
+                
+        long attendedThisMonth = monthRecords.stream()
                 .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()))
                 .count();
         
-        double overallAttendance = allRecords.isEmpty() ? 0.0 : (double) attendedCount * 100.0 / allRecords.size();
+        double overallAttendance = allRecords.isEmpty() ? 0.0 : (double) attendedAllTime * 100.0 / allRecords.size();
         
         // 2. Fetch Today's Classes (IST)
         DayOfWeek today = now.getDayOfWeek();
@@ -208,8 +222,8 @@ public class StudentV1Service {
 
         return StudentDashboardStatsDTO.builder()
                 .overallAttendance(Math.round(overallAttendance * 10.0) / 10.0)
-                .attendedClasses((int) attendedCount)
-                .totalClasses(allRecords.size())
+                .attendedClasses((int) attendedThisMonth)
+                .totalClasses(monthRecords.size())
                 .attendanceTrend(attendanceTrend)
                 .todayClasses(todayClasses)
                 .activeSession(activeSession)

@@ -143,7 +143,8 @@ public class AIAttendanceMonitorService {
             sendNotificationIfNotAlreadySent(session);
         }
 
-        if (timeIsAfterThreshold(slot.getStartTime(), now.toLocalDateTime(), 10)) {
+        int gracePeriodMinutes = isFirstPeriodOfDay(slot) ? 15 : 10;
+        if (timeIsAfterThreshold(slot.getStartTime(), now.toLocalDateTime(), gracePeriodMinutes)) {
             enforceAttendance(session, slot);
         }
 
@@ -286,6 +287,19 @@ public class AIAttendanceMonitorService {
         return now.toLocalTime().isAfter(startTime.plusMinutes(minutes));
     }
 
+    private boolean isFirstPeriodOfDay(Timetable slot) {
+        if (slot.getSection() == null) return false;
+        List<Timetable> daySlots = timetableRepository.findBySectionAndDayOfWeek(slot.getSection().getId(), slot.getDayOfWeek());
+        if (daySlots == null || daySlots.isEmpty()) return false;
+        
+        LocalTime earliestTime = daySlots.stream()
+            .map(Timetable::getStartTime)
+            .min(LocalTime::compareTo)
+            .orElse(null);
+            
+        return slot.getStartTime().equals(earliestTime);
+    }
+
     private void enforceAttendance(ClassroomSession session, Timetable slot) {
         if (Boolean.TRUE.equals(session.getIsExamDay())) return;
 
@@ -321,7 +335,7 @@ public class AIAttendanceMonitorService {
         absentRecord.setConfidence(1.0);
         attendanceRepository.save(absentRecord);
 
-        notificationService.sendAttendanceAlert(student, slot, "AUTOMATED_ABSENCE");
+        // notificationService.sendAttendanceAlert(student, slot, "AUTOMATED_ABSENCE");
 
         SecurityAlert alert = new SecurityAlert();
         alert.setUser(student);

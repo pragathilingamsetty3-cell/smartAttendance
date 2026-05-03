@@ -190,6 +190,18 @@ public class AttendanceV1Service {
         logger.info("🔵 [PROCESS-HB] Session loaded: subject='{}', active={}, geofence present={}", 
                 session.getSubject(), session.isActive(), session.getGeofencePolygon() != null);
         
+        // 🚀 STRICT WINDOW ENFORCEMENT
+        com.example.smartAttendence.entity.Timetable slot = session.getTimetable();
+        int gracePeriodSeconds = (slot != null && isFirstPeriodOfDay(slot)) ? 900 : 600;
+        
+        if (Instant.now().isAfter(session.getStartTime().plusSeconds(gracePeriodSeconds))) {
+            var existingRecord = attendanceRecordRepository.findFirstByStudent_IdAndSession_IdOrderByRecordedAtDesc(studentId, sessionId);
+            if (existingRecord.isEmpty() || ("ABSENT".equals(existingRecord.get().getStatus()) && existingRecord.get().isAiDecision())) {
+                logger.warn("🔴 [PROCESS-HB] Student {} tried to mark attendance after window closed ({}s).", studentId, gracePeriodSeconds);
+                throw new IllegalStateException(String.format("Attendance window closed (%d minutes). You have been marked absent automatically.", gracePeriodSeconds / 60));
+            }
+        }
+        
         // 🌐 GPS ACCURACY-AWARE GEOFENCE CHECK
         // Indoor GPS often has 30-50m accuracy. We buffer the polygon to account for this.
         Point point = GEOMETRY_FACTORY.createPoint(new Coordinate(ping.longitude(), ping.latitude()));
@@ -461,7 +473,22 @@ public class AttendanceV1Service {
         if (now.isAfter(session.getEndTime())) {
             return "ABSENT";
         }
-        return now.isAfter(session.getStartTime().plusSeconds(600)) ? "LATE" : "PRESENT";
+        com.example.smartAttendence.entity.Timetable slot = session.getTimetable();
+        int gracePeriodSeconds = (slot != null && isFirstPeriodOfDay(slot)) ? 900 : 600;
+        return now.isAfter(session.getStartTime().plusSeconds(gracePeriodSeconds)) ? "LATE" : "PRESENT";
+    }
+
+    private boolean isFirstPeriodOfDay(com.example.smartAttendence.entity.Timetable slot) {
+        if (slot.getSection() == null) return false;
+        List<com.example.smartAttendence.entity.Timetable> daySlots = timetableRepository.findBySectionAndDayOfWeek(slot.getSection().getId(), slot.getDayOfWeek());
+        if (daySlots == null || daySlots.isEmpty()) return false;
+        
+        LocalTime earliestTime = daySlots.stream()
+            .map(com.example.smartAttendence.entity.Timetable::getStartTime)
+            .min(LocalTime::compareTo)
+            .orElse(null);
+            
+        return slot.getStartTime().equals(earliestTime);
     }
 
     private String hallPassKey(UUID sessionId, UUID studentId) { return "hallpass:" + sessionId + ":" + studentId; }

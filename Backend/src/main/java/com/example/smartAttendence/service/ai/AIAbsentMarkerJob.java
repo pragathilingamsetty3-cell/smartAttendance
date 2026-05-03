@@ -50,9 +50,9 @@ public class AIAbsentMarkerJob {
     }
 
     /**
-     * Runs every 5 minutes to find sessions that ended strictly before the grace period threshold.
+     * Runs every 1 minute to find sessions that ended strictly before the grace period threshold.
      */
-    @Scheduled(fixedRate = 300000)
+    @Scheduled(fixedRate = 60000)
     @Transactional
     public void processAutoAbsentMarking() {
         Instant now = Instant.now();
@@ -117,7 +117,7 @@ public class AIAbsentMarkerJob {
         
         Set<java.util.UUID> attendedStudentIds = records.stream()
                 .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()) 
-                           || "WALK_OUT".equals(r.getStatus()) || "ABSENT".equals(r.getStatus()))
+                           || "WALK_OUT".equals(r.getStatus()))
                 .map(r -> r.getStudent().getId())
                 .collect(Collectors.toSet());
         logger.info("   ✅ Students with existing records (PRESENT/LATE/WALK_OUT/ABSENT): {}", attendedStudentIds.size());
@@ -159,6 +159,12 @@ public class AIAbsentMarkerJob {
                      rec.setRecordedAt(Instant.now());
                      attendanceRepository.save(rec);
                      
+                     emailService.sendAbsentNotification(student.getEmail(), student.getName(), subjectName, dateStr);
+                     absentCount++;
+                } else if ("ABSENT".equals(existingRecord.get().getStatus()) && existingRecord.get().isAiDecision()) {
+                     // They were automatically marked absent by the 10-minute monitor. Send end-of-class email.
+                     logger.info("   📧 SENDING end-of-class absent email to early-absent student: {} ({})", 
+                             student.getName(), student.getEmail());
                      emailService.sendAbsentNotification(student.getEmail(), student.getName(), subjectName, dateStr);
                      absentCount++;
                 }
