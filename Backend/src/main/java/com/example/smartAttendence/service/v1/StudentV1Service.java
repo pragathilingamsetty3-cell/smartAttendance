@@ -12,6 +12,7 @@ import com.example.smartAttendence.repository.DepartmentRepository;
 import com.example.smartAttendence.repository.SectionRepository;
 import com.example.smartAttendence.repository.v1.AttendanceRecordV1Repository;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
+import com.example.smartAttendence.repository.v1.ClassroomSessionV1Repository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,6 +39,7 @@ public class StudentV1Service {
     private final TimetableRepository timetableRepository;
     private final DepartmentRepository departmentRepository;
     private final SectionRepository sectionRepository;
+    private final ClassroomSessionV1Repository classroomSessionRepository;
     private final FacultyHallPassService facultyHallPassService;
 
     /**
@@ -53,31 +55,38 @@ public class StudentV1Service {
         // 1. Calculate Attendance Metrics
         List<AttendanceRecord> allRecordsRaw = attendanceRecordRepository.findByStudentIdAndRecordedAtAfter(studentId, Instant.EPOCH);
         
-        // 🚀 ONLY USE COMPLETED SESSIONS (active = false)
-        List<AttendanceRecord> allRecords = allRecordsRaw.stream()
-                .filter(r -> r.getSession() != null && !r.getSession().isActive())
-                .collect(Collectors.toList());
+        // 🚀 NUMERATOR: Attended sessions (PRESENT/LATE)
+        long attendedAllTime = allRecordsRaw.stream()
+                .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()))
+                .count();
         
         java.time.Instant startOfMonth = now.toLocalDate().withDayOfMonth(1).atStartOfDay(IST).toInstant();
-        List<AttendanceRecord> monthRecords = allRecords.stream()
+        long attendedThisMonth = allRecordsRaw.stream()
                 .filter(r -> r.getRecordedAt().isAfter(startOfMonth))
-                .collect(Collectors.toList());
+                .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()))
+                .count();
+
+        // 🚀 DENOMINATOR: Total sessions conducted for the SECTION
+        UUID sectionId = student.getSectionId();
+        long totalSessionsForSection = 0;
+        long totalSessionsThisMonth = 0;
+        
+        if (sectionId != null) {
+            totalSessionsForSection = classroomSessionRepository.countBySectionIdAndActiveFalse(sectionId);
+            totalSessionsThisMonth = classroomSessionRepository.countBySectionIdAndActiveFalseAndStartTimeAfter(sectionId, startOfMonth);
+        } else {
+            // Fallback to record count if section is missing (should not happen with our self-healing)
+            totalSessionsForSection = allRecordsRaw.stream().filter(r -> r.getSession() != null && !r.getSession().isActive()).count();
+            totalSessionsThisMonth = allRecordsRaw.stream().filter(r -> r.getRecordedAt().isAfter(startOfMonth) && r.getSession() != null && !r.getSession().isActive()).count();
+        }
+        
+        double overallAttendance = totalSessionsForSection == 0 ? 0.0 : (double) attendedAllTime * 100.0 / totalSessionsForSection;
         
         // 🚀 OPTIMIZATION: Only use today's records for the dashboard "Marked" check
         java.time.Instant startOfToday = now.toLocalDate().atStartOfDay(IST).toInstant();
-        List<AttendanceRecord> todayRecords = allRecordsRaw.stream() // Use raw to include active session
+        List<AttendanceRecord> todayRecords = allRecordsRaw.stream()
                 .filter(r -> r.getRecordedAt().isAfter(startOfToday))
                 .collect(Collectors.toList());
-        
-        long attendedAllTime = allRecords.stream()
-                .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()))
-                .count();
-                
-        long attendedThisMonth = monthRecords.stream()
-                .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()))
-                .count();
-        
-        double overallAttendance = allRecords.isEmpty() ? 0.0 : (double) attendedAllTime * 100.0 / allRecords.size();
         
         // 2. Fetch Today's Classes (IST)
         DayOfWeek today = now.getDayOfWeek();
@@ -91,7 +100,7 @@ public class StudentV1Service {
                 today);
 
         if (student.getSection() != null || student.getSectionId() != null) {
-            UUID sectionId = student.getSectionId();
+            sectionId = student.getSectionId();
             
             List<Timetable> allForSection = timetableRepository.findBySectionId(sectionId);
             log.info("🔍 DASHBOARD DEBUG: Total classes in DB for section {}: {}", sectionId, allForSection.size());
@@ -207,7 +216,7 @@ public class StudentV1Service {
         String sectionName = student.getSection() != null ? student.getSection().getName() : "N/A";
 
         // 6. AI Insights for Student
-        double avgConfidence = allRecords.stream()
+        double avgConfidence = allRecordsRaw.stream()
                 .filter(r -> r.getConfidence() != null)
                 .mapToDouble(AttendanceRecord::getConfidence)
                 .average()
@@ -223,7 +232,7 @@ public class StudentV1Service {
         return StudentDashboardStatsDTO.builder()
                 .overallAttendance(Math.round(overallAttendance * 10.0) / 10.0)
                 .attendedClasses((int) attendedThisMonth)
-                .totalClasses(monthRecords.size())
+                .totalClasses((int) totalSessionsThisMonth)
                 .attendanceTrend(attendanceTrend)
                 .todayClasses(todayClasses)
                 .activeSession(activeSession)

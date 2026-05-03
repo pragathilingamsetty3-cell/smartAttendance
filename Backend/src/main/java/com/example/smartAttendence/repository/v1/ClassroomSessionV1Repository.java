@@ -112,5 +112,11 @@ public interface ClassroomSessionV1Repository extends JpaRepository<ClassroomSes
     @Query("DELETE FROM ClassroomSession cs WHERE cs.timetable.id = :timetableId")
     void deleteByTimetableId(@Param("timetableId") UUID timetableId);
     long countByTimetableId(UUID timetableId);
+
+    @Query("SELECT COUNT(cs) FROM ClassroomSession cs WHERE cs.section.id = :sectionId AND cs.active = false")
+    long countBySectionIdAndActiveFalse(@Param("sectionId") UUID sectionId);
+
+    @Query("SELECT COUNT(cs) FROM ClassroomSession cs WHERE cs.section.id = :sectionId AND cs.active = false AND cs.startTime >= :since")
+    long countBySectionIdAndActiveFalseAndStartTimeAfter(@Param("sectionId") UUID sectionId, @Param("since") Instant since);
 }
 
