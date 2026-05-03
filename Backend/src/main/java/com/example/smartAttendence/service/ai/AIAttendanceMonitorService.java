@@ -148,8 +148,12 @@ public class AIAttendanceMonitorService {
             enforceAttendance(session, slot);
         }
 
-        enforceWalkoutRules(session, slot);
-        monitorStudentBehavior(session);
+        if (slot.isDuringAnyBreak(LocalTime.now())) {
+            log.info("☕ BREAK TIME: Skipping walkout and behavior monitoring for '{}'", slot.getSubject());
+        } else {
+            enforceWalkoutRules(session, slot);
+            monitorStudentBehavior(session);
+        }
     }
 
     private ClassroomSession createAutomaticSession(Timetable slot, ZonedDateTime now) {
