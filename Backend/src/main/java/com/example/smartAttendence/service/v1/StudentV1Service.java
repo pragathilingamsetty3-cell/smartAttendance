@@ -231,8 +231,8 @@ public class StudentV1Service {
 
         return StudentDashboardStatsDTO.builder()
                 .overallAttendance(Math.round(overallAttendance * 10.0) / 10.0)
-                .attendedClasses((int) attendedThisMonth)
-                .totalClasses((int) totalSessionsThisMonth)
+                .attendedClasses((int) attendedAllTime)
+                .totalClasses((int) totalSessionsForSection)
                 .attendanceTrend(attendanceTrend)
                 .todayClasses(todayClasses)
                 .activeSession(activeSession)
