@@ -78,7 +78,7 @@ class AttendanceV1ControllerTest {
     @DisplayName("POST /api/v1/attendance/heartbeat - Happy Path")
     void heartbeat_Success() throws Exception {
         // Arrange
-        doNothing().when(attendanceService).processEnhancedHeartbeat(any(EnhancedHeartbeatPing.class), eq(false));
+        when(attendanceService.processEnhancedHeartbeat(any(EnhancedHeartbeatPing.class), eq(false))).thenReturn(null);
 
         // Act & Assert
         mockMvc.perform(post("/api/v1/attendance/heartbeat")
@@ -117,6 +117,7 @@ class AttendanceV1ControllerTest {
     void enhancedHeartbeat_Success() throws Exception {
         // Arrange
         doNothing().when(sensorFusionService).processEnhancedHeartbeat(any(EnhancedHeartbeatPing.class));
+        when(attendanceService.resolveOrCreateSession(any(UUID.class))).thenReturn(testSessionId);
         when(sensorFusionService.getRecentReadings(any(UUID.class), any(UUID.class), eq(10)))
             .thenReturn(List.of());
         when(sensorFusionService.detectSpoofing(any(List.class))).thenReturn(false);
@@ -132,7 +133,7 @@ class AttendanceV1ControllerTest {
             .thenReturn(new com.example.smartAttendence.service.ai.AILearningOptimizer.AIOptimizationResult(
                 60L, "BALANCED", 0.85, "Medium confidence based on historical data", 100, 0.85));
 
-        doNothing().when(attendanceService).processEnhancedHeartbeat(any(EnhancedHeartbeatPing.class), eq(false));
+        when(attendanceService.processEnhancedHeartbeat(any(EnhancedHeartbeatPing.class), eq(false))).thenReturn(null);
 
         // Act & Assert
         mockMvc.perform(post("/api/v1/attendance/heartbeat-enhanced")
@@ -168,6 +169,7 @@ class AttendanceV1ControllerTest {
     void enhancedHeartbeat_SpoofingDetected_Returns403() throws Exception {
         // Arrange
         doNothing().when(sensorFusionService).processEnhancedHeartbeat(any(EnhancedHeartbeatPing.class));
+        when(attendanceService.resolveOrCreateSession(any(UUID.class))).thenReturn(testSessionId);
         when(sensorFusionService.getRecentReadings(any(UUID.class), any(UUID.class), eq(10)))
             .thenReturn(List.of());
         when(sensorFusionService.detectSpoofing(any(List.class))).thenReturn(true);

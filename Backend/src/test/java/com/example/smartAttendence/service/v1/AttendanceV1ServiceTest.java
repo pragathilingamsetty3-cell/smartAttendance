@@ -10,8 +10,10 @@ import com.example.smartAttendence.repository.v1.AttendanceRecordV1Repository;
 import com.example.smartAttendence.repository.v1.ClassroomSessionV1Repository;
 import com.example.smartAttendence.repository.v1.SecurityAlertV1Repository;
 import com.example.smartAttendence.repository.v1.UserV1Repository;
+import com.example.smartAttendence.repository.TimetableRepository;
 import com.example.smartAttendence.security.SecurityAuditLogger;
 import com.example.smartAttendence.service.ai.AILearningOptimizer;
+import com.example.smartAttendence.service.ai.AISpatialMonitoringEngine;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -70,6 +72,12 @@ class AttendanceV1ServiceTest {
     private SecurityAlertV1Repository securityAlertRepository;
 
     @Mock
+    private TimetableRepository timetableRepository;
+
+    @Mock
+    private AISpatialMonitoringEngine spatialEngine;
+
+    @Mock
     private Firestore firestore;
 
     @Mock
@@ -117,6 +125,11 @@ class AttendanceV1ServiceTest {
         
         when(userRepository.findById(testStudentId)).thenReturn(Optional.of(testStudent));
         when(attendanceRecordRepository.existsBySession_IdAndStudent_Id(any(), any())).thenReturn(false);
+        when(attendanceRecordRepository.save(any(AttendanceRecord.class))).thenAnswer(i -> {
+            AttendanceRecord rec = i.getArgument(0);
+            rec.setId(UUID.randomUUID());
+            return rec;
+        });
     }
 
     // ========== HALL PASS TESTS ==========
@@ -186,7 +199,7 @@ class AttendanceV1ServiceTest {
         assertDoesNotThrow(() -> attendanceService.processEnhancedHeartbeat(testHeartbeatPing, false));
 
         // Assert
-        verify(classroomSessionRepository).findById(testSessionId);
+        verify(classroomSessionRepository, times(2)).findById(testSessionId);
     }
 
     @Test
@@ -228,7 +241,7 @@ class AttendanceV1ServiceTest {
         EnhancedHeartbeatPing outsidePing = new EnhancedHeartbeatPing(
                 testStudentId, testSessionId,
                 13.0, 78.0, 100, 0.1, 0.2, 0.3, true, Instant.now(),
-                "device-fingerprint-123", null, 85, false, true, "MOVING", null, 30L, 
+                "device-fingerprint-123", "biometric-signature-123", 85, false, true, "MOVING", null, 30L, 
                 null, 1L // 🔐 signature, 📈 sequence
         );
 
@@ -237,6 +250,7 @@ class AttendanceV1ServiceTest {
         when(documentReference.get()).thenReturn(apiFuture);
         when(apiFuture.get()).thenReturn(documentSnapshot);
         when(documentSnapshot.getData()).thenReturn(null);
+        when(documentSnapshot.exists()).thenReturn(false);
 
         when(classroomSessionRepository.findById(testSessionId)).thenReturn(Optional.of(testSession));
         
@@ -246,6 +260,11 @@ class AttendanceV1ServiceTest {
             .thenReturn(Optional.of(mockRecord));
 
         // Act
+        System.out.println("--- CALL 1 ---");
+        attendanceService.processEnhancedHeartbeat(outsidePing, false);
+        System.out.println("--- CALL 2 ---");
+        attendanceService.processEnhancedHeartbeat(outsidePing, false);
+        System.out.println("--- CALL 3 ---");
         attendanceService.processEnhancedHeartbeat(outsidePing, false);
 
         // Assert

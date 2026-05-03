@@ -108,6 +108,9 @@ public class AttendanceV1Service {
 
     @Transactional
     public void grantHallPass(HallPassRequestDTO request) {
+        if (request.requestedMinutes() <= 0) {
+            throw new IllegalArgumentException("requestedMinutes must be positive");
+        }
         String hallPassKey = hallPassKey(request.sessionId(), request.studentId());
         Map<String, Object> data = new HashMap<>();
         data.put("status", "ACTIVE");
