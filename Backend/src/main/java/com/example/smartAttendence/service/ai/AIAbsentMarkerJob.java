@@ -29,8 +29,8 @@ public class AIAbsentMarkerJob {
 
     private static final Logger logger = LoggerFactory.getLogger(AIAbsentMarkerJob.class);
     
-    // 10 minute grace period
-    private static final int GRACE_PERIOD_MINUTES = 10;
+    // 0 minute grace period (Send immediately after class ends)
+    private static final int GRACE_PERIOD_MINUTES = 0;
 
     private final ClassroomSessionV1Repository sessionRepository;
     private final AttendanceRecordV1Repository attendanceRepository;

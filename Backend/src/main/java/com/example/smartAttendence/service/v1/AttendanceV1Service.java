@@ -281,11 +281,14 @@ public class AttendanceV1Service {
             }
             
             // Provisional Walk-out logic
+            double accelMag = computeAccelerationMagnitude(ping);
             attendanceRecordRepository.findFirstByStudent_IdAndSession_IdOrderByRecordedAtDesc(studentId, sessionId)
                 .ifPresent(record -> {
                     record.setLatitude(ping.latitude());
                     record.setLongitude(ping.longitude());
                     record.setRecordedAt(Instant.now());
+                    record.setMoving(true); // Outside geofence = definitely moving
+                    record.setAccelerationMagnitude(Math.max(accelMag, 3.5)); // Ensure movement threshold is met
                     if (!"ABSENT".equalsIgnoreCase(record.getStatus())) {
                         record.setStatus("WALK_OUT");
                     }
@@ -342,18 +345,23 @@ public class AttendanceV1Service {
         String newStatus = determineStatus(session, Instant.now());
         boolean statusChanged = !newStatus.equalsIgnoreCase(record.getStatus());
         
+        // 🚶 MOVEMENT DETECTION: Compute actual movement from accelerometer + GPS delta
+        double accelMagnitude = computeAccelerationMagnitude(ping);
+        boolean isMoving = computeIsMoving(ping, record, accelMagnitude);
+        boolean movementChanged = isMoving != record.isMoving();
+
         // 🏎️ SCALABILITY CHECK: Hybrid Buffering
         // Skip DB write if:
-        // 1. Status is the same
+        // 1. Status is the same AND movement state is the same
         // 2. Student is roughly in the same spot (delta < 2m)
         // 3. Last write was less than 5 minutes ago
         // 4. Previous record has valid coordinates (null after security violations)
         Instant lastWrite = heartbeatBuffer.getIfPresent(record.getStudent().getId());
-        if (!statusChanged && lastWrite != null && lastWrite.isAfter(Instant.now().minus(java.time.Duration.ofMinutes(5)))
+        if (!statusChanged && !movementChanged && lastWrite != null && lastWrite.isAfter(Instant.now().minus(java.time.Duration.ofMinutes(5)))
                 && record.getLatitude() != null && record.getLongitude() != null) {
             double dist = calculateDistance(record.getLatitude(), record.getLongitude(), ping.latitude(), ping.longitude());
             if (dist < 2.0) {
-                logger.info("🟡 [UPDATE-RECORD] Skipped DB write (buffered, same status '{}', dist={}m)", record.getStatus(), String.format("%.1f", dist));
+                logger.info("🟡 [UPDATE-RECORD] Skipped DB write (buffered, same status '{}', moving={}, dist={}m)", record.getStatus(), isMoving, String.format("%.1f", dist));
                 return;
             }
         }
@@ -367,10 +375,12 @@ public class AttendanceV1Service {
         record.setLongitude(ping.longitude());
         record.setBatteryLevel(ping.batteryLevel());
         record.setSequenceId(ping.sequenceId()); // 📈 Update sequence
+        record.setMoving(isMoving);
+        record.setAccelerationMagnitude(accelMagnitude);
         
         attendanceRecordRepository.save(record);
         heartbeatBuffer.put(record.getStudent().getId(), Instant.now());
-        logger.info("🟢 [UPDATE-RECORD] Record SAVED: id={}, status={}, student={}", record.getId(), record.getStatus(), record.getStudent().getId());
+        logger.info("🟢 [UPDATE-RECORD] Record SAVED: id={}, status={}, moving={}, accel={}, student={}", record.getId(), record.getStatus(), isMoving, String.format("%.1f", accelMagnitude), record.getStudent().getId());
     }
 
     private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
@@ -386,8 +396,11 @@ public class AttendanceV1Service {
 
     private void createNewRecord(User student, ClassroomSession session, EnhancedHeartbeatPing ping) {
         String status = determineStatus(session, Instant.now());
-        logger.info("🟢 [CREATE-RECORD] Creating NEW attendance record: student={}, session={}, status={}", 
-                student.getId(), session.getId(), status);
+        double accelMagnitude = computeAccelerationMagnitude(ping);
+        boolean isMoving = Boolean.TRUE.equals(ping.isDeviceMoving()) || accelMagnitude > 3.0;
+        
+        logger.info("🟢 [CREATE-RECORD] Creating NEW attendance record: student={}, session={}, status={}, moving={}, accel={}", 
+                student.getId(), session.getId(), status, isMoving, String.format("%.1f", accelMagnitude));
         
         AttendanceRecord record = new AttendanceRecord();
         record.setStudent(student);
@@ -398,9 +411,11 @@ public class AttendanceV1Service {
         record.setLongitude(ping.longitude());
         record.setDeviceSignature(ping.deviceFingerprint());
         record.setSequenceId(ping.sequenceId()); // 📈 Set initial sequence
+        record.setMoving(isMoving);
+        record.setAccelerationMagnitude(accelMagnitude);
         AttendanceRecord saved = attendanceRecordRepository.save(record);
         heartbeatBuffer.put(student.getId(), Instant.now());
-        logger.info("🟢 [CREATE-RECORD] ✓ Record SAVED to DB: id={}, status={}", saved.getId(), saved.getStatus());
+        logger.info("🟢 [CREATE-RECORD] ✓ Record SAVED to DB: id={}, status={}, moving={}", saved.getId(), saved.getStatus(), isMoving);
     }
 
     private void handleUnauthorizedDevice(User student, UUID sessionId) {
@@ -487,6 +502,52 @@ public class AttendanceV1Service {
                 student.getBiometricSignature().substring(0, Math.min(20, student.getBiometricSignature().length())),
                 signature.substring(0, Math.min(20, signature.length())));
         return match;
+    }
+
+    // 🚶 MOVEMENT COMPUTATION HELPERS
+    
+    /**
+     * Compute acceleration magnitude from the raw accelerometer axes.
+     * Values > 3.0 typically indicate walking; > 15.0 indicates running.
+     */
+    private double computeAccelerationMagnitude(EnhancedHeartbeatPing ping) {
+        double ax = ping.accelerationX() != null ? ping.accelerationX() : 0.0;
+        double ay = ping.accelerationY() != null ? ping.accelerationY() : 0.0;
+        double az = ping.accelerationZ() != null ? ping.accelerationZ() : 0.0;
+        return Math.sqrt(ax * ax + ay * ay + az * az);
+    }
+
+    /**
+     * Determine if the student is actually moving using multiple signals:
+     * 1. Frontend's isDeviceMoving flag (from device motion sensors)
+     * 2. Accelerometer magnitude (> 3.0 = walking)
+     * 3. GPS distance delta from the last saved record (> 5 meters = moving)
+     */
+    private boolean computeIsMoving(EnhancedHeartbeatPing ping, AttendanceRecord lastRecord, double accelMagnitude) {
+        // Signal 1: Frontend explicitly says device is moving
+        if (Boolean.TRUE.equals(ping.isDeviceMoving())) {
+            return true;
+        }
+        
+        // Signal 2: Accelerometer magnitude indicates walking/running
+        if (accelMagnitude > 3.0) {
+            return true;
+        }
+        
+        // Signal 3: GPS position changed significantly (> 5 meters)
+        if (lastRecord.getLatitude() != null && lastRecord.getLongitude() != null
+                && ping.latitude() != 0 && ping.longitude() != 0) {
+            double dist = calculateDistance(
+                lastRecord.getLatitude(), lastRecord.getLongitude(),
+                ping.latitude(), ping.longitude()
+            );
+            if (dist > 5.0) {
+                logger.info("🚶 [MOVEMENT] GPS delta detected: {}m (threshold: 5m)", String.format("%.1f", dist));
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     private int getWalkOutThresholdSeconds(UUID sessionId) {

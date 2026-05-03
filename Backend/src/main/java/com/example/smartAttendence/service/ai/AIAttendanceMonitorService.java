@@ -126,11 +126,11 @@ public class AIAttendanceMonitorService {
                 // to allow Faculty to end classes early if they finish the lecture.
                 log.info("🤖 AI MONITOR: Session '{}' is inactive during its scheduled time. Respecting current state (Faculty may have ended it).", slot.getSubject());
             } else {
-                Instant graceThreshold = session.getEndTime().plus(10, java.time.temporal.ChronoUnit.MINUTES);
+                Instant graceThreshold = session.getEndTime().plus(1, java.time.temporal.ChronoUnit.MINUTES);
                 if (nowInstant.isBefore(graceThreshold)) {
                     session.setActive(true);
                     session = sessionRepository.save(session);
-                    log.info("🤖 AI MONITOR: Reactivated session '{}' (within grace period).", slot.getSubject());
+                    log.info("🤖 AI MONITOR: Reactivated session '{}' (within 1m grace period).", slot.getSubject());
                 }
             }
             return; // Stop processing this slot for now
@@ -250,10 +250,10 @@ public class AIAttendanceMonitorService {
     }
 
     private void autoEndExpiredSessions(Instant now) {
-        // IMPORTANT: Wait 15 minutes after endTime before deactivating sessions.
-        // The AIAbsentMarkerJob needs sessions to be active=true and processes them
-        // 10 minutes after endTime. If we deactivate too early, absent emails never get sent.
-        Instant cutoffTime = now.minus(15, java.time.temporal.ChronoUnit.MINUTES);
+        // IMPORTANT: Wait 5 minutes after endTime before deactivating sessions as fallback.
+        // The AIAbsentMarkerJob now processes them immediately (0m grace) after endTime.
+        // We keep a small 5m buffer here to ensure the Marker Job has at least one run.
+        Instant cutoffTime = now.minus(5, java.time.temporal.ChronoUnit.MINUTES);
         List<ClassroomSession> expired = sessionRepository.findByEndTimeBeforeAndActiveTrue(cutoffTime);
         
         for (ClassroomSession session : expired) {
