@@ -135,7 +135,7 @@ public interface AttendanceRecordV1Repository extends JpaRepository<AttendanceRe
            "JOIN FETCH s.section sect " +
            "JOIN FETCH sect.department d " +
            "WHERE ar.session.active = true " +
-           "AND ar.recordedAt = (SELECT MAX(ar2.recordedAt) FROM AttendanceRecord ar2 WHERE ar2.student.id = s.id AND ar2.session.id = ar.session.id) " +
+           "AND ar.recordedAt = (SELECT MAX(ar2.recordedAt) FROM AttendanceRecord ar2 WHERE ar2.student.id = s.id AND ar2.session.active = true) " +
            "AND (:deptId IS NULL OR d.id = :deptId) " +
            "AND (:sectId IS NULL OR sect.id = :sectId) " +
            "ORDER BY ar.recordedAt DESC")
