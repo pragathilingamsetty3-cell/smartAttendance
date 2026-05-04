@@ -10,7 +10,7 @@ const TimetableGrid = dynamic(
   () => import('@/components/timetable/TimetableGrid').then(mod => mod.TimetableGrid),
   { 
     ssr: false, 
-    loading: () => <div className="h-[500px] w-full bg-white/5 animate-pulse rounded-xl flex items-center justify-center text-gray-500 italic">Formatting Timetable Architect...</div>
+    loading: () => <div className="h-[500px] w-full bg-slate-50 animate-pulse rounded-xl flex items-center justify-center text-slate-400 italic">Formatting Timetable Architect...</div>
   }
 );
 import { ScheduleModal } from '@/components/timetable/ScheduleModal';
@@ -180,22 +180,22 @@ export default function TimetablePage() {
       {/* Header Area */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold gradient-text flex items-center">
-            <Calendar className="w-8 h-8 mr-3 text-[#7C3AED]" />
+          <h1 className="text-3xl font-bold text-slate-900 flex items-center">
+            <Calendar className="w-8 h-8 mr-3 text-primary" />
             {userRole === 'FACULTY' || userRole === 'STUDENT' ? 'My Class Schedule' : 'Timetable Architect'}
           </h1>
-          <div className="flex items-center mt-1 text-gray-400">
+          <div className="flex items-center mt-1 text-slate-500">
             <p>
               {userRole === 'FACULTY' || userRole === 'STUDENT'
                 ? 'Your assigned weekly class sessions and room allocations.' 
                 : 'Manage recurring class schedules and smart breaks.'}
             </p>
             {entries.length > 0 ? (
-              <span className="ml-3 px-2 py-0.5 rounded-full bg-[#7C3AED]/20 text-[#7C3AED] text-xs font-bold border border-[#7C3AED]/30">
+              <span className="ml-3 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold border border-primary/20">
                 {entries.length} Slots Loaded
               </span>
             ) : (
-              <span className="ml-3 px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/30">
+              <span className="ml-3 px-2 py-0.5 rounded-full bg-red-50 text-red-500 text-xs font-bold border border-red-100">
                 0 Slots Found {selectedSection ? `[Section: ${selectedSection.substring(0,8)}...]` : '[Select Section]'}
               </span>
             )}
@@ -206,7 +206,7 @@ export default function TimetablePage() {
           <Button 
             variant="primary" 
             onClick={() => { setEditingEntry(null); setIsModalOpen(true); }}
-            className="shadow-[0_0_20px_rgba(124,58,237,0.3)]"
+            className="shadow-xl shadow-primary/20"
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Schedule Slot
@@ -230,39 +230,39 @@ export default function TimetablePage() {
       {/* Filters Area - Only for Admins/Faculty Coordinators */}
       {userRole !== 'FACULTY' && userRole !== 'STUDENT' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card glass className="bg-white/5">
+          <Card glass className="bg-white border-slate-200 shadow-sm">
             <CardContent className="p-4 flex items-center space-x-4">
-              <Filter className="text-[#7C3AED] w-5 h-5" />
+              <Filter className="text-primary w-5 h-5" />
               <select 
-                className="bg-transparent text-sm font-medium text-white focus:outline-none w-full"
+                className="bg-transparent text-sm font-medium text-slate-900 focus:outline-none w-full cursor-pointer"
                 value={selectedSection}
                 onChange={e => setSelectedSection(e.target.value)}
               >
-                <option value="" className="bg-[#0F0F16]">Filter by Section</option>
+                <option value="" className="bg-white">Filter by Section</option>
                 {sections.map(s => (
-                  <option key={s.id} value={s.id} className="bg-[#0F0F16]">{s.label || s.name}</option>
+                  <option key={s.id} value={s.id} className="bg-white">{s.label || s.name}</option>
                 ))}
               </select>
             </CardContent>
           </Card>
 
-          <Card glass className="bg-white/5">
+          <Card glass className="bg-white border-slate-200 shadow-sm">
             <CardContent className="p-4 flex items-center space-x-4">
-              <User className="text-[#7C3AED] w-5 h-5" />
+              <User className="text-primary w-5 h-5" />
               <select 
-                className="bg-transparent text-sm font-medium text-white focus:outline-none w-full"
+                className="bg-transparent text-sm font-medium text-slate-900 focus:outline-none w-full cursor-pointer"
                 value={selectedFaculty}
                 onChange={e => setSelectedFaculty(e.target.value)}
               >
-                <option value="" className="bg-[#0F0F16]">Filter by Faculty</option>
+                <option value="" className="bg-white">Filter by Faculty</option>
                 {facultyList.map(f => (
-                  <option key={f.id} value={f.id} className="bg-[#0F0F16]">{f.name || f.label}</option>
+                  <option key={f.id} value={f.id} className="bg-white">{f.name || f.label}</option>
                 ))}
               </select>
             </CardContent>
           </Card>
 
-          <div className="flex items-center justify-end text-xs text-gray-500 italic">
+          <div className="flex items-center justify-end text-xs text-slate-500 italic">
             <Building className="w-4 h-4 mr-1" />
             Displaying Weekly Schedule
           </div>
@@ -309,19 +309,19 @@ export default function TimetablePage() {
       </AnimatePresence>
 
       {/* 🔍 DIAGNOSTIC PANEL (Always useful for debugging) */}
-      <div className="mt-10 p-4 rounded-xl border border-white/5 bg-black/20">
+      <div className="mt-10 p-4 rounded-xl border border-slate-100 bg-slate-50">
         <details className="cursor-pointer">
-          <summary className="text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-[#7C3AED] transition-colors">
+          <summary className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors">
             Data Architect Diagnostics
           </summary>
-          <div className="mt-4 p-4 rounded-lg bg-black/40 font-mono text-[10px] text-gray-500 overflow-auto max-h-60">
-            <p className="mb-1 uppercase font-bold text-gray-500">▼ Data Architect Diagnostics</p>
+          <div className="mt-4 p-4 rounded-lg bg-white border border-slate-200 font-mono text-[10px] text-slate-500 overflow-auto max-h-60">
+            <p className="mb-1 uppercase font-bold text-slate-400">▼ Data Architect Diagnostics</p>
             <p>User Role: {String(userRole)}</p>
             <p>Active Endpoint: {activeEndpoint}</p>
             <p>User Profile Section ID: {user?.sectionId || 'NOT FOUND'}</p>
             <p>Current Filter Section ID: {selectedSection || 'NOT SELECTED'}</p>
             <p>Total Entries Received: {entries.length}</p>
-            <pre className="mt-2 text-[8px] opacity-50">{JSON.stringify(entries, null, 2)}</pre>
+            <pre className="mt-2 text-[8px] opacity-70">{JSON.stringify(entries, null, 2)}</pre>
           </div>
         </details>
       </div>

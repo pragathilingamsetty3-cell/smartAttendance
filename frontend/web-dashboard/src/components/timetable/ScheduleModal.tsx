@@ -141,14 +141,14 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
           animate={{ opacity: 1 }} 
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+          className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" 
         />
         
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-4xl bg-[#0F0F16] border border-white/10 rounded-3xl overflow-hidden shadow-2xl shadow-primary/10"
+          className="relative w-full max-w-4xl bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl shadow-sky-900/10"
         >
           {/* SUCCESS OVERLAY FOR HOLIDAYS */}
           <AnimatePresence>
@@ -157,7 +157,7 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-[#0F0F16]/95 backdrop-blur-xl"
+                className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-white/95 backdrop-blur-xl"
               >
                 <motion.div
                   initial={{ scale: 0 }}
@@ -171,7 +171,7 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-3xl font-black text-white tracking-tight text-center"
+                  className="text-3xl font-black text-slate-900 tracking-tight text-center"
                 >
                   RESTING MODE ACTIVATED
                 </motion.h2>
@@ -189,16 +189,16 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
           </AnimatePresence>
 
           {/* Header */}
-          <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between">
+          <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
                 <Clock className="text-primary" /> {editingEntry ? 'Edit Class Schedule' : 'Schedule New Class'}
               </h2>
               <p className="text-slate-500 text-sm mt-1">Configure class timing and smart breaks</p>
             </div>
             <button 
               onClick={onClose}
-              className="p-2 hover:bg-white/5 rounded-xl transition-colors text-slate-400 hover:text-white"
+              className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400 hover:text-slate-900"
             >
               <X size={24} />
             </button>
@@ -214,7 +214,7 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                     type="text" 
                     value={formData.subject}
                     onChange={e => setFormData({...formData, subject: e.target.value})}
-                    className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium placeholder:text-slate-400"
                     placeholder="e.g. Advanced AI Systems" 
                     required
                   />
@@ -226,13 +226,13 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                     <select 
                       value={formData.facultyId}
                       onChange={e => setFormData({...formData, facultyId: e.target.value})}
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none"
                       required={!formData.isHoliday}
                       disabled={formData.isHoliday}
                     >
-                      <option value="" className="bg-[#0F0F16]">Select Faculty</option>
+                      <option value="" className="bg-white">Select Faculty</option>
                       {faculties.map(f => (
-                        <option key={f.id} value={f.id} className="bg-[#0F0F16]">{f.name}</option>
+                        <option key={f.id} value={f.id} className="bg-white">{f.name}</option>
                       ))}
                     </select>
                   </div>
@@ -241,13 +241,13 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                     <select 
                       value={formData.roomId}
                       onChange={e => setFormData({...formData, roomId: e.target.value})}
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none"
                       required={!formData.isHoliday}
                       disabled={formData.isHoliday}
                     >
-                      <option value="" className="bg-[#0F0F16]">Select Room</option>
+                      <option value="" className="bg-white">Select Room</option>
                       {rooms.map(r => (
-                        <option key={r.id} value={r.id} className="bg-[#0F0F16]">{r.name}</option>
+                        <option key={r.id} value={r.id} className="bg-white">{r.name}</option>
                       ))}
                     </select>
                   </div>
@@ -260,7 +260,7 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                       type="date" 
                       value={formData.startDate}
                       onChange={e => setFormData({...formData, startDate: e.target.value})}
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none ring-1 ring-white/5"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none"
                       required
                     />
                   </div>
@@ -270,7 +270,7 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                       type="date" 
                       value={formData.endDate}
                       onChange={e => setFormData({...formData, endDate: e.target.value})}
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none ring-1 ring-white/5"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none"
                       required
                     />
                   </div>
@@ -282,11 +282,11 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                     <select 
                       value={formData.sectionId}
                       onChange={e => setFormData({...formData, sectionId: e.target.value})}
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none"
                     >
-                      <option value="" className="bg-[#0F0F16]">All Sections</option>
+                      <option value="" className="bg-white">All Sections</option>
                       {sections.map(s => (
-                        <option key={s.id} value={s.id} className="bg-[#0F0F16]">{s.label || s.name}</option>
+                        <option key={s.id} value={s.id} className="bg-white">{s.label || s.name}</option>
                       ))}
                     </select>
                   </div>
@@ -299,23 +299,23 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                         type="date"
                         value={formData.holidayDate}
                         onChange={e => handleHolidayDateChange(e.target.value)}
-                        className="w-full bg-orange-500/10 border border-orange-500/20 rounded-xl px-4 py-2.5 text-white focus:outline-none ring-1 ring-orange-500/20"
+                        className="w-full bg-orange-50 border border-orange-200 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none ring-1 ring-orange-100"
                         required
                       />
                     ) : (
                       <select 
                         value={formData.dayOfWeek}
                         onChange={e => setFormData({...formData, dayOfWeek: e.target.value})}
-                        className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none"
                         required
                       >
-                        <option value="MONDAY" className="bg-[#0F0F16]">Monday</option>
-                        <option value="TUESDAY" className="bg-[#0F0F16]">Tuesday</option>
-                        <option value="WEDNESDAY" className="bg-[#0F0F16]">Wednesday</option>
-                        <option value="THURSDAY" className="bg-[#0F0F16]">Thursday</option>
-                        <option value="FRIDAY" className="bg-[#0F0F16]">Friday</option>
-                        <option value="SATURDAY" className="bg-[#0F0F16]">Saturday</option>
-                        <option value="SUNDAY" className="bg-[#0F0F16]">Sunday</option>
+                        <option value="MONDAY" className="bg-white">Monday</option>
+                        <option value="TUESDAY" className="bg-white">Tuesday</option>
+                        <option value="WEDNESDAY" className="bg-white">Wednesday</option>
+                        <option value="THURSDAY" className="bg-white">Thursday</option>
+                        <option value="FRIDAY" className="bg-white">Friday</option>
+                        <option value="SATURDAY" className="bg-white">Saturday</option>
+                        <option value="SUNDAY" className="bg-white">Sunday</option>
                       </select>
                     )}
                   </div>
@@ -329,7 +329,7 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                       step="1"
                       value={formData.startTime}
                       onChange={e => setFormData({...formData, startTime: e.target.value})}
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none"
                       required
                     />
                   </div>
@@ -340,7 +340,7 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                       step="1"
                       value={formData.endTime}
                       onChange={e => setFormData({...formData, endTime: e.target.value})}
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-900 focus:outline-none"
                       required
                     />
                   </div>
@@ -353,11 +353,11 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                   <GraduationCap size={16} /> AI Monitoring Adjustments
                 </h3>
                 
-                <Card glass className="bg-white/[0.02] border-white/5">
+                <Card glass className="bg-slate-50 border-slate-100">
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center text-sm font-bold text-white">
-                        <Utensils className="w-4 h-4 mr-2 text-orange-400" />
+                      <div className="flex items-center text-sm font-bold text-slate-900">
+                        <Utensils className="w-4 h-4 mr-2 text-orange-500" />
                         Lunch Break Window
                       </div>
                       <input 
@@ -377,7 +377,7 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                             step="1"
                             value={formData.lunchBreakStart}
                             onChange={e => setFormData({...formData, lunchBreakStart: e.target.value})}
-                            className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none" 
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:outline-none" 
                           />
                         </div>
                         <div className="space-y-1">
@@ -387,7 +387,7 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                             step="1"
                             value={formData.lunchBreakEnd}
                             onChange={e => setFormData({...formData, lunchBreakEnd: e.target.value})}
-                            className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none" 
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:outline-none" 
                           />
                         </div>
                       </div>
@@ -395,11 +395,11 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                   </CardContent>
                 </Card>
 
-                <Card glass className="bg-white/[0.02] border-white/5">
+                <Card glass className="bg-slate-50 border-slate-100">
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center text-sm font-bold text-white">
-                        <Coffee className="w-4 h-4 mr-2 text-blue-400" />
+                      <div className="flex items-center text-sm font-bold text-slate-900">
+                        <Coffee className="w-4 h-4 mr-2 text-blue-500" />
                         Short Break Window
                       </div>
                       <input 
@@ -419,7 +419,7 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                             step="1"
                             value={formData.shortBreakStart}
                             onChange={e => setFormData({...formData, shortBreakStart: e.target.value})}
-                            className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none" 
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:outline-none" 
                           />
                         </div>
                         <div className="space-y-1">
@@ -429,7 +429,7 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                             step="1"
                             value={formData.shortBreakEnd}
                             onChange={e => setFormData({...formData, shortBreakEnd: e.target.value})}
-                            className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none" 
+                            className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:outline-none" 
                           />
                         </div>
                       </div>
@@ -437,12 +437,12 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                   </CardContent>
                 </Card>
                 
-                <Card glass className="bg-primary/5 border border-primary/20">
+                <Card glass className="bg-primary/5 border border-primary/10">
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                          <GraduationCap className="w-4 h-4 text-red-400" />
+                        <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                          <GraduationCap className="w-4 h-4 text-red-500" />
                           Mark as Exam Session
                         </h4>
                         <p className="text-[10px] text-gray-400 mt-1">
@@ -459,12 +459,12 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                   </CardContent>
                 </Card>
 
-                <Card glass className="bg-orange-500/5 border border-orange-500/20">
+                <Card glass className="bg-orange-50 border border-orange-100">
                   <CardContent className="p-5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-orange-400" />
+                        <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-orange-500" />
                           Mark as Holiday Session
                         </h4>
                         <p className="text-[10px] text-gray-400 mt-1">
@@ -481,16 +481,16 @@ export function ScheduleModal({ isOpen, onClose, onSave, editingEntry, rooms, fa
                   </CardContent>
                 </Card>
 
-                <div className="p-5 rounded-2xl bg-primary/5 border border-primary/20 space-y-2">
-                    <p className="text-xs text-gray-300 font-semibold uppercase tracking-wider">Smart Monitoring Tip</p>
-                    <p className="text-[11px] text-gray-400 leading-relaxed">
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                    <p className="text-xs text-slate-700 font-semibold uppercase tracking-wider">Smart Monitoring Tip</p>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
                         Defining lunch and short breaks helps the AI Attendance engine differentiate between legitimate recesses and unauthorized walk-outs.
                     </p>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-8 border-t border-white/5">
+            <div className="flex justify-end gap-3 pt-8 border-t border-slate-200">
               <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
               <Button type="submit" variant="primary" className="px-10 shadow-lg shadow-primary/20">
                 <Save size={18} className="mr-2" /> {editingEntry ? 'Update Schedule' : 'Create Entry'}

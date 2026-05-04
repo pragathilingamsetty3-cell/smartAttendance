@@ -60,15 +60,15 @@ export function TimetableGrid({ entries, onEdit, onDelete, userRole }: Timetable
   }, [entries]);
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-white/5 bg-[#0F0F16]/50 backdrop-blur-md">
+    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
       {entries.length === 0 ? (
         <div className="p-20 text-center flex flex-col items-center justify-center space-y-4">
-          <div className="p-4 rounded-full bg-white/5 border border-white/10">
-            <Calendar className="w-8 h-8 text-[#7C3AED]/50" />
+          <div className="p-4 rounded-full bg-slate-50 border border-slate-100">
+            <Calendar className="w-8 h-8 text-primary/50" />
           </div>
           <div>
-            <h3 className="text-lg font-medium text-white">No classes scheduled</h3>
-            <p className="text-sm text-gray-400 max-w-xs mx-auto mt-1">
+            <h3 className="text-lg font-medium text-slate-900">No classes scheduled</h3>
+            <p className="text-sm text-slate-500 max-w-xs mx-auto mt-1">
               {isFaculty 
                 ? "You don't have any classes assigned to you for the current academic session."
                 : "No timetable records found for the selected filter criteria."}
@@ -78,10 +78,10 @@ export function TimetableGrid({ entries, onEdit, onDelete, userRole }: Timetable
       ) : (
         <table className="w-full border-collapse min-w-[1000px]">
         <thead>
-          <tr className="border-b border-white/5 bg-white/5">
-            <th className="p-4 px-6 text-left text-sm font-semibold text-gray-400 w-24">Time</th>
+          <tr className="border-b border-slate-100 bg-slate-50">
+            <th className="p-4 px-6 text-left text-sm font-semibold text-slate-500 w-24">Time</th>
             {DAYS.map(day => (
-              <th key={day} className="p-4 text-center text-sm font-semibold text-gray-300">
+              <th key={day} className="p-4 text-center text-sm font-semibold text-slate-700">
                 {day.charAt(0) + day.slice(1).toLowerCase()}
               </th>
             ))}
@@ -89,32 +89,32 @@ export function TimetableGrid({ entries, onEdit, onDelete, userRole }: Timetable
         </thead>
         <tbody>
           {HOURS.map(hour => (
-            <tr key={hour} className="border-b border-white/5 group">
-              <td className="p-4 px-6 text-xs text-gray-500 font-mono align-top">
+            <tr key={hour} className="border-b border-slate-100 group">
+              <td className="p-4 px-6 text-xs text-slate-400 font-mono align-top">
                 {hour}:00
               </td>
               {DAYS.map(day => {
                 const dayEntries = groupedEntries[day.toUpperCase()]?.[hour] || [];
 
                 return (
-                  <td key={day} className="p-2 border-r border-white/5 min-h-[100px] align-top relative">
+                  <td key={day} className="p-2 border-r border-slate-100 min-h-[100px] align-top relative">
                     {dayEntries.map(entry => (
                       <div 
                         key={entry.id}
                         className={cn(
                           "mb-2 p-3 rounded-lg shadow-sm transition-all group/item relative overflow-hidden",
                           entry.isHoliday 
-                            ? "bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20" 
-                            : "bg-[#7C3AED]/10 border border-[#7C3AED]/20 hover:bg-[#7C3AED]/20"
+                            ? "bg-orange-50 border border-orange-200 hover:bg-orange-100" 
+                            : "bg-primary/5 border border-primary/10 hover:bg-primary/10"
                         )}
                       >
-                        <div className={cn("absolute top-0 left-0 w-1 h-full", entry.isHoliday ? "bg-orange-500" : "bg-[#7C3AED]")} />
+                        <div className={cn("absolute top-0 left-0 w-1 h-full", entry.isHoliday ? "bg-orange-500" : "bg-primary")} />
                         
                         <div className="flex justify-between items-start mb-1 gap-2">
-                          <h4 className="text-xs font-bold text-white leading-tight">
+                          <h4 className="text-xs font-bold text-slate-900 leading-tight">
                             {entry.isHoliday ? `⛱️ ${entry.subject}` : entry.subject}
                             {entry.section && !entry.isHoliday && (
-                              <span className="block text-[10px] text-[#7C3AED] mt-0.5 opacity-80 uppercase tracking-wider">
+                              <span className="block text-[10px] text-primary mt-0.5 opacity-80 uppercase tracking-wider">
                                 {entry.section.name}
                               </span>
                             )}
@@ -122,12 +122,12 @@ export function TimetableGrid({ entries, onEdit, onDelete, userRole }: Timetable
                           
                           <div className="flex flex-col gap-1">
                             {entry.isExamDay && (
-                              <span className="px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-tighter border border-red-500/30">
+                              <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-tighter border border-red-100">
                                 Exam
                               </span>
                             )}
                             {entry.isHoliday && (
-                              <span className="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 text-[10px] font-black uppercase tracking-tighter border border-orange-500/30">
+                              <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 text-[10px] font-black uppercase tracking-tighter border border-orange-200">
                                 Holiday
                               </span>
                             )}
@@ -135,10 +135,10 @@ export function TimetableGrid({ entries, onEdit, onDelete, userRole }: Timetable
                           
                           {!isFaculty && (
                             <div className="opacity-0 group-hover/item:opacity-100 flex gap-1 transition-opacity absolute top-2 right-2">
-                              <button onClick={() => onEdit(entry)} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white">
+                              <button onClick={() => onEdit(entry)} className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-900">
                                 <Edit2 size={12} />
                               </button>
-                              <button onClick={() => onDelete(entry.id)} className="p-1 hover:bg-red-500/20 rounded text-gray-400 hover:text-red-400">
+                              <button onClick={() => onDelete(entry.id)} className="p-1 hover:bg-red-50 rounded text-slate-400 hover:text-red-500">
                                 <Trash2 size={12} />
                               </button>
                             </div>
@@ -146,27 +146,27 @@ export function TimetableGrid({ entries, onEdit, onDelete, userRole }: Timetable
                         </div>
 
                         <div className="space-y-1 mt-1">
-                          <div className="flex items-center text-[10px] text-gray-400">
-                            <Clock className="w-3 h-3 mr-1 text-[#7C3AED]/50" />
+                          <div className="flex items-center text-[10px] text-slate-500">
+                            <Clock className="w-3 h-3 mr-1 text-primary/50" />
                             {entry.startTime?.substring(0, 5)} - {entry.endTime?.substring(0, 5)}
                           </div>
                           {!entry.isHoliday && (
                             <>
-                              <div className="flex items-center text-[10px] text-gray-400">
-                                <MapPin className="w-3 h-3 mr-1 text-[#7C3AED]/50" />
+                              <div className="flex items-center text-[10px] text-slate-500">
+                                <MapPin className="w-3 h-3 mr-1 text-primary/50" />
                                 {entry.room?.name || 'N/A'}
                               </div>
                               
                               {!isFaculty && (
-                                <div className="flex items-center text-[10px] text-gray-400">
-                                  <User className="w-3 h-3 mr-1 text-[#7C3AED]/50" />
+                                <div className="flex items-center text-[10px] text-slate-500">
+                                  <User className="w-3 h-3 mr-1 text-primary/50" />
                                   {entry.faculty?.name || 'Unassigned'}
                                 </div>
                               )}
                             </>
                           )}
                           {entry.isHoliday && (
-                             <div className="flex items-center text-[10px] text-orange-400/80 font-medium">
+                             <div className="flex items-center text-[10px] text-orange-600/80 font-medium">
                                <Calendar className="w-3 h-3 mr-1" />
                                AI Resting Mode Active
                              </div>
