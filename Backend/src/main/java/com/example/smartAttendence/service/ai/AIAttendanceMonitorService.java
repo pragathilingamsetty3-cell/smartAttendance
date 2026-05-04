@@ -272,16 +272,44 @@ public class AIAttendanceMonitorService {
     private void monitorStudentBehavior(ClassroomSession session) {
         List<AttendanceRecord> presenceList = attendanceRepository.findBySessionIdOrderByRecordedAtDesc(session.getId());
         for (AttendanceRecord record : presenceList) {
-            if ("PRESENT".equalsIgnoreCase(record.getStatus())) {
-                boolean isSuspicious = spatialEngine.checkSuspiciousBehavior(record.getStudent().getId(), session.getId());
-                if (isSuspicious) {
+            String currentStatus = record.getStatus();
+            if ("PRESENT".equalsIgnoreCase(currentStatus) || "LATE".equalsIgnoreCase(currentStatus)) {
+                UUID studentId = record.getStudent().getId();
+                UUID sessionId = session.getId();
+
+                // 1. Check Suspicious Movement toward boundaries
+                boolean isSuspicious = spatialEngine.checkSuspiciousBehavior(studentId, sessionId);
+                
+                // 2. Check GPS Drift & Spoofing via AI Engine
+                var driftResult = spatialEngine.analyzeGPSDrift(studentId, sessionId);
+                boolean isDrift = driftResult.isGPSDrift();
+                boolean isSpoofing = driftResult.isSpoofing();
+
+                if (isSuspicious || isDrift || isSpoofing) {
+                    String anomalyType = isSpoofing ? "GPS_SPOOFING" : isDrift ? "GPS_DRIFT" : "SUSPICIOUS_MOVEMENT";
+                    String message = isSpoofing ? "AI detected impossible movement speed (Spoofing attempt)." :
+                                    isDrift ? "AI detected significant GPS location instability (Drift anomaly)." :
+                                    "AI detected suspicious movement vector toward classroom boundary.";
+
+                    log.warn("🚨 AI SECURITY ENFORCEMENT: Student {} flagged for {} in session {}. Revoking attendance.", 
+                            record.getStudent().getName(), anomalyType, session.getSubject());
+
                     SecurityAlert alert = new SecurityAlert();
                     alert.setUser(record.getStudent());
-                    alert.setAlertType("SUSPICIOUS_MOVEMENT");
-                    alert.setAlertMessage("AI detected suspicious movement vector toward boundary.");
-                    alert.setSeverity("MEDIUM");
-                    alert.setConfidence(0.85);
+                    alert.setAlertType(anomalyType);
+                    alert.setAlertMessage(message);
+                    alert.setSeverity(isSpoofing ? "HIGH" : "MEDIUM");
+                    alert.setConfidence(isSpoofing ? 0.99 : 0.85);
                     alertRepository.save(alert);
+
+                    // 🚀 ACTIVE ENFORCEMENT: Mark ABSENT immediately
+                    record.setStatus("ABSENT");
+                    record.setAiDecision(true);
+                    record.setNote("AI Automated Absence: Security Anomaly (" + anomalyType + ") detected.");
+                    attendanceRepository.save(record);
+
+                    // Notify student and stakeholders
+                    notificationService.sendAttendanceAlert(record.getStudent(), session.getTimetable(), "SECURITY_ANOMALY");
                 }
             }
         }

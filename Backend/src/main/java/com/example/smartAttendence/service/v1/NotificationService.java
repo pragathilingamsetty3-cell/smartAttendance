@@ -95,9 +95,15 @@ public class NotificationService {
                 alertType, studentName, student.getRegistrationNumber());
 
         boolean isWalkout = "UNAUTHORIZED_WALKOUT".equalsIgnoreCase(alertType);
-        String alertTitle = isWalkout ? "🚨 Security Alert: Class Walkout" : "🔔 Attendance Alert";
+        boolean isAnomaly = "SECURITY_ANOMALY".equalsIgnoreCase(alertType);
+        
+        String alertTitle = isWalkout ? "🚨 Security Alert: Class Walkout" : 
+                           isAnomaly ? "🚨 Security Alert: Anomaly Detected" : "🔔 Attendance Alert";
+                           
         String message = isWalkout 
             ? String.format("Attendance revoked for %s. Unauthorized exit from %s.", studentName, subject)
+            : isAnomaly
+            ? String.format("Attendance revoked for %s. AI detected a security anomaly in %s.", studentName, subject)
             : String.format("You have been marked ABSENT for %s starting at %s.", subject, session.getStartTime());
 
         // Route to Firebase (Primary for daily alerts)
