@@ -206,7 +206,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, u
                   </select>
                 </div>
 
-                {formData.role === 'STUDENT' && (
+                {(formData.role === 'STUDENT' || formData.role === 'CR' || formData.role === 'LR') && (
                   <div className="space-y-2">
                     <label className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Section</label>
                     <select 

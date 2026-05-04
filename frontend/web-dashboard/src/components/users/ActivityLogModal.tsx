@@ -56,22 +56,22 @@ export const ActivityLogModal: React.FC<ActivityLogModalProps> = ({ isOpen, onCl
           initial={{ opacity: 0, scale: 0.95, x: 20 }}
           animate={{ opacity: 1, scale: 1, x: 0 }}
           exit={{ opacity: 0, scale: 0.95, x: 20 }}
-          className="relative w-full max-w-2xl bg-[#0F0F16] border border-white/10 rounded-3xl overflow-hidden shadow-2xl h-[80vh] flex flex-col"
+          className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl h-[80vh] flex flex-col"
         >
           {/* Header */}
-          <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between">
+          <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-2xl bg-secondary/10 text-secondary border border-secondary/20 shadow-inner">
+              <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20">
                 <History size={24} />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white tracking-tight">Activity Log</h2>
-                <p className="text-slate-500 text-sm mt-0.5">Historical verification timeline for {userName}</p>
+                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Activity Log</h2>
+                <p className="text-slate-500 text-sm mt-0.5 font-medium">Historical verification timeline for {userName}</p>
               </div>
             </div>
             <button 
               onClick={onClose}
-              className="p-2 hover:bg-white/5 rounded-xl transition-colors text-slate-400 hover:text-white"
+              className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400 hover:text-slate-600"
             >
               <X size={24} />
             </button>
@@ -85,19 +85,19 @@ export const ActivityLogModal: React.FC<ActivityLogModalProps> = ({ isOpen, onCl
               </div>
             ) : error ? (
               <div className="text-center py-20">
-                <AlertCircle className="mx-auto text-accent mb-4" size={48} />
-                <p className="text-white font-bold">{error}</p>
+                <AlertCircle className="mx-auto text-red-500 mb-4" size={48} />
+                <p className="text-slate-900 font-bold">{error}</p>
                 <Button variant="secondary" className="mt-6" onClick={fetchActivity}>
                   Retry Fetch
                 </Button>
               </div>
             ) : activities.length === 0 ? (
-              <div className="text-center py-20 text-slate-500">
+              <div className="text-center py-20 text-slate-400">
                 <History className="mx-auto mb-4 opacity-20" size={64} />
-                <p className="text-lg">No historical records found for this identity.</p>
+                <p className="text-lg font-medium">No historical records found for this identity.</p>
               </div>
             ) : (
-              <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-primary/50 before:via-white/5 before:to-transparent">
+              <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-primary/30 before:via-slate-100 before:to-transparent">
                 {activities.map((activity, idx) => (
                   <motion.div 
                     key={activity.id}
@@ -107,34 +107,34 @@ export const ActivityLogModal: React.FC<ActivityLogModalProps> = ({ isOpen, onCl
                     className="relative pl-12"
                   >
                     {/* Timeline Dot */}
-                    <div className={`absolute left-0 top-1.5 h-10 w-10 rounded-xl border-4 border-[#0F0F16] flex items-center justify-center z-10 shadow-lg ${
+                    <div className={`absolute left-0 top-1.5 h-10 w-10 rounded-xl border-4 border-white flex items-center justify-center z-10 shadow-md ${
                       activity.action === 'PRESENT' ? 'bg-emerald-500 text-white' :
-                      activity.action === 'WALK_OUT' ? 'bg-accent text-white' :
+                      activity.action === 'WALK_OUT' ? 'bg-red-500 text-white' :
                       'bg-primary text-white'
                     }`}>
                       {activity.type === 'ATTENDANCE' ? <CheckCircle2 size={16} /> : <Clock size={16} />}
                     </div>
 
-                    <div className="glass-panel p-6 hover:bg-white/[0.04] transition-all group">
+                    <div className="bg-slate-50 border border-slate-200 p-6 rounded-2xl hover:bg-white transition-all group shadow-sm hover:shadow-md">
                       <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
                         <div>
                           <div className="flex items-center gap-3 mb-1">
-                            <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-white/5 text-slate-400 border border-white/5">
+                            <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-200 text-slate-600 border border-slate-300">
                               {activity.type}
                             </span>
                             <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded border border-current shadow-sm ${
-                              activity.action === 'PRESENT' ? 'bg-emerald-500/10 text-emerald-400' :
-                              activity.action === 'WALK_OUT' ? 'bg-accent/10 text-accent' :
+                              activity.action === 'PRESENT' ? 'bg-emerald-500/10 text-emerald-600' :
+                              activity.action === 'WALK_OUT' ? 'bg-red-500/10 text-red-600' :
                               'bg-primary/10 text-primary'
                             }`}>
                               {activity.action}
                             </span>
                           </div>
-                          <h4 className="font-bold text-white group-hover:text-primary transition-colors">{activity.description}</h4>
+                          <h4 className="font-bold text-slate-900 group-hover:text-primary transition-colors">{activity.description}</h4>
                         </div>
-                        <div className="flex flex-col items-end text-[11px] text-slate-500 font-medium">
-                          <div className="flex items-center gap-1.5 ring-1 ring-white/5 px-2 py-1 rounded bg-black/20">
-                            <Calendar size={12} className="text-secondary" /> {new Date(activity.timestamp).toLocaleDateString()}
+                        <div className="flex flex-col items-end text-[11px] text-slate-400 font-bold">
+                          <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-white border border-slate-200">
+                            <Calendar size={12} className="text-primary" /> {new Date(activity.timestamp).toLocaleDateString()}
                           </div>
                           <div className="flex items-center gap-1.5 mt-1">
                             <Clock size={12} /> {new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -143,10 +143,10 @@ export const ActivityLogModal: React.FC<ActivityLogModalProps> = ({ isOpen, onCl
                       </div>
 
                       {activity.metadata && (
-                        <div className="flex items-center gap-4 text-xs p-3 rounded-xl bg-black/40 border border-white/5">
-                          <div className="flex items-center gap-2 text-slate-400">
+                        <div className="flex items-center gap-4 text-xs p-3 rounded-xl bg-white border border-slate-200 shadow-inner">
+                          <div className="flex items-center gap-2 text-slate-500">
                              <MapPin size={14} className="text-primary" />
-                             <span>Session: <span className="text-slate-200 font-bold">{activity.metadata}</span></span>
+                             <span className="font-medium">Session: <span className="text-slate-900 font-bold">{activity.metadata}</span></span>
                           </div>
                         </div>
                       )}
@@ -158,8 +158,8 @@ export const ActivityLogModal: React.FC<ActivityLogModalProps> = ({ isOpen, onCl
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-white/5 bg-black/20 flex justify-end">
-            <Button variant="secondary" onClick={onClose}>
+          <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+            <Button variant="secondary" onClick={onClose} className="px-8 font-bold">
               Close History
             </Button>
           </div>
