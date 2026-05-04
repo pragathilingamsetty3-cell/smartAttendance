@@ -145,7 +145,7 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw room boundary
-    ctx.strokeStyle = '#374151';
+    ctx.strokeStyle = '#E2E8F0';
     ctx.lineWidth = 2;
     ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
 
@@ -212,7 +212,7 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
       case 'ERRATIC':
         return <AlertTriangle className="h-4 w-4 text-red-400" />;
       default:
-        return <Activity className="h-4 w-4 text-gray-400" />;
+        return <Activity className="h-4 w-4 text-slate-400" />;
     }
   };
 
@@ -229,7 +229,7 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
       case 'ERRATIC':
         return 'bg-red-500/20 text-red-400 border-red-500/30';
       default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        return 'bg-slate-100 text-slate-500 border-slate-200';
     }
   };
 
@@ -244,7 +244,7 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
       case 'LOW':
         return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
       default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        return 'bg-slate-100 text-slate-500 border-slate-200';
     }
   };
 
@@ -263,14 +263,14 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-500/20 rounded-lg">
-                <Map className="h-5 w-5 text-purple-400" />
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Map className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-semibold text-slate-900">
                   {sessionId ? 'Spatial Behavior Analysis' : 'Campus Spatial Intelligence'}
                 </h3>
-                <p className="text-gray-400 text-sm">
+                <p className="text-slate-500 text-sm font-medium">
                   {sessionId ? 'AI-powered movement pattern detection for this session' : 'Aggregated campus-wide movement and anomaly tracking'}
                 </p>
               </div>
@@ -301,18 +301,18 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
       {showSettings && (
         <Card glass>
           <CardHeader>
-            <h4 className="text-white font-medium">Analysis Settings</h4>
+            <h4 className="text-slate-900 font-bold">Analysis Settings</h4>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   Sensitivity
                 </label>
                 <select
                   value={analysisSettings.sensitivity}
                   onChange={(e) => setAnalysisSettings(prev => ({ ...prev, sensitivity: e.target.value }))}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -321,7 +321,7 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   Update Interval (ms)
                 </label>
                 <input
@@ -330,7 +330,7 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
                   onChange={(e) => {
                     setAnalysisSettings(prev => ({ ...prev, updateInterval: safeParseInt(e.target.value, 5000) }));
                   }}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
                 />
               </div>
               
@@ -340,9 +340,9 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
                     type="checkbox"
                     checked={analysisSettings.showAnomalies}
                     onChange={(e) => setAnalysisSettings(prev => ({ ...prev, showAnomalies: e.target.checked }))}
-                    className="rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500"
+                    className="rounded border-slate-300 bg-white text-primary focus:ring-primary"
                   />
-                  <span className="text-sm text-gray-300">Show Anomalies</span>
+                  <span className="text-sm text-slate-600 font-medium">Show Anomalies</span>
                 </label>
                 
                 <label className="flex items-center space-x-2">
@@ -350,9 +350,9 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
                     type="checkbox"
                     checked={analysisSettings.showPaths}
                     onChange={(e) => setAnalysisSettings(prev => ({ ...prev, showPaths: e.target.checked }))}
-                    className="rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500"
+                    className="rounded border-slate-300 bg-white text-primary focus:ring-primary"
                   />
-                  <span className="text-sm text-gray-300">Show Paths</span>
+                  <span className="text-sm text-slate-600 font-medium">Show Paths</span>
                 </label>
                 
                 <label className="flex items-center space-x-2">
@@ -360,9 +360,9 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
                     type="checkbox"
                     checked={analysisSettings.showHeatmap}
                     onChange={(e) => setAnalysisSettings(prev => ({ ...prev, showHeatmap: e.target.checked }))}
-                    className="rounded border-gray-600 bg-gray-800 text-purple-500 focus:ring-purple-500"
+                    className="rounded border-slate-300 bg-white text-primary focus:ring-primary"
                   />
-                  <span className="text-sm text-gray-300">Show Heatmap</span>
+                  <span className="text-sm text-slate-600 font-medium">Show Heatmap</span>
                 </label>
               </div>
             </div>
@@ -375,19 +375,19 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
         <Card glass>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <h4 className="text-white font-medium">Room Heatmap</h4>
+              <h4 className="text-slate-900 font-bold">Room Heatmap</h4>
               <div className="flex items-center space-x-2">
                 <div className="flex items-center space-x-1">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-xs text-gray-400">Low</span>
+                  <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                  <span className="text-xs text-slate-500 font-medium">Low</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <span className="text-xs text-gray-400">Medium</span>
+                  <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
+                  <span className="text-xs text-slate-500 font-medium">Medium</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="text-xs text-gray-400">High</span>
+                  <div className="w-3 h-3 bg-rose-500 rounded-full"></div>
+                  <span className="text-xs text-slate-500 font-medium">High</span>
                 </div>
               </div>
             </div>
@@ -397,10 +397,10 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
               ref={canvasRef}
               width={400}
               height={300}
-              className="w-full bg-gray-800/50 rounded-lg border border-gray-700"
+              className="w-full bg-slate-50 rounded-xl border border-slate-200"
             />
             
-            <div className="mt-4 text-sm text-gray-400">
+            <div className="mt-4 text-sm text-slate-500 font-medium">
               <p>• Intensity represents student concentration</p>
               <p>• Red zones indicate high activity areas</p>
               <p>• Blue zones show low movement areas</p>
@@ -412,11 +412,11 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
         <Card glass>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <h4 className="text-white font-medium">Movement Patterns</h4>
+              <h4 className="text-slate-900 font-bold">Movement Patterns</h4>
               <select
                 value={patternFilter}
                 onChange={(e) => setPatternFilter(e.target.value)}
-                className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs text-white outline-none focus:border-purple-500"
+                className="px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs text-slate-900 outline-none focus:border-primary cursor-pointer"
               >
                 <option value="ALL">All Patterns</option>
                 <option value="STATIONARY">Stationary Only</option>
@@ -424,7 +424,7 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
                 <option value="ERRATIC">Walkouts / Erratic</option>
               </select>
             </div>
-            <p className="text-gray-400 text-sm">Real-time student behavior analysis</p>
+            <p className="text-slate-500 text-sm font-medium">Real-time student behavior analysis</p>
           </CardHeader>
           <CardContent>
             <div className="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
@@ -437,31 +437,31 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
                 .map((pattern) => (
                 <div
                   key={pattern.studentId}
-                  className="p-3 bg-gray-800/30 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors cursor-pointer"
+                  className="p-3 bg-slate-50 rounded-xl border border-slate-100 hover:border-slate-200 transition-colors cursor-pointer group"
                   onClick={() => setSelectedStudent(pattern.studentId)}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
                       {getPatternIcon(pattern.pattern)}
-                      <span className="text-white font-medium">{pattern.studentName}</span>
+                      <span className="text-slate-900 font-bold">{pattern.studentName}</span>
                     </div>
-                    <div className={`px-2 py-1 rounded-full text-xs font-medium border ${getPatternColor(pattern.pattern)}`}>
+                    <div className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter border ${getPatternColor(pattern.pattern)}`}>
                       {pattern.pattern}
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div className="grid grid-cols-3 gap-2 text-[10px] font-medium">
                     <div>
-                      <span className="text-gray-400">Speed:</span>
-                      <span className="text-white ml-1">{pattern.speed.toFixed(1)} m/s</span>
+                      <span className="text-slate-400">Speed:</span>
+                      <span className="text-slate-900 ml-1">{pattern.speed.toFixed(1)} m/s</span>
                     </div>
                     <div>
-                      <span className="text-gray-400">Distance:</span>
-                      <span className="text-white ml-1">{pattern.distance}m</span>
+                      <span className="text-slate-400">Distance:</span>
+                      <span className="text-slate-900 ml-1">{pattern.distance}m</span>
                     </div>
                     <div>
-                      <span className="text-gray-400">Confidence:</span>
-                      <span className="text-white ml-1">{Math.round(pattern.confidence * 100)}%</span>
+                      <span className="text-slate-400">Confidence:</span>
+                      <span className="text-slate-900 ml-1">{Math.round(pattern.confidence * 100)}%</span>
                     </div>
                   </div>
                   
@@ -482,17 +482,17 @@ export const SpatialBehaviorDashboard: React.FC<SpatialBehaviorDashboardProps> =
       <Card glass>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <h4 className="text-white font-medium">AI Alerts</h4>
-            <span className="text-gray-400 text-sm">
+            <h4 className="text-slate-900 font-bold">AI Alerts</h4>
+            <span className="text-slate-500 text-sm font-medium">
               {alerts.length} active alerts
             </span>
           </div>
         </CardHeader>
         <CardContent>
           {alerts.length === 0 ? (
-            <div className="text-center py-8">
-              <Eye className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-              <p className="text-gray-400">No anomalies detected</p>
+            <div className="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+              <Eye className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+              <p className="text-slate-500 font-medium">No anomalies detected</p>
             </div>
           ) : (
             <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">

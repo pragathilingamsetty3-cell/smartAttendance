@@ -252,14 +252,14 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-red-500/20 rounded-lg">
-                <Brain className="h-5 w-5 text-red-400" />
+              <div className="p-2 bg-rose-50 rounded-lg">
+                <Brain className="h-5 w-5 text-rose-500" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-semibold text-slate-900">
                   {sessionId ? 'Walk-Out Prediction' : 'Campus Walk-Out Risk Analysis'}
                 </h3>
-                <p className="text-gray-400 text-sm">
+                <p className="text-slate-500 text-sm font-medium">
                   {sessionId ? 'AI-powered early warning system for this session' : 'Predictive risk monitoring for the entire active student population'}
                 </p>
               </div>
@@ -267,11 +267,11 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
             
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2">
-                <label className="text-sm text-gray-400">Risk Threshold:</label>
+                <label className="text-sm text-slate-500 font-medium">Risk Threshold:</label>
                 <select
                   value={riskThreshold}
                   onChange={(e) => setRiskThreshold(parseFloat(e.target.value))}
-                  className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-white text-sm"
+                  className="px-2 py-1 bg-slate-50 border border-slate-200 rounded text-slate-900 text-sm cursor-pointer"
                 >
                   <option value="0.5">50%</option>
                   <option value="0.6">60%</option>
@@ -295,21 +295,21 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
 
       {/* Risk Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card glass>
+        <Card glass className="bg-white border-slate-100">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-red-500/20 rounded-lg">
-                <AlertTriangle className="h-5 w-5 text-red-400" />
+              <div className="p-2 bg-rose-50 rounded-lg">
+                <AlertTriangle className="h-5 w-5 text-rose-500" />
               </div>
-              <span className="text-2xl font-bold text-red-400">
+              <span className="text-2xl font-bold text-rose-600">
                 {metrics.highRiskStudents}
               </span>
             </div>
-            <p className="text-gray-400 text-sm">High Risk Students</p>
+            <p className="text-slate-500 text-sm font-medium">High Risk Students</p>
             <div className="mt-2">
-              <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-slate-100 rounded-full h-2">
                 <div 
-                  className="bg-red-500 h-2 rounded-full"
+                  className="bg-rose-500 h-2 rounded-full"
                   style={{ width: `${(metrics.highRiskStudents / metrics.totalStudents) * 100}%` }}
                 />
               </div>
@@ -317,21 +317,21 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
           </CardContent>
         </Card>
 
-        <Card glass>
+        <Card glass className="bg-white border-slate-100">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-yellow-500/20 rounded-lg">
-                <AlertTriangle className="h-5 w-5 text-yellow-400" />
+              <div className="p-2 bg-amber-50 rounded-lg">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
               </div>
-              <span className="text-2xl font-bold text-yellow-400">
+              <span className="text-2xl font-bold text-amber-600">
                 {metrics.mediumRiskStudents}
               </span>
             </div>
-            <p className="text-gray-400 text-sm">Medium Risk Students</p>
+            <p className="text-slate-500 text-sm font-medium">Medium Risk Students</p>
             <div className="mt-2">
-              <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-slate-100 rounded-full h-2">
                 <div 
-                  className="bg-yellow-500 h-2 rounded-full"
+                  className="bg-amber-500 h-2 rounded-full"
                   style={{ width: `${(metrics.mediumRiskStudents / metrics.totalStudents) * 100}%` }}
                 />
               </div>
@@ -339,38 +339,38 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
           </CardContent>
         </Card>
 
-        <Card glass>
+        <Card glass className="bg-white border-slate-100">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-green-500/20 rounded-lg">
-                <Shield className="h-5 w-5 text-green-400" />
+              <div className="p-2 bg-emerald-50 rounded-lg">
+                <Shield className="h-5 w-5 text-emerald-500" />
               </div>
-              <span className="text-2xl font-bold text-green-400">
+              <span className="text-2xl font-bold text-emerald-600">
                 {metrics.preventedWalkOuts}
               </span>
             </div>
-            <p className="text-gray-400 text-sm">Prevented Walk-Outs</p>
-            <div className="mt-2 text-xs text-green-400">
+            <p className="text-slate-500 text-sm font-medium">Prevented Walk-Outs</p>
+            <div className="mt-2 text-xs text-emerald-600 font-bold">
               {Math.round((metrics.preventedWalkOuts / (metrics.highRiskStudents || 1)) * 100)}% success rate
             </div>
           </CardContent>
         </Card>
 
-        <Card glass>
+        <Card glass className="bg-white border-slate-100">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-purple-500/20 rounded-lg">
-                <Brain className="h-5 w-5 text-purple-400" />
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Brain className="h-5 w-5 text-primary" />
               </div>
-              <span className="text-2xl font-bold text-purple-400">
+              <span className="text-2xl font-bold text-slate-900">
                 {Math.round(metrics.predictionAccuracy * 100)}%
               </span>
             </div>
-            <p className="text-gray-400 text-sm">Prediction Accuracy</p>
+            <p className="text-slate-500 text-sm font-medium">Prediction Accuracy</p>
             <div className="mt-2">
-              <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-slate-100 rounded-full h-2">
                 <div 
-                  className="bg-purple-500 h-2 rounded-full"
+                  className="bg-primary h-2 rounded-full"
                   style={{ width: `${metrics.predictionAccuracy * 100}%` }}
                 />
               </div>
@@ -381,12 +381,12 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
 
       {/* Confirmed Walk-outs Section */}
       {activeWalkOuts.length > 0 && (
-        <Card glass className="border-[#ff007a]/30 bg-[#ff007a]/5">
+        <Card glass className="border-rose-200 bg-rose-50">
           <CardHeader>
-            <div className="flex items-center space-x-2 text-[#ff007a]">
+            <div className="flex items-center space-x-2 text-rose-600">
               <Activity className="h-5 w-5" />
               <h4 className="font-bold">Confirmed Walk-outs Detected</h4>
-              <span className="bg-[#ff007a]/20 px-2 py-0.5 rounded text-xs">
+              <span className="bg-rose-100 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">
                 {activeWalkOuts.length} Students
               </span>
             </div>
@@ -394,14 +394,14 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {activeWalkOuts.map(student => (
-                <div key={student.studentId} className="p-3 bg-black/20 rounded-lg border border-[#ff007a]/20 flex items-center justify-between">
+                <div key={student.studentId} className="p-3 bg-white rounded-xl border border-rose-100 flex items-center justify-between shadow-sm">
                   <div>
-                    <p className="text-white font-medium text-sm">{student.studentName}</p>
-                    <p className="text-[10px] text-gray-400">ID: {student.studentId.substring(0, 8)}...</p>
+                    <p className="text-slate-900 font-bold text-sm">{student.studentName}</p>
+                    <p className="text-[10px] text-slate-500 font-medium">ID: {student.studentId.substring(0, 8)}...</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] text-[#ff007a] font-bold uppercase tracking-wider">Outside Boundary</span>
-                    <p className="text-[9px] text-gray-500">{new Date(student.timestamp).toLocaleTimeString()}</p>
+                    <span className="text-[10px] text-rose-600 font-black uppercase tracking-wider">Outside Boundary</span>
+                    <p className="text-[9px] text-slate-400 font-medium">{new Date(student.timestamp).toLocaleTimeString()}</p>
                   </div>
                 </div>
               ))}
@@ -414,19 +414,19 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
       <Card glass>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <h4 className="text-white font-medium">Active Walk-Out Alerts</h4>
+            <h4 className="text-slate-900 font-bold">Active Walk-Out Alerts</h4>
             <div className="flex items-center space-x-3">
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
                   checked={autoRefresh}
                   onChange={(e) => setAutoRefresh(e.target.checked)}
-                  className="rounded border-gray-600 bg-gray-800 text-red-500"
+                  className="rounded border-slate-300 bg-white text-rose-500 focus:ring-rose-500"
                 />
-                <span className="text-sm text-gray-300">Auto Refresh</span>
+                <span className="text-sm text-slate-500 font-medium">Auto Refresh</span>
               </label>
               
-              <span className="text-gray-400 text-sm">
+              <span className="text-slate-400 text-sm font-medium">
                 {alerts.length} alerts
               </span>
             </div>
@@ -434,10 +434,10 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
         </CardHeader>
         <CardContent>
           {alerts.length === 0 ? (
-            <div className="text-center py-12">
-              <Shield className="h-16 w-16 text-gray-500 mx-auto mb-4" />
-              <h4 className="text-xl font-semibold text-white mb-2">No Active Alerts</h4>
-              <p className="text-gray-400">
+            <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+              <Shield className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+              <h4 className="text-xl font-bold text-slate-900 mb-2">No Active Alerts</h4>
+              <p className="text-slate-500 font-medium">
                 All students appear to be within normal risk parameters
               </p>
             </div>
@@ -548,15 +548,15 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
 
       {/* Alert Details Modal */}
       {selectedAlert && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <Card glass className="w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-            <CardHeader>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <Card glass className="w-full max-w-2xl max-h-[80vh] overflow-y-auto bg-white border-slate-200 shadow-2xl rounded-3xl">
+            <CardHeader className="border-b border-slate-100">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-bold text-slate-900">
                   Walk-Out Alert Details - {selectedAlert.studentName}
                 </h3>
                 <Button
-                  variant="glass"
+                  variant="secondary"
                   size="sm"
                   onClick={() => setSelectedAlert(null)}
                 >
@@ -568,28 +568,28 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
             <CardContent>
               <div className="space-y-6">
                 {/* Risk Overview */}
-                <div className={`p-4 rounded-lg border ${getRiskColor(selectedAlert.riskLevel)}`}>
+                <div className={`p-4 rounded-xl border ${getRiskColor(selectedAlert.riskLevel)}`}>
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-2">
                       {getRiskIcon(selectedAlert.riskLevel)}
-                      <span className="font-medium">{selectedAlert.riskLevel} Risk Level</span>
+                      <span className="font-bold">{selectedAlert.riskLevel} Risk Level</span>
                     </div>
                     <div className="text-right">
                       <p className={`text-2xl font-bold ${getProbabilityColor(selectedAlert.probability)}`}>
                         {Math.round(selectedAlert.probability * 100)}%
                       </p>
-                      <p className="text-xs opacity-75">Walk-out Probability</p>
+                      <p className="text-xs opacity-75 font-medium">Walk-out Probability</p>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="grid grid-cols-2 gap-4 text-sm font-medium">
                     <div>
-                      <span className="opacity-75">Alert Time:</span>
-                      <p className="text-white">{new Date(selectedAlert.timestamp).toLocaleString()}</p>
+                      <span className="opacity-75 text-slate-500">Alert Time:</span>
+                      <p className="text-slate-900">{new Date(selectedAlert.timestamp).toLocaleString()}</p>
                     </div>
                     <div>
-                      <span className="opacity-75">Estimated Walk-out:</span>
-                      <p className="text-white">
+                      <span className="opacity-75 text-slate-500">Estimated Walk-out:</span>
+                      <p className="text-slate-900">
                         {new Date(selectedAlert.prediction.estimatedTime).toLocaleString()}
                       </p>
                     </div>
@@ -598,17 +598,17 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
 
                 {/* Risk Factors */}
                 <div>
-                  <h4 className="text-white font-medium mb-3">Risk Factors Analysis</h4>
+                  <h4 className="text-slate-900 font-bold mb-3">Risk Factors Analysis</h4>
                   <div className="space-y-2">
                     {selectedAlert.factors.map((factor, index) => (
-                      <div key={index} className="p-3 bg-gray-800/30 rounded-lg">
+                      <div key={index} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-white font-medium">{factor.factor}</span>
-                          <span className={`font-bold ${getProbabilityColor(factor.impact)}`}>
+                          <span className="text-slate-900 font-bold">{factor.factor}</span>
+                          <span className={`font-black ${getProbabilityColor(factor.impact)}`}>
                             {Math.round(factor.impact * 100)}%
                           </span>
                         </div>
-                        <p className="text-sm text-gray-400">{factor.description}</p>
+                        <p className="text-sm text-slate-500 font-medium">{factor.description}</p>
                       </div>
                     ))}
                   </div>
@@ -617,16 +617,16 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
                 {/* Location Information */}
                 {selectedAlert.location && (
                   <div>
-                    <h4 className="text-white font-medium mb-3">Location Information</h4>
-                    <div className="p-3 bg-gray-800/30 rounded-lg">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                  <h4 className="text-slate-900 font-bold mb-3">Location Information</h4>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <div className="grid grid-cols-2 gap-4 text-sm font-medium">
                         <div>
-                          <span className="opacity-75">Distance from Room:</span>
-                          <p className="text-white">{selectedAlert.location.distanceFromRoom.toFixed(1)}m</p>
+                          <span className="opacity-75 text-slate-500">Distance from Room:</span>
+                          <p className="text-slate-900">{selectedAlert.location.distanceFromRoom.toFixed(1)}m</p>
                         </div>
                         <div>
-                          <span className="opacity-75">Coordinates:</span>
-                          <p className="text-white">
+                          <span className="opacity-75 text-slate-500">Coordinates:</span>
+                          <p className="text-slate-900">
                             {selectedAlert.location.latitude.toFixed(6)}, {selectedAlert.location.longitude.toFixed(6)}
                           </p>
                         </div>
@@ -637,7 +637,7 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
 
                 {/* Recommended Actions */}
                 <div>
-                  <h4 className="text-white font-medium mb-3">Recommended Actions</h4>
+                  <h4 className="text-slate-900 font-bold mb-3">Recommended Actions</h4>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2 p-2 bg-blue-500/10 rounded-lg">
                       <Eye className="h-4 w-4 text-blue-400" />
@@ -657,7 +657,7 @@ export const WalkOutPrediction: React.FC<WalkOutPredictionProps> = ({
                 </div>
 
                 {/* Actions */}
-                <div className="flex space-x-3 pt-4 border-t border-gray-700">
+                <div className="flex space-x-3 pt-4 border-t border-slate-100">
                   <Button
                     variant="primary"
                     onClick={() => acknowledgeAlert(selectedAlert.alertId)}

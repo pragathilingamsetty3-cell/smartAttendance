@@ -150,7 +150,7 @@ export const GPSDriftDetection: React.FC<GPSDriftDetectionProps> = ({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw grid
-    ctx.strokeStyle = '#374151';
+    ctx.strokeStyle = '#F1F5F9';
     ctx.lineWidth = 1;
     for (let i = 0; i <= 10; i++) {
       const x = (canvas.width / 10) * i;
@@ -197,8 +197,8 @@ export const GPSDriftDetection: React.FC<GPSDriftDetectionProps> = ({
 
       // Label for global mode
       if (!studentId && (point as any).studentName) {
-        ctx.fillStyle = 'white';
-        ctx.font = '10px Inter';
+        ctx.fillStyle = '#1E293B';
+        ctx.font = 'bold 10px Inter';
         ctx.fillText((point as any).studentName, x + 8, y + 4);
       }
 
@@ -208,7 +208,7 @@ export const GPSDriftDetection: React.FC<GPSDriftDetectionProps> = ({
         if (prev.latitude !== 0) {
           const prevX = ((prev.longitude - centerLng + (zoom/2)) / zoom) * canvas.width;
           const prevY = (((centerLat + (zoom/2)) - prev.latitude) / zoom) * canvas.height;
-          ctx.strokeStyle = '#4b5563';
+          ctx.strokeStyle = '#CBD5E1';
           ctx.setLineDash([2, 5]);
           ctx.beginPath();
           ctx.moveTo(prevX, prevY);
@@ -236,17 +236,15 @@ export const GPSDriftDetection: React.FC<GPSDriftDetectionProps> = ({
       case 'HIGH': return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
       case 'MEDIUM': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
       case 'LOW': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+      default: return 'bg-slate-100 text-slate-500 border-slate-200';
     }
   };
 
-  if (loading && gpsData.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loading size="lg" text="Initialing GPS campus intelligence..." />
       </div>
     );
-  }
 
   return (
     <div className="space-y-6">
@@ -255,14 +253,14 @@ export const GPSDriftDetection: React.FC<GPSDriftDetectionProps> = ({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-orange-500/20 rounded-lg">
-                <MapPin className="h-5 w-5 text-orange-400" />
+              <div className="p-2 bg-orange-50 rounded-lg">
+                <MapPin className="h-5 w-5 text-orange-500" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-bold text-slate-900">
                   {studentId ? 'Student GPS Tracking' : 'Campus Spatial Monitoring'}
                 </h3>
-                <p className="text-gray-400 text-sm">
+                <p className="text-slate-500 text-sm font-medium">
                   {studentId ? 'High-accuracy breadcrumb analysis for specific student' : 'Real-time student density and GPS distribution'}
                 </p>
               </div>
@@ -296,16 +294,16 @@ export const GPSDriftDetection: React.FC<GPSDriftDetectionProps> = ({
         <Card glass className="lg:col-span-2">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <h4 className="text-white font-medium">GPS Tracking Map</h4>
+              <h4 className="text-slate-900 font-bold">GPS Tracking Map</h4>
               <div className="flex items-center space-x-4">
                 <label className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     checked={showCorrections}
                     onChange={(e) => setShowCorrections(e.target.checked)}
-                    className="rounded border-gray-600 bg-gray-800 text-orange-500"
+                    className="rounded border-slate-300 bg-white text-orange-500 focus:ring-orange-500"
                   />
-                  <span className="text-sm text-gray-300">Show AI Corrections</span>
+                  <span className="text-sm text-slate-600 font-medium">Show AI Corrections</span>
                 </label>
               </div>
             </div>
@@ -315,7 +313,7 @@ export const GPSDriftDetection: React.FC<GPSDriftDetectionProps> = ({
               ref={canvasRef}
               width={600}
               height={400}
-              className="w-full bg-gray-800/50 rounded-lg border border-gray-700"
+              className="w-full bg-slate-50 rounded-xl border border-slate-200 shadow-sm"
             />
           </CardContent>
         </Card>
@@ -323,20 +321,20 @@ export const GPSDriftDetection: React.FC<GPSDriftDetectionProps> = ({
         {/* Analysis Results */}
         <Card glass>
           <CardHeader>
-            <h4 className="text-white font-medium">Tracking Metrics</h4>
+            <h4 className="text-slate-900 font-bold">Tracking Metrics</h4>
           </CardHeader>
           <CardContent>
             {driftAnalysis ? (
               <div className="space-y-4">
-                <div className={`p-3 rounded-lg border ${getSeverityColor(driftAnalysis.severity)}`}>
+                <div className={`p-3 rounded-lg border ${getSeverityColor(driftAnalysis!.severity)}`}>
                   <div className="flex items-center space-x-2 mb-2">
-                    {driftAnalysis.isGPSDrift ? (
+                    {driftAnalysis!.isGPSDrift ? (
                       <AlertTriangle className="h-4 w-4" />
                     ) : (
                       <CheckCircle className="h-4 w-4" />
                     )}
                     <span className="font-medium">
-                      {driftAnalysis.isGPSDrift ? 'GPS Drift Detected' : 'No Drift Detected'}
+                      {driftAnalysis!.isGPSDrift ? 'GPS Drift Detected' : 'No Drift Detected'}
                     </span>
                   </div>
                   <p className="text-sm opacity-90">Analysis completed</p>
@@ -344,22 +342,22 @@ export const GPSDriftDetection: React.FC<GPSDriftDetectionProps> = ({
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Avg Precision</span>
-                    <span className={`font-medium ${getAccuracyColor(metrics.averageAccuracy)}`}>
+                    <span className="text-slate-500 font-medium">Avg Precision</span>
+                    <span className={`font-bold ${getAccuracyColor(metrics.averageAccuracy)}`}>
                       {metrics.averageAccuracy.toFixed(1)}m
                     </span>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Best Fix</span>
-                    <span className="font-medium text-green-400">
+                    <span className="text-slate-500 font-medium">Best Fix</span>
+                    <span className="font-bold text-emerald-500">
                       {metrics.bestAccuracy.toFixed(1)}m
                     </span>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-400">AI Confidence</span>
-                    <span className="font-medium text-blue-400">
+                    <span className="text-slate-500 font-medium">AI Confidence</span>
+                    <span className="font-bold text-primary">
                       {Math.round(metrics.correctionRate * 100)}%
                     </span>
                   </div>
@@ -367,27 +365,27 @@ export const GPSDriftDetection: React.FC<GPSDriftDetectionProps> = ({
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                <div className="p-3 bg-primary/5 rounded-xl border border-primary/10">
                   <div className="flex items-center space-x-2 mb-2">
-                    <Activity className="h-4 w-4 text-blue-400" />
-                    <span className="font-medium text-blue-400">Signal Intelligence</span>
+                    <Activity className="h-4 w-4 text-primary" />
+                    <span className="font-bold text-primary">Signal Intelligence</span>
                   </div>
-                  <p className="text-sm text-gray-300">
+                  <p className="text-sm text-slate-500 font-medium">
                     {studentId ? 'Run analysis to check for signal drift.' : 'Campus GPS monitoring active across all departments.'}
                   </p>
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Avg Precision</span>
-                    <span className={`font-medium ${getAccuracyColor(metrics.averageAccuracy)}`}>
+                    <span className="text-slate-500 font-medium">Avg Precision</span>
+                    <span className={`font-bold ${getAccuracyColor(metrics.averageAccuracy)}`}>
                       {metrics.averageAccuracy.toFixed(1)}m
                     </span>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Active Nodes</span>
-                    <span className="font-medium text-blue-400">
+                    <span className="text-slate-500 font-medium">Active Nodes</span>
+                    <span className="font-bold text-primary">
                       {gpsData.length}
                     </span>
                   </div>
@@ -407,7 +405,7 @@ export const GPSDriftDetection: React.FC<GPSDriftDetectionProps> = ({
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-700 text-left text-xs text-gray-400 uppercase">
+                <tr className="border-b border-slate-100 text-left text-xs text-slate-500 uppercase tracking-wider font-bold">
                   <th className="px-4 py-3">Time</th>
                   <th className="px-4 py-3">Entity</th>
                   <th className="px-4 py-3">Location</th>
@@ -415,23 +413,23 @@ export const GPSDriftDetection: React.FC<GPSDriftDetectionProps> = ({
                   <th className="px-4 py-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-700">
+              <tbody className="divide-y divide-slate-100">
                 {gpsData.slice(0, 10).map((point, index) => (
-                  <tr key={index} className="hover:bg-gray-800/30">
-                    <td className="px-4 py-3 text-sm text-gray-300">
+                  <tr key={index} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-3 text-sm text-slate-500 font-medium">
                       {new Date(point.timestamp).toLocaleTimeString()}
                     </td>
-                    <td className="px-4 py-3 text-sm text-white">
+                    <td className="px-4 py-3 text-sm text-slate-900 font-bold">
                       {point.studentName || 'Self'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-400">
+                    <td className="px-4 py-3 text-sm text-slate-500 font-medium">
                       {point.latitude.toFixed(4)}, {point.longitude.toFixed(4)}
                     </td>
-                    <td className={`px-4 py-3 text-sm ${getAccuracyColor(point.accuracy)}`}>
+                    <td className={`px-4 py-3 text-sm font-bold ${getAccuracyColor(point.accuracy)}`}>
                       {point.accuracy.toFixed(1)}m
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-green-500/20 text-green-400 border border-green-500/20 uppercase">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase tracking-tighter">
                         Active Fix
                       </span>
                     </td>

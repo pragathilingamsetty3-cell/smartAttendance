@@ -138,11 +138,11 @@ function AnalyticsContent() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold gradient-text flex items-center">
-            <Brain className="h-6 w-6 mr-3" />
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center">
+            <Brain className="h-6 w-6 mr-3 text-primary" />
             AI Analytics
           </h1>
-          <p className="text-gray-400">
+          <p className="text-slate-500">
             Advanced machine learning insights and predictive analytics
           </p>
         </div>
@@ -151,46 +151,46 @@ function AnalyticsContent() {
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        <Card glass>
+        <Card glass className="bg-white border-slate-100">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-green-500/20 rounded-lg">
-                <Activity className="h-5 w-5 text-green-400" />
+              <div className="p-2 bg-emerald-50 rounded-lg">
+                <Activity className="h-5 w-5 text-emerald-500" />
               </div>
-              <span className="text-2xl font-bold text-white">{stats.liveVerifications.toLocaleString()}</span>
+              <span className="text-2xl font-bold text-slate-900">{stats.liveVerifications.toLocaleString()}</span>
             </div>
-            <p className="text-gray-400 text-sm">Live Verifications</p>
-            <div className="mt-2 text-xs text-green-400">
+            <p className="text-slate-500 text-sm">Live Verifications</p>
+            <div className="mt-2 text-xs text-emerald-500 font-medium">
               Present & Late Verified
             </div>
           </CardContent>
         </Card>
 
-        <Card glass>
+        <Card glass className="bg-white border-slate-100">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-purple-500/20 rounded-lg">
-                <Brain className="h-5 w-5 text-purple-400" />
+              <div className="p-2 bg-purple-50 rounded-lg">
+                <Brain className="h-5 w-5 text-purple-500" />
               </div>
-              <span className="text-2xl font-bold text-white">{stats.predictionsToday.toLocaleString()}</span>
+              <span className="text-2xl font-bold text-slate-900">{stats.predictionsToday.toLocaleString()}</span>
             </div>
-            <p className="text-gray-400 text-sm">Predictions Today</p>
-            <div className="mt-2 text-xs text-purple-400">
+            <p className="text-slate-500 text-sm">Predictions Today</p>
+            <div className="mt-2 text-xs text-purple-500 font-medium">
               AI behavioral analysis
             </div>
           </CardContent>
         </Card>
 
-        <Card glass>
+        <Card glass className="bg-white border-slate-100">
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-orange-500/20 rounded-lg">
-                <UserMinus className="h-5 w-5 text-orange-400" />
+              <div className="p-2 bg-orange-50 rounded-lg">
+                <UserMinus className="h-5 w-5 text-orange-500" />
               </div>
-              <span className="text-2xl font-bold text-white">{stats.absentCount}</span>
+              <span className="text-2xl font-bold text-slate-900">{stats.absentCount}</span>
             </div>
-            <p className="text-gray-400 text-sm">Absent Count</p>
-            <div className="mt-2 text-xs text-orange-400">
+            <p className="text-slate-500 text-sm">Absent Count</p>
+            <div className="mt-2 text-xs text-orange-500 font-medium">
               No-shows & Security Failures
             </div>
           </CardContent>
@@ -203,7 +203,7 @@ function AnalyticsContent() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-300">
+              <label className="block text-sm font-medium text-slate-700">
                 Department Search
               </label>
               <div className="relative">
@@ -213,17 +213,17 @@ function AnalyticsContent() {
                   placeholder="Search departments..."
                   value={deptSearchTerm}
                   onChange={(e) => setDeptSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none"
+                  className="w-full pl-10 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
                 />
               </div>
               <select
                 value={selectedDepartment}
                 onChange={(e) => setSelectedDepartment(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer"
               >
-                <option value="">All Departments {filteredDepartments.length < departments.length ? `(${filteredDepartments.length} found)` : ""}</option>
+                <option value="" className="bg-white">All Departments {filteredDepartments.length < departments.length ? `(${filteredDepartments.length} found)` : ""}</option>
                 {filteredDepartments.map(dept => (
-                  <option key={dept.id} value={dept.id}>
+                  <option key={dept.id} value={dept.id} className="bg-white">
                     {dept.label} {dept.code ? `(${dept.code})` : ""}
                   </option>
                 ))}
@@ -231,18 +231,18 @@ function AnalyticsContent() {
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-300">
+              <label className="block text-sm font-medium text-slate-700">
                 Section
               </label>
               <select
                 value={selectedSection}
                 onChange={(e) => setSelectedSection(e.target.value)}
                 disabled={!selectedDepartment}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
-                <option value="">{selectedDepartment ? 'All Sections' : 'Select Department First'}</option>
+                <option value="" className="bg-white">{selectedDepartment ? 'All Sections' : 'Select Department First'}</option>
                 {sections.map(sec => (
-                  <option key={sec.id} value={sec.id}>
+                  <option key={sec.id} value={sec.id} className="bg-white">
                     {sec.label}
                   </option>
                 ))}
@@ -275,55 +275,55 @@ function AnalyticsContent() {
       {/* Security Anomalies Modal - Fraud List */}
       {showAnomalyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <Card className="w-full max-w-2xl bg-gray-900 border-gray-800 shadow-2xl animate-in zoom-in duration-200">
+          <Card className="w-full max-w-2xl bg-white border-slate-200 shadow-2xl animate-in zoom-in duration-200 overflow-hidden rounded-3xl">
             <CardContent className="p-0">
-              <div className="flex items-center justify-between p-6 border-b border-gray-800">
-                <div className="flex items-center space-x-3 text-red-400">
+              <div className="flex items-center justify-between p-6 border-b border-slate-100">
+                <div className="flex items-center space-x-3 text-red-500">
                   <ShieldAlert className="h-6 w-6" />
-                  <h2 className="text-xl font-bold text-white">Security Fraud Audit</h2>
+                  <h2 className="text-xl font-bold text-slate-900">Security Fraud Audit</h2>
                 </div>
                 <button 
                   onClick={() => setShowAnomalyModal(false)}
-                  className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+                  className="p-2 hover:bg-slate-100 rounded-full transition-colors"
                 >
-                  <X className="h-5 w-5 text-gray-400" />
+                  <X className="h-5 w-5 text-slate-400" />
                 </button>
               </div>
               
               <div className="p-6">
-                <p className="text-gray-400 mb-6 text-sm">
+                <p className="text-slate-500 mb-6 text-sm">
                   The following students have been flagged for hardware mismatch, biometric verification failure, or unauthorized spatial behavior.
                 </p>
                 
                 <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                   {anomalyList.length === 0 ? (
-                    <div className="text-center py-12 bg-gray-800/50 rounded-xl border border-dashed border-gray-700">
-                      <ShieldAlert className="h-12 w-12 text-gray-600 mx-auto mb-3 opacity-20" />
-                      <p className="text-gray-500">No active security anomalies detected.</p>
+                    <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                      <ShieldAlert className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+                      <p className="text-slate-500">No active security anomalies detected.</p>
                     </div>
                   ) : (
                     anomalyList.map((alert) => (
-                      <div key={alert.id} className="flex items-center justify-between p-4 bg-red-500/5 border border-red-500/20 rounded-xl group hover:bg-red-500/10 transition-all">
+                      <div key={alert.id} className="flex items-center justify-between p-4 bg-red-50 border border-red-100 rounded-xl group hover:bg-red-100 transition-all">
                         <div className="flex items-center space-x-4">
-                          <div className="h-10 w-10 bg-red-500/20 rounded-full flex items-center justify-center">
-                            <User className="h-5 w-5 text-red-400" />
+                          <div className="h-10 w-10 bg-red-500/10 rounded-full flex items-center justify-center">
+                            <User className="h-5 w-5 text-red-500" />
                           </div>
                           <div>
-                            <h4 className="font-semibold text-white">{alert.studentName || alert.studentId || 'System'}</h4>
-                            <div className="flex items-center space-x-2 text-xs text-gray-400">
-                              <span className="bg-gray-800 px-2 py-0.5 rounded text-gray-300">
+                            <h4 className="font-semibold text-slate-900">{alert.studentName || alert.studentId || 'System'}</h4>
+                            <div className="flex items-center space-x-2 text-xs text-slate-500">
+                              <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600">
                                 {alert.registrationNumber || 'N/A'}
                               </span>
                               <span>•</span>
-                              <span className="text-red-400/80">{alert.type}</span>
+                              <span className="text-red-500 font-medium">{alert.type}</span>
                             </div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-xs font-medium text-red-400 mb-1">
+                          <div className="text-xs font-bold text-red-600 mb-1">
                             {Math.round((alert.confidence || 0.95) * 100)}% Confidence
                           </div>
-                          <div className="text-[10px] text-gray-500">
+                          <div className="text-[10px] text-slate-400">
                             {new Date(alert.timestamp).toLocaleTimeString()}
                           </div>
                         </div>
@@ -333,8 +333,8 @@ function AnalyticsContent() {
                 </div>
               </div>
               
-              <div className="p-6 bg-gray-800/50 border-t border-gray-800 rounded-b-xl flex justify-end">
-                <Button variant="glass" onClick={() => setShowAnomalyModal(false)}>
+              <div className="p-6 bg-slate-50 border-t border-slate-100 rounded-b-xl flex justify-end">
+                <Button variant="secondary" onClick={() => setShowAnomalyModal(false)}>
                   Close Audit
                 </Button>
               </div>

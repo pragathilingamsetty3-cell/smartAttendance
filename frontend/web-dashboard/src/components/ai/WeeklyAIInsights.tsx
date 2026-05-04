@@ -53,9 +53,9 @@ export const WeeklyAIInsights: React.FC = () => {
                        <CheckCircle2 className="h-5 w-5 text-green-400 mt-1" />;
                        
           return (
-            <li key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-800/20 border border-gray-700/30 hover:border-purple-500/30 transition-colors">
+            <li key={index} className="flex items-start space-x-3 p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-primary/30 transition-colors">
               <span className="flex-shrink-0">{icon}</span>
-              <p className="text-gray-300 text-sm leading-relaxed">
+              <p className="text-slate-700 text-sm leading-relaxed">
                 {line.replace(/^[•\s*-]+/, '')}
               </p>
             </li>
@@ -81,14 +81,14 @@ export const WeeklyAIInsights: React.FC = () => {
         <Sparkles size={120} className="text-purple-500" />
       </div>
       
-      <CardHeader className="flex flex-row items-center justify-between border-b border-gray-700/50 pb-4">
+      <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 pb-4">
         <div className="flex items-center space-x-2">
-          <div className="p-2 bg-purple-500/20 rounded-lg">
-            <Sparkles className="h-5 w-5 text-purple-400" />
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Sparkles className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-white">AI Executive Summary</h3>
-            <div className="flex items-center text-xs text-gray-400 mt-0.5">
+            <h3 className="text-lg font-bold text-slate-900">AI Executive Summary</h3>
+            <div className="flex items-center text-xs text-slate-500 mt-0.5 font-medium">
               <Calendar className="h-3 w-3 mr-1" />
               <span>Generated {generatedAt ? new Date(generatedAt).toLocaleDateString() : 'Today'}</span>
             </div>
@@ -116,15 +116,15 @@ export const WeeklyAIInsights: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            <p className="text-sm text-gray-400 italic">
+            <p className="text-sm text-slate-500 italic font-medium">
               "Based on the latest data patterns, here are your strategic insights for the current week."
             </p>
             
             {formatInsights(insights)}
             
-            <div className="pt-4 mt-2 border-t border-gray-700/50 flex justify-between items-center text-[10px] text-gray-500 uppercase tracking-widest font-bold">
+            <div className="pt-4 mt-2 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 uppercase tracking-widest font-bold">
               <span>Smart Attendance AI Engine</span>
-              <span className="flex items-center text-purple-400/70">
+              <span className="flex items-center text-primary/70">
                 <Sparkles className="h-3 w-3 mr-1" />
                 Live Analysis Active
               </span>

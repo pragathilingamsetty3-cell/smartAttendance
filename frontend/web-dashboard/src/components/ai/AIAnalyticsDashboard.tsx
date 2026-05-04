@@ -366,14 +366,14 @@ export const AIAnalyticsDashboard: React.FC<AIAnalyticsDashboardProps> = ({
               <Card glass>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <h4 className="text-white font-medium">AI Model Performance</h4>
+                    <h4 className="text-slate-900 font-bold">AI Model Performance</h4>
                     <div className="flex space-x-2">
                       <Button
-                        variant="glass"
+                        variant="secondary"
                         size="sm"
                         onClick={() => retrainModel('ATTENDANCE_PREDICTION')}
                       >
-                        <Zap className="h-3 w-3 mr-1" />
+                        <Zap className="h-3 w-3 mr-2" />
                         Retrain
                       </Button>
                     </div>
@@ -385,36 +385,36 @@ export const AIAnalyticsDashboard: React.FC<AIAnalyticsDashboardProps> = ({
                       <div className={`text-3xl font-bold ${getModelStatusColor(modelMetrics.accuracy)}`}>
                         {Math.round(modelMetrics.accuracy * 100)}%
                       </div>
-                      <p className="text-gray-400 text-sm mt-1">Accuracy</p>
+                      <p className="text-slate-500 text-sm mt-1">Accuracy</p>
                     </div>
                     
                     <div className="text-center">
                       <div className={`text-3xl font-bold ${getModelStatusColor(modelMetrics.precision)}`}>
                         {Math.round(modelMetrics.precision * 100)}%
                       </div>
-                      <p className="text-gray-400 text-sm mt-1">Precision</p>
+                      <p className="text-slate-500 text-sm mt-1">Precision</p>
                     </div>
                     
                     <div className="text-center">
                       <div className={`text-3xl font-bold ${getModelStatusColor(modelMetrics.recall)}`}>
                         {Math.round(modelMetrics.recall * 100)}%
                       </div>
-                      <p className="text-gray-400 text-sm mt-1">Recall</p>
+                      <p className="text-slate-500 text-sm mt-1">Recall</p>
                     </div>
                     
                     <div className="text-center">
                       <div className={`text-3xl font-bold ${getModelStatusColor(modelMetrics.f1Score)}`}>
                         {Math.round(modelMetrics.f1Score * 100)}%
                       </div>
-                      <p className="text-gray-400 text-sm mt-1">F1 Score</p>
+                      <p className="text-slate-500 text-sm mt-1">F1 Score</p>
                     </div>
                   </div>
                   
-                  <div className="mt-4 pt-4 border-t border-gray-700">
+                  <div className="mt-4 pt-4 border-t border-slate-100">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">Model: {modelMetrics.modelName}</span>
-                      <span className="text-gray-400">Version: {modelMetrics.version}</span>
-                      <span className="text-gray-400">
+                      <span className="text-slate-500">Model: {modelMetrics.modelName}</span>
+                      <span className="text-slate-500">Version: {modelMetrics.version}</span>
+                      <span className="text-slate-500 font-medium">
                         {modelMetrics.totalPredictions?.toLocaleString() || '0'} predictions
                       </span>
                     </div>
@@ -435,9 +435,9 @@ export const AIAnalyticsDashboard: React.FC<AIAnalyticsDashboardProps> = ({
               </CardHeader>
               <CardContent>
                 {alerts.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Eye className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-                    <p className="text-gray-400">No active alerts</p>
+                  <div className="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                    <Eye className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                    <p className="text-slate-500 font-medium">No active alerts</p>
                   </div>
                 ) : (
                   <div className="space-y-3 max-h-[450px] overflow-y-auto pr-2 custom-scrollbar">
