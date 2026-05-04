@@ -164,14 +164,14 @@ export const GeofencingValidation: React.FC<GeofencingValidationProps> = ({ sess
               <MapPin className="h-6 w-6" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white tracking-tight">Geofence Trajectory Engine</h3>
-              <p className="text-slate-400 text-sm">Real-time GPS validation & boundary tracking</p>
+              <h3 className="text-xl font-bold text-slate-900 tracking-tight">Geofence Trajectory Engine</h3>
+              <p className="text-slate-500 text-sm">Real-time GPS validation & boundary tracking</p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <label className="flex items-center space-x-2 cursor-pointer bg-white/5 py-2 px-3 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
-              <input type="checkbox" checked={autoValidate} onChange={(e) => setAutoValidate(e.target.checked)} className="rounded bg-obsidian-900 border-white/20 accent-primary" />
-              <span className="text-sm font-medium text-slate-300">Live Telemetry</span>
+            <label className="flex items-center space-x-2 cursor-pointer bg-slate-50/80 py-2 px-3 rounded-lg border border-slate-200/60 hover:bg-white/80 transition-colors">
+              <input type="checkbox" checked={autoValidate} onChange={(e) => setAutoValidate(e.target.checked)} className="rounded bg-white border-slate-300 accent-primary" />
+              <span className="text-sm font-medium text-slate-600">Live Telemetry</span>
             </label>
             <Button variant="primary" onClick={runValidation} disabled={loading}>
               {loading ? 'Scanning...' : 'Force Validations'}
@@ -182,55 +182,55 @@ export const GeofencingValidation: React.FC<GeofencingValidationProps> = ({ sess
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <motion.div variants={itemVars} className="glass-panel p-6 group">
-          <div className="flex justify-between mb-2"><p className="text-slate-400 text-sm font-medium">Nodes Validated</p><Shield className="h-5 w-5 text-secondary transition-transform group-hover:scale-110" /></div>
-          <p className="text-3xl font-bold text-white">{metrics.totalValidations}</p>
+          <div className="flex justify-between mb-2"><p className="text-slate-500 text-sm font-medium">Nodes Validated</p><Shield className="h-5 w-5 text-secondary transition-transform group-hover:scale-110" /></div>
+          <p className="text-3xl font-bold text-slate-900">{metrics.totalValidations}</p>
         </motion.div>
 
         <motion.div variants={itemVars} className="glass-panel p-6 border-emerald-500/20 group">
-          <div className="flex justify-between mb-2"><p className="text-slate-400 text-sm font-medium">Inside Boundary</p><CheckCircle className="h-5 w-5 text-emerald-400 transition-transform group-hover:scale-110" /></div>
-          <p className="text-3xl font-bold text-white">{metrics.successfulValidations}</p>
-          <div className="w-full bg-obsidian-700 rounded-full h-1 mt-3">
+          <div className="flex justify-between mb-2"><p className="text-slate-500 text-sm font-medium">Inside Boundary</p><CheckCircle className="h-5 w-5 text-emerald-400 transition-transform group-hover:scale-110" /></div>
+          <p className="text-3xl font-bold text-slate-900">{metrics.successfulValidations}</p>
+          <div className="w-full bg-slate-200/60 rounded-full h-1 mt-3">
             <div className="bg-emerald-500 h-1 rounded-full transition-all duration-700" style={{ width: `${metrics.validationRate}%` }} />
           </div>
         </motion.div>
 
         <motion.div variants={itemVars} className="glass-panel p-6 group">
-          <div className="flex justify-between mb-2"><p className="text-slate-400 text-sm font-medium">GNSS Accuracy</p><Target className="h-5 w-5 text-yellow-400 transition-transform group-hover:scale-110" /></div>
+          <div className="flex justify-between mb-2"><p className="text-slate-500 text-sm font-medium">GNSS Accuracy</p><Target className="h-5 w-5 text-yellow-400 transition-transform group-hover:scale-110" /></div>
           <p className={`text-3xl font-bold ${getAccuracyColor(metrics.averageAccuracy)}`}>±{metrics.averageAccuracy.toFixed(1)}m</p>
         </motion.div>
 
         <motion.div variants={itemVars} className="glass-panel p-6 group">
-          <div className="flex justify-between mb-2"><p className="text-slate-400 text-sm font-medium">Radius Drift</p><MapPin className="h-5 w-5 text-primary transition-transform group-hover:scale-110" /></div>
-          <p className="text-3xl font-bold text-white">{metrics.averageDistance.toFixed(1)}m</p>
+          <div className="flex justify-between mb-2"><p className="text-slate-500 text-sm font-medium">Radius Drift</p><MapPin className="h-5 w-5 text-primary transition-transform group-hover:scale-110" /></div>
+          <p className="text-3xl font-bold text-slate-900">{metrics.averageDistance.toFixed(1)}m</p>
         </motion.div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <motion.div variants={itemVars} className="glass-panel p-6">
-          <h4 className="text-white font-bold mb-1 tracking-tight">Geospatial Overlay</h4>
-          <p className="text-slate-400 text-sm mb-5">Visualizing relative distance to physical bounds</p>
-          <canvas ref={canvasRef} width={400} height={300} className="w-full bg-obsidian-900 rounded-xl border border-white/5" />
+          <h4 className="text-slate-900 font-bold mb-1 tracking-tight">Geospatial Overlay</h4>
+          <p className="text-slate-500 text-sm mb-5">Visualizing relative distance to physical bounds</p>
+          <canvas ref={canvasRef} width={400} height={300} className="w-full bg-slate-50 rounded-xl border border-slate-200/60" />
           <div className="mt-4 grid grid-cols-2 gap-4 text-sm font-medium">
-            <div className="flex items-center space-x-2"><div className="w-3 h-3 bg-secondary rounded"></div><span className="text-slate-300">Room Boundary</span></div>
-            <div className="flex items-center space-x-2"><div className="w-3 h-3 bg-primary rounded border border-primary border-dashed"></div><span className="text-slate-300">Geofence Radials</span></div>
+            <div className="flex items-center space-x-2"><div className="w-3 h-3 bg-secondary rounded"></div><span className="text-slate-600">Room Boundary</span></div>
+            <div className="flex items-center space-x-2"><div className="w-3 h-3 bg-primary rounded border border-primary border-dashed"></div><span className="text-slate-600">Geofence Radials</span></div>
           </div>
         </motion.div>
 
         <motion.div variants={itemVars} className="glass-panel p-6">
-          <h4 className="text-white font-bold mb-1 tracking-tight">Validation Audit Log</h4>
-          <p className="text-slate-400 text-sm mb-5">Telemetry snapshots sorted by recent pings</p>
+          <h4 className="text-slate-900 font-bold mb-1 tracking-tight">Validation Audit Log</h4>
+          <p className="text-slate-500 text-sm mb-5">Telemetry snapshots sorted by recent pings</p>
           <div className="space-y-3 max-h-[380px] overflow-y-auto pr-2">
             {validations.map((val) => (
-              <motion.div layout key={val.studentId} onClick={() => setSelectedValidation(val)} className="p-4 bg-obsidian-800/80 rounded-xl border border-white/5 hover:border-white/10 hover:bg-white/[0.02] transition-colors cursor-pointer">
+              <motion.div layout key={val.studentId} onClick={() => setSelectedValidation(val)} className="p-4 bg-slate-50/80 rounded-xl border border-slate-200/60 hover:border-primary/20 hover:bg-white/80 transition-colors cursor-pointer">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-3">{getValidationIcon(val.isValid)} <span className="text-white font-bold">{val.studentName}</span></div>
+                  <div className="flex items-center space-x-3">{getValidationIcon(val.isValid)} <span className="text-slate-900 font-bold">{val.studentName}</span></div>
                   <div className={`px-2.5 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider border ${getValidationColor(val.isValid)}`}>{val.isValid ? 'Valid Coord' : 'Boundary Alert'}</div>
                 </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs bg-obsidian-900/50 p-2 rounded-lg">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs bg-slate-100/80 p-2 rounded-lg">
                   <div><span className="text-slate-500 block mb-0.5">DEV ERROR</span><span className={`font-mono ${getAccuracyColor(val.accuracy)}`}>±{val.accuracy.toFixed(1)}m</span></div>
-                  <div><span className="text-slate-500 block mb-0.5">DRIFT</span><span className="font-mono text-white">{val.distanceFromRoom.toFixed(1)}m</span></div>
-                  <div><span className="text-slate-500 block mb-0.5">VECTOR</span><span className="text-white font-medium">{val.validationType.replace('_', ' ')}</span></div>
-                  <div><span className="text-slate-500 block mb-0.5">SCORE</span><span className="text-white font-mono">{Math.round(val.confidence * 100)}%</span></div>
+                  <div><span className="text-slate-500 block mb-0.5">DRIFT</span><span className="font-mono text-slate-900">{val.distanceFromRoom.toFixed(1)}m</span></div>
+                  <div><span className="text-slate-500 block mb-0.5">VECTOR</span><span className="text-slate-900 font-medium">{val.validationType.replace('_', ' ')}</span></div>
+                  <div><span className="text-slate-500 block mb-0.5">SCORE</span><span className="text-slate-900 font-mono">{Math.round(val.confidence * 100)}%</span></div>
                 </div>
               </motion.div>
             ))}
@@ -242,9 +242,9 @@ export const GeofencingValidation: React.FC<GeofencingValidationProps> = ({ sess
         {selectedValidation && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
             <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="glass-panel w-full max-w-md shadow-2xl overflow-hidden">
-              <div className="p-5 border-b border-white/10 flex items-center justify-between bg-obsidian-800/50">
-                <h3 className="text-lg font-bold text-white tracking-tight">{selectedValidation.studentName} :: Ping Data</h3>
-                <button onClick={() => setSelectedValidation(null)} className="text-slate-400 hover:text-white transition">×</button>
+              <div className="p-5 border-b border-slate-200/60 flex items-center justify-between bg-slate-50/80">
+                <h3 className="text-lg font-bold text-slate-900 tracking-tight">{selectedValidation.studentName} :: Ping Data</h3>
+                <button onClick={() => setSelectedValidation(null)} className="text-slate-400 hover:text-slate-900 transition">×</button>
               </div>
               <div className="p-6 space-y-6">
                 <div className={`p-4 rounded-xl border ${getValidationColor(selectedValidation.isValid)}`}>
@@ -252,11 +252,11 @@ export const GeofencingValidation: React.FC<GeofencingValidationProps> = ({ sess
                   <p className="text-sm opacity-90">{selectedValidation.isValid ? 'Node mapped directly within accepted threshold.' : 'Node triggered severe boundary divergence.'}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-y-6 gap-x-4">
-                  <div><span className="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1 block">Coordinate</span><p className="text-white font-mono text-xs">{selectedValidation.latitude.toFixed(6)},<br/>{selectedValidation.longitude.toFixed(6)}</p></div>
+                  <div><span className="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1 block">Coordinate</span><p className="text-slate-900 font-mono text-xs">{selectedValidation.latitude.toFixed(6)},<br/>{selectedValidation.longitude.toFixed(6)}</p></div>
                   <div><span className="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1 block">GPS Error Area</span><p className={`font-mono text-lg font-bold ${getAccuracyColor(selectedValidation.accuracy)}`}>±{selectedValidation.accuracy.toFixed(1)}m</p></div>
-                  <div><span className="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1 block">Distance off Center</span><p className="text-white font-mono text-lg">{selectedValidation.distanceFromRoom.toFixed(1)}m</p></div>
-                  <div><span className="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1 block">Engine Used</span><p className="text-white text-sm font-medium">{selectedValidation.validationType.replace('_', ' ')}</p></div>
-                  <div className="col-span-2"><span className="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1 block">Temporal Registration</span><p className="text-white font-mono">{new Date(selectedValidation.timestamp).toLocaleString()}</p></div>
+                  <div><span className="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1 block">Distance off Center</span><p className="text-slate-900 font-mono text-lg">{selectedValidation.distanceFromRoom.toFixed(1)}m</p></div>
+                  <div><span className="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1 block">Engine Used</span><p className="text-slate-900 text-sm font-medium">{selectedValidation.validationType.replace('_', ' ')}</p></div>
+                  <div className="col-span-2"><span className="text-slate-500 text-xs uppercase font-bold tracking-wider mb-1 block">Temporal Registration</span><p className="text-slate-900 font-mono">{new Date(selectedValidation.timestamp).toLocaleString()}</p></div>
                 </div>
               </div>
             </motion.div>

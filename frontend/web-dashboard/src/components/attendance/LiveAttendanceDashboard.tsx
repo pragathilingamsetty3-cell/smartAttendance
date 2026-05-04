@@ -101,8 +101,8 @@ export const LiveAttendanceDashboard: React.FC<LiveAttendanceDashboardProps> = (
               <Activity className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">Live Attendance System</h3>
-              <p className="text-slate-400 text-sm">
+              <h3 className="text-lg font-semibold text-slate-900">Live Attendance System</h3>
+              <p className="text-slate-500 text-sm">
                 {session?.roomId || 'Loading'} •{' '}
                 {isConnected ? (
                   <span className="text-emerald-400">Firestore Live</span>
@@ -148,19 +148,19 @@ export const LiveAttendanceDashboard: React.FC<LiveAttendanceDashboardProps> = (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <motion.div variants={itemVars} className="glass-panel p-6 relative overflow-hidden group">
           <div className="flex justify-between mb-2">
-            <p className="text-slate-400 text-sm font-medium">Headcount</p>
+            <p className="text-slate-500 text-sm font-medium">Headcount</p>
             <Users className="h-5 w-5 text-secondary opacity-80" />
           </div>
-          <p className="text-3xl font-bold text-white">{totalStudents}</p>
+          <p className="text-3xl font-bold text-slate-900">{totalStudents}</p>
         </motion.div>
 
         <motion.div variants={itemVars} className="glass-panel p-6 relative overflow-hidden border-emerald-500/20">
           <div className="flex justify-between mb-2">
-            <p className="text-slate-400 text-sm font-medium">Present</p>
+            <p className="text-slate-500 text-sm font-medium">Present</p>
             <CheckCircle className="h-5 w-5 text-emerald-400 opacity-80" />
           </div>
-          <p className="text-3xl font-bold text-white">{presentCount}</p>
-          <div className="w-full bg-obsidian-700 rounded-full h-1 mt-3">
+          <p className="text-3xl font-bold text-slate-900">{presentCount}</p>
+          <div className="w-full bg-slate-200/60 rounded-full h-1 mt-3">
             <div
               className="bg-emerald-500 h-1 rounded-full transition-all duration-500"
               style={{ width: `${totalStudents ? (presentCount / totalStudents) * 100 : 0}%` }}
@@ -170,11 +170,11 @@ export const LiveAttendanceDashboard: React.FC<LiveAttendanceDashboardProps> = (
 
         <motion.div variants={itemVars} className="glass-panel p-6 relative overflow-hidden group">
           <div className="flex justify-between mb-2">
-            <p className="text-slate-400 text-sm font-medium">Drifted</p>
+            <p className="text-slate-500 text-sm font-medium">Drifted</p>
             <AlertTriangle className="h-5 w-5 text-amber-400 opacity-80" />
           </div>
-          <p className="text-3xl font-bold text-white">{driftedStudents.length}</p>
-          <div className="w-full bg-obsidian-700 rounded-full h-1 mt-3">
+          <p className="text-3xl font-bold text-slate-900">{driftedStudents.length}</p>
+          <div className="w-full bg-slate-200/60 rounded-full h-1 mt-3">
             <div
               className="bg-amber-500 h-1 rounded-full transition-all duration-500"
               style={{ width: `${totalStudents ? (driftedStudents.length / totalStudents) * 100 : 0}%` }}
@@ -184,17 +184,17 @@ export const LiveAttendanceDashboard: React.FC<LiveAttendanceDashboardProps> = (
 
         <motion.div variants={itemVars} className="glass-panel p-6 relative overflow-hidden group">
           <div className="flex justify-between mb-2">
-            <p className="text-slate-400 text-sm font-medium">Walkouts</p>
+            <p className="text-slate-500 text-sm font-medium">Walkouts</p>
             <LogOut className="h-5 w-5 text-red-400 opacity-80" />
           </div>
-          <p className="text-3xl font-bold text-white">{walkoutStudents.length}</p>
+          <p className="text-3xl font-bold text-slate-900">{walkoutStudents.length}</p>
         </motion.div>
       </div>
 
       {/* ── Live Stream Table ────────────────────────────────────────────────── */}
       <motion.div variants={itemVars} className="glass-panel p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-white">Live Identity Stream</h3>
+          <h3 className="text-lg font-semibold text-slate-900">Live Identity Stream</h3>
           <span className="text-xs text-slate-500 font-mono">
             {presenceMap.size} active pings
           </span>
@@ -205,7 +205,7 @@ export const LiveAttendanceDashboard: React.FC<LiveAttendanceDashboardProps> = (
             <motion.div
               layout
               key={p.studentId}
-              className="p-4 bg-obsidian-800/80 rounded-xl border border-white/5 hover:border-white/10 hover:bg-white/[0.03] transition-colors flex justify-between items-center"
+              className="p-4 bg-slate-50/80 rounded-xl border border-slate-200/60 hover:border-primary/20 hover:bg-white/80 transition-colors flex justify-between items-center"
             >
               <div className="flex items-center space-x-4">
                 <div className={`p-2.5 rounded-xl border ${
@@ -224,7 +224,7 @@ export const LiveAttendanceDashboard: React.FC<LiveAttendanceDashboardProps> = (
                   )}
                 </div>
                 <div>
-                  <p className="text-slate-200 font-medium font-mono text-sm">
+                  <p className="text-slate-700 font-medium font-mono text-sm">
                     {p.studentId.substring(0, 12)}…
                   </p>
                   <p className="text-slate-500 text-xs">
@@ -246,7 +246,7 @@ export const LiveAttendanceDashboard: React.FC<LiveAttendanceDashboardProps> = (
           ))}
 
           {presenceMap.size === 0 && (
-            <p className="text-slate-500 py-8 text-center border border-white/5 border-dashed rounded-xl">
+            <p className="text-slate-500 py-8 text-center border border-slate-200/60 border-dashed rounded-xl">
               {isConnected ? 'No active stream pings in the last 5 minutes.' : 'Waiting for Firestore connection…'}
             </p>
           )}

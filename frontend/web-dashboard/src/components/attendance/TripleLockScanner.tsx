@@ -129,7 +129,7 @@ export const TripleLockScanner: React.FC<TripleLockScannerProps> = ({ liveData }
     switch (status) {
       case 'PASS': return 'text-emerald-400 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.3)] bg-emerald-500/10';
       case 'FAIL': return 'text-accent border-accent/50 shadow-[0_0_15px_rgba(244,63,94,0.3)] bg-accent/10';
-      default: return 'text-slate-500 border-slate-700 bg-obsidian-900/50';
+      default: return 'text-slate-400 border-slate-200 bg-slate-50/80';
     }
   };
 
@@ -148,16 +148,16 @@ export const TripleLockScanner: React.FC<TripleLockScannerProps> = ({ liveData }
         {/* Header Controls */}
         <div className="glass-panel p-6 flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold text-white flex items-center tracking-tight">
+            <h2 className="text-2xl font-bold text-slate-900 flex items-center tracking-tight">
               <Shield className="h-6 w-6 text-primary mr-3" />
               Triple-Lock Guardian
             </h2>
-            <p className="text-slate-400 text-sm mt-1">Identity validation via Hardware, Bio, and Geo constraints.</p>
+            <p className="text-slate-500 text-sm mt-1">Identity validation via Hardware, Bio, and Geo constraints.</p>
           </div>
           <div className="flex space-x-4 items-center">
-            <label className="flex items-center space-x-2 cursor-pointer bg-white/5 py-1.5 px-3 rounded-lg border border-white/10 hover:bg-white/10 transition-colors">
-              <input type="checkbox" checked={soundEnabled} onChange={(e) => setSoundEnabled(e.target.checked)} className="rounded bg-obsidian-900 border-white/20 accent-primary" />
-              <span className="text-xs font-medium text-slate-300">Audio FX</span>
+            <label className="flex items-center space-x-2 cursor-pointer bg-slate-50/80 py-1.5 px-3 rounded-lg border border-slate-200/60 hover:bg-white/80 transition-colors">
+              <input type="checkbox" checked={soundEnabled} onChange={(e) => setSoundEnabled(e.target.checked)} className="rounded bg-white border-slate-300 accent-primary" />
+              <span className="text-xs font-medium text-slate-600">Audio FX</span>
             </label>
             <div className={`px-3 py-1.5 rounded-full border text-xs font-bold tracking-widest uppercase ${isSimulating ? 'bg-primary/20 text-primary border-primary/30 animate-pulse' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'}`}>
               {isSimulating ? 'Simulation' : 'Live Mode'}
@@ -166,7 +166,7 @@ export const TripleLockScanner: React.FC<TripleLockScannerProps> = ({ liveData }
         </div>
 
         {/* Central Scan Ring UI */}
-        <div className="glass-panel p-8 relative overflow-hidden flex-1 min-h-[450px] flex items-center justify-center border-t border-t-primary/20 bg-gradient-to-br from-obsidian-900 via-[#150D2B] to-[#0A0614]">
+        <div className="glass-panel p-8 relative overflow-hidden flex-1 min-h-[450px] flex items-center justify-center border-t border-t-primary/20 bg-gradient-to-br from-sky-50 via-white to-blue-50/30">
           
           {/* Background Pulse Ambience */}
           <motion.div 
@@ -185,16 +185,16 @@ export const TripleLockScanner: React.FC<TripleLockScannerProps> = ({ liveData }
             >
               <div className="text-center mb-8">
                 <span className="text-primary tracking-[0.2em] text-xs font-bold uppercase block mb-2 animate-pulse">Acquiring Target</span>
-                <h3 className="text-4xl font-mono font-bold text-white tracking-tight drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">{activeScan.studentId}</h3>
+                <h3 className="text-4xl font-mono font-bold text-slate-900 tracking-tight">{activeScan.studentId}</h3>
               </div>
 
               <div className="space-y-4">
                 {/* Lock 1 */}
                 <motion.div layout className={`flex items-center justify-between p-4 rounded-xl border backdrop-blur-md transition-all duration-300 ${getLockColor(activeScan.locks.geo)}`}>
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-obsidian-900/50 rounded-lg">{getLockIcon(activeScan.locks.geo, MapPin)}</div>
+                    <div className="p-2 bg-white/60 rounded-lg backdrop-blur-md">{getLockIcon(activeScan.locks.geo, MapPin)}</div>
                     <div>
-                      <h4 className="text-white font-bold text-sm uppercase tracking-wide">1. GNSS Bounds</h4>
+                      <h4 className="text-slate-900 font-bold text-sm uppercase tracking-wide">1. GNSS Bounds</h4>
                       <p className="text-xs opacity-70">Spatial boundary verification</p>
                     </div>
                   </div>
@@ -204,9 +204,9 @@ export const TripleLockScanner: React.FC<TripleLockScannerProps> = ({ liveData }
                 {/* Lock 2 */}
                 <motion.div layout className={`flex items-center justify-between p-4 rounded-xl border backdrop-blur-md transition-all duration-300 ${getLockColor(activeScan.locks.device)}`}>
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-obsidian-900/50 rounded-lg">{getLockIcon(activeScan.locks.device, Fingerprint)}</div>
+                    <div className="p-2 bg-white/60 rounded-lg backdrop-blur-md">{getLockIcon(activeScan.locks.device, Fingerprint)}</div>
                     <div>
-                      <h4 className="text-white font-bold text-sm uppercase tracking-wide">2. Hardware Key</h4>
+                      <h4 className="text-slate-900 font-bold text-sm uppercase tracking-wide">2. Hardware Key</h4>
                       <p className="text-xs opacity-70">Device fingerprint match</p>
                     </div>
                   </div>
@@ -216,9 +216,9 @@ export const TripleLockScanner: React.FC<TripleLockScannerProps> = ({ liveData }
                 {/* Lock 3 */}
                 <motion.div layout className={`flex items-center justify-between p-4 rounded-xl border backdrop-blur-md transition-all duration-300 ${getLockColor(activeScan.locks.bio)}`}>
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-obsidian-900/50 rounded-lg">{getLockIcon(activeScan.locks.bio, ScanFace)}</div>
+                    <div className="p-2 bg-white/60 rounded-lg backdrop-blur-md">{getLockIcon(activeScan.locks.bio, ScanFace)}</div>
                     <div>
-                      <h4 className="text-white font-bold text-sm uppercase tracking-wide">3. Biometric Matrix</h4>
+                      <h4 className="text-slate-900 font-bold text-sm uppercase tracking-wide">3. Biometric Matrix</h4>
                       <p className="text-xs opacity-70">Facial geometry match</p>
                     </div>
                   </div>
@@ -243,12 +243,12 @@ export const TripleLockScanner: React.FC<TripleLockScannerProps> = ({ liveData }
               className="flex flex-col items-center text-center z-10"
             >
               <div className="relative">
-                <div className="absolute inset-0 border-4 border-slate-700 rounded-full animate-[spin_4s_linear_infinite] border-t-primary w-24 h-24" />
-                <div className="w-24 h-24 bg-obsidian-800 rounded-full flex items-center justify-center border border-white/5">
+                <div className="absolute inset-0 border-4 border-slate-200 rounded-full animate-[spin_4s_linear_infinite] border-t-primary w-24 h-24" />
+                <div className="w-24 h-24 bg-white/60 backdrop-blur-xl rounded-full flex items-center justify-center border border-slate-200/60">
                   <Shield className="h-10 w-10 text-slate-500" />
                 </div>
               </div>
-              <p className="mt-8 text-slate-400 font-mono tracking-widest text-sm uppercase">Awaiting Target Vector...</p>
+              <p className="mt-8 text-slate-500 font-mono tracking-widest text-sm uppercase">Awaiting Target Vector...</p>
             </motion.div>
           )}
         </div>
@@ -258,8 +258,8 @@ export const TripleLockScanner: React.FC<TripleLockScannerProps> = ({ liveData }
       <div className="w-full lg:w-[40%] flex flex-col h-full">
         <div className="glass-panel flex-1 flex flex-col overflow-hidden max-h-[80vh] border-t border-t-secondary/20">
           
-          <div className="p-4 border-b border-white/5 bg-obsidian-900/80 flex items-center justify-between z-10">
-            <h3 className="text-white font-bold tracking-widest text-sm flex items-center uppercase">
+          <div className="p-4 border-b border-slate-200/60 bg-slate-50/80 backdrop-blur-xl flex items-center justify-between z-10">
+            <h3 className="text-slate-900 font-bold tracking-widest text-sm flex items-center uppercase">
               <Terminal className="h-4 w-4 mr-2 text-secondary" />
               Event Stream
             </h3>
@@ -279,14 +279,14 @@ export const TripleLockScanner: React.FC<TripleLockScannerProps> = ({ liveData }
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                  className="bg-obsidian-800 border border-white/5 p-4 rounded-xl flex items-center justify-between hover:bg-white/[0.03] transition-colors"
+                  className="bg-slate-50/80 border border-slate-200/60 p-4 rounded-xl flex items-center justify-between hover:bg-white/80 transition-colors"
                 >
                   <div className="flex items-center space-x-4">
                     <div className={`p-2 rounded-full flex-shrink-0 ${ping.status === 'CLEARED' ? 'bg-emerald-500/10 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]' : 'bg-accent/10 text-accent shadow-[0_0_10px_rgba(244,63,94,0.2)]'}`}>
                       {ping.status === 'CLEARED' ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
                     </div>
                     <div>
-                      <p className="text-white font-mono font-bold">{ping.studentId}</p>
+                      <p className="text-slate-900 font-mono font-bold">{ping.studentId}</p>
                       <div className="flex space-x-2 mt-1">
                         <span className="text-[10px] uppercase tracking-widest text-slate-500">{new Date(ping.timestamp).toLocaleTimeString()}</span>
                       </div>

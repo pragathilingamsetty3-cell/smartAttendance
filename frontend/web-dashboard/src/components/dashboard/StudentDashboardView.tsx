@@ -283,7 +283,7 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
             {stats?.departmentName} • Section {stats?.sectionName} • Semester {stats?.semester}
           </p>
         </div>
-        <div className="bg-white/5 border border-white/10 px-4 py-2 rounded-2xl">
+        <div className="bg-white/50 border border-white/50 px-4 py-2 rounded-2xl backdrop-blur-xl">
           <p className="text-[10px] font-bold text-slate-500 uppercase mb-0.5 tracking-tighter">Reg Number</p>
           <p className="text-sm font-mono text-violet-400 font-bold">{stats?.registrationNumber}</p>
         </div>
@@ -306,7 +306,7 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
                     <span className="text-[10px] text-slate-500 uppercase tracking-widest">Required: 75%</span>
                 </div>
               </div>
-              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-slate-200/60 rounded-full overflow-hidden">
                 <motion.div 
                     initial={{ width: 0 }}
                     animate={{ width: `${stats?.overallAttendance || 0}%` }}
@@ -336,7 +336,7 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
           <motion.div variants={itemVariants} className={`glass-card p-8 bg-gradient-to-br from-violet-600/[0.05] to-transparent border-violet-500/20 ${!stats?.activeSession && 'opacity-60'}`}>
             <div className="flex items-start justify-between mb-8">
               <div className="flex gap-4">
-                <div className={`p-4 rounded-3xl ${stats?.activeSession ? 'bg-violet-600 shadow-xl shadow-violet-600/20 text-white' : 'bg-slate-800 text-slate-500'}`}>
+                <div className={`p-4 rounded-3xl ${stats?.activeSession ? 'bg-violet-600 shadow-xl shadow-violet-600/20 text-white' : 'bg-slate-100 text-slate-400'}`}>
                     <BookOpen size={24} />
                 </div>
                 <div>
@@ -363,7 +363,7 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
             <div className="pt-2">
                 {stats?.activeSession ? (
                     stats.attendanceMarked ? (
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 rounded-3xl bg-white/[0.03] border border-white/5">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 p-6 rounded-3xl bg-slate-50/80 border border-slate-200/60">
                             <div className="flex gap-4 items-center">
                                 <div className="p-3 bg-emerald-500/20 rounded-2xl text-emerald-500">
                                     <CheckCircle2 size={24} />
@@ -387,7 +387,7 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
                                         <Fingerprint size={24} />
                                     </div>
                                     <div>
-                                        <p className="text-xs font-bold text-white tracking-tight">Action Required</p>
+                                        <p className="text-xs font-bold text-slate-900 tracking-tight">Action Required</p>
                                         <p className="text-[10px] text-slate-500 uppercase tracking-widest">Verify Attendance</p>
                                     </div>
                                 </div>
@@ -434,30 +434,30 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
                 stats.todayClasses.map((cls, idx) => (
                   <div key={cls.id || idx} className="flex gap-4 group">
                     <div className="flex flex-col items-center">
-                        <div className={`w-3 h-3 rounded-full mt-1.5 border-2 ${stats?.activeSession?.id === cls.id ? 'bg-violet-500 border-violet-400 shadow-lg shadow-violet-500/40' : 'bg-transparent border-slate-700 group-hover:border-slate-500'}`} />
-                        {idx !== stats.todayClasses.length - 1 && <div className="w-0.5 grow bg-slate-800 my-1 group-hover:bg-slate-700 transition-colors" />}
+                        <div className={`w-3 h-3 rounded-full mt-1.5 border-2 ${stats?.activeSession?.id === cls.id ? 'bg-violet-500 border-violet-400 shadow-lg shadow-violet-500/40' : 'bg-transparent border-slate-300 group-hover:border-slate-400'}`} />
+                        {idx !== stats.todayClasses.length - 1 && <div className="w-0.5 grow bg-slate-200 my-1 group-hover:bg-slate-300 transition-colors" />}
                     </div>
-                    <div className={`grow glass-card p-4 flex items-center justify-between transition-all group-hover:bg-white/[0.03] ${stats?.activeSession?.id === cls.id ? 'border-violet-500/30 bg-violet-500/[0.02]' : 'border-transparent'}`}>
+                    <div className={`grow glass-card p-4 flex items-center justify-between transition-all group-hover:bg-white/80 ${stats?.activeSession?.id === cls.id ? 'border-violet-500/30 bg-violet-50' : 'border-transparent'}`}>
                         <div className="flex gap-4">
                             <div className="min-w-[60px]">
-                                <p className="text-[10px] font-black text-white tracking-tighter">{cls.startTime}</p>
+                                <p className="text-[10px] font-black text-slate-900 tracking-tighter">{cls.startTime}</p>
                                 <p className="text-[10px] text-slate-500 font-medium">{cls.endTime}</p>
                             </div>
                             <div>
-                                <p className={`text-sm font-bold tracking-tight ${stats?.activeSession?.id === cls.id ? 'text-violet-400' : 'text-white'}`}>{cls.subject}</p>
+                                <p className={`text-sm font-bold tracking-tight ${stats?.activeSession?.id === cls.id ? 'text-violet-600' : 'text-slate-900'}`}>{cls.subject}</p>
                                 <p className="text-[10px] text-slate-500 uppercase tracking-widest">{cls.room?.name} • {cls.faculty?.name}</p>
                             </div>
                         </div>
                         {stats?.activeSession?.id === cls.id ? (
                              <Activity size={16} className="text-violet-500 animate-pulse" />
                         ) : (
-                            <Clock size={16} className="text-slate-700 group-hover:text-slate-500" />
+                            <Clock size={16} className="text-slate-400 group-hover:text-slate-600" />
                         )}
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-12 glass-card border-dashed border-slate-800">
+                <div className="text-center py-12 glass-card border-dashed border-slate-300">
                     <p className="text-sm text-slate-600 font-bold uppercase tracking-widest">No classes scheduled for today</p>
                 </div>
               )}
@@ -487,7 +487,7 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
                             stroke="currentColor"
                             strokeWidth="4"
                             fill="transparent"
-                            className="text-white/5"
+                            className="text-slate-200"
                         />
                         <motion.circle
                             initial={{ strokeDashoffset: 175 }}
@@ -502,12 +502,12 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
                             className="text-violet-500"
                         />
                     </svg>
-                    <span className="absolute text-xs font-black text-white">
+                    <span className="absolute text-xs font-black text-slate-900">
                         {Math.round((stats?.aiVerificationConfidence || 0.5) * 100)}%
                     </span>
                 </div>
                 <div>
-                    <h5 className="text-sm font-black text-white tracking-tight">Pattern Confidence</h5>
+                    <h5 className="text-sm font-black text-slate-900 tracking-tight">Pattern Confidence</h5>
                     <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">ML Sync active</p>
                 </div>
             </div>
@@ -532,11 +532,11 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
                         {action.icon}
                         </div>
                         <div>
-                        <h5 className="font-bold text-white text-sm tracking-tight">{action.title}</h5>
+                        <h5 className="font-bold text-slate-900 text-sm tracking-tight">{action.title}</h5>
                         <p className="text-[10px] text-slate-500 italic">{action.desc}</p>
                         </div>
                     </div>
-                    <ArrowRight size={14} className="text-slate-700 group-hover:text-white transition-colors" />
+                    <ArrowRight size={14} className="text-slate-400 group-hover:text-slate-900 transition-colors" />
                     </motion.div>
                 </Link>
                 ))}
@@ -574,11 +574,11 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
                          'text-rose-500'
                     }`}>{stats.recentHallPass.status}</p>
                 </div>
-                <p className="text-xs text-white font-bold leading-tight mb-2">{stats.recentHallPass.reason}</p>
+                <p className="text-xs text-slate-900 font-bold leading-tight mb-2">{stats.recentHallPass.reason}</p>
                 <p className="text-[10px] text-slate-500 font-medium">Requested {stats.recentHallPass.requestedMinutes} mins</p>
                 
                 {stats.recentHallPass.facultyNotes && (
-                    <div className="mt-4 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
+                    <div className="mt-4 p-3 rounded-2xl bg-slate-50/80 border border-slate-200/60">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Faculty Note</p>
                         <p className="text-[10px] text-slate-300 italic">"{stats.recentHallPass.facultyNotes}"</p>
                     </div>
@@ -588,9 +588,9 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
             <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="p-6 rounded-[2rem] border border-white/5 bg-white/[0.02] flex flex-col items-center text-center py-10"
+                className="p-6 rounded-[2rem] border border-slate-200/60 bg-slate-50/50 flex flex-col items-center text-center py-10"
             >
-                <div className="p-4 bg-slate-800/50 rounded-2xl text-slate-600 mb-4">
+                <div className="p-4 bg-slate-100 rounded-2xl text-slate-400 mb-4">
                     <Activity size={32} />
                 </div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">No Active Pass</p>

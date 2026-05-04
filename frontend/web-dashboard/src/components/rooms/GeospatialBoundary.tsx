@@ -21,7 +21,7 @@ export default function GeospatialBoundary({ roomId, coordinates, center, radius
   const mapCenter: [number, number] = center || (coordinates && coordinates[0]) || [0, 0];
 
   return (
-    <div style={{ height: '400px', width: '100%', borderRadius: '12px', overflow: 'hidden' }} className="shadow-lg border border-slate-700">
+    <div style={{ height: '400px', width: '100%', borderRadius: '12px', overflow: 'hidden' }} className="shadow-lg border border-slate-200">
       <MapContainer center={mapCenter} zoom={18} style={{ height: '100%', width: '100%' }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

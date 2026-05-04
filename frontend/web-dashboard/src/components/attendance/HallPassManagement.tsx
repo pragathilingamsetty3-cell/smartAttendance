@@ -114,8 +114,8 @@ export const HallPassManagement: React.FC<HallPassManagementProps> = ({ facultyI
               <Ticket className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white tracking-tight">Hall Pass Terminal</h3>
-              <p className="text-slate-400 text-sm">Approve and monitor biological movements</p>
+              <h3 className="text-xl font-bold text-slate-900 tracking-tight">Hall Pass Terminal</h3>
+              <p className="text-slate-500 text-sm">Approve and monitor biological movements</p>
             </div>
           </div>
           <Button variant="primary" onClick={() => setShowRequestForm(true)}>
@@ -127,36 +127,36 @@ export const HallPassManagement: React.FC<HallPassManagementProps> = ({ facultyI
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <motion.div variants={itemVars} className="glass-panel p-6 relative overflow-hidden group">
           <div className="flex justify-between mb-2">
-            <p className="text-slate-400 text-sm font-medium">Pending Requests</p>
+            <p className="text-slate-500 text-sm font-medium">Pending Requests</p>
             <Clock className="h-5 w-5 text-yellow-400 opacity-80" />
           </div>
-          <p className="text-3xl font-bold text-white relative z-10">{hallPassRequests.length}</p>
+          <p className="text-3xl font-bold text-slate-900 relative z-10">{hallPassRequests.length}</p>
         </motion.div>
 
         <motion.div variants={itemVars} className="glass-panel p-6 relative overflow-hidden">
           <div className="flex justify-between mb-2">
-            <p className="text-slate-400 text-sm font-medium">Active Passes</p>
+            <p className="text-slate-500 text-sm font-medium">Active Passes</p>
             <CheckCircle className="h-5 w-5 text-emerald-400 opacity-80" />
           </div>
-          <p className="text-3xl font-bold text-white">{activePasses.length}</p>
+          <p className="text-3xl font-bold text-slate-900">{activePasses.length}</p>
         </motion.div>
 
         <motion.div variants={itemVars} className="glass-panel p-6 relative overflow-hidden group">
           <div className="flex justify-between mb-2">
-            <p className="text-slate-400 text-sm font-medium">Total Absence Time</p>
+            <p className="text-slate-500 text-sm font-medium">Total Absence Time</p>
             <User className="h-5 w-5 text-primary opacity-80" />
           </div>
-          <p className="text-3xl font-bold text-white relative z-10">
+          <p className="text-3xl font-bold text-slate-900 relative z-10">
             {activePasses.reduce((sum, pass) => sum + (pass.requestedMinutes || 0), 0)} min
           </p>
         </motion.div>
 
         <motion.div variants={itemVars} className="glass-panel p-6 relative overflow-hidden group">
           <div className="flex justify-between mb-2">
-            <p className="text-slate-400 text-sm font-medium">Currently Away</p>
+            <p className="text-slate-500 text-sm font-medium">Currently Away</p>
             <MapPin className="h-5 w-5 text-accent opacity-80" />
           </div>
-          <p className="text-3xl font-bold text-white relative z-10">
+          <p className="text-3xl font-bold text-slate-900 relative z-10">
             {activePasses.filter(pass => {
               const rem = getTimeRemaining(pass.processedAt, pass.requestedMinutes);
               return rem !== 'Expired' && rem !== 'N/A';
@@ -165,14 +165,14 @@ export const HallPassManagement: React.FC<HallPassManagementProps> = ({ facultyI
         </motion.div>
       </div>
 
-      <motion.div variants={itemVars} className="flex space-x-2 p-1.5 bg-obsidian-800/50 rounded-xl border border-white/5 w-fit">
-        <button onClick={() => setActiveTab('requests')} className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center ${activeTab === 'requests' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+      <motion.div variants={itemVars} className="flex space-x-2 p-1.5 bg-white/50 backdrop-blur-xl rounded-xl border border-white/50 w-fit">
+        <button onClick={() => setActiveTab('requests')} className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center ${activeTab === 'requests' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}>
           <Clock size={16} className="mr-2" /> Pending ({hallPassRequests.length})
         </button>
-        <button onClick={() => setActiveTab('active')} className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center ${activeTab === 'active' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+        <button onClick={() => setActiveTab('active')} className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center ${activeTab === 'active' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}>
           <CheckCircle size={16} className="mr-2" /> Cleared ({activePasses.length})
         </button>
-        <button onClick={() => setActiveTab('history')} className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center ${activeTab === 'history' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+        <button onClick={() => setActiveTab('history')} className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center ${activeTab === 'history' ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'}`}>
           <Eye size={16} className="mr-2" /> Logs
         </button>
       </motion.div>
@@ -181,33 +181,33 @@ export const HallPassManagement: React.FC<HallPassManagementProps> = ({ facultyI
         {showRequestForm && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 z-50">
             <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="glass-panel w-full max-w-md shadow-2xl">
-              <div className="p-6 border-b border-white/10 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-white tracking-tight">Manual Hall Pass Grant</h3>
-                <button onClick={() => setShowRequestForm(false)} className="text-slate-400 hover:text-white transition">×</button>
+              <div className="p-6 border-b border-slate-200/60 flex items-center justify-between">
+                <h3 className="text-xl font-bold text-slate-900 tracking-tight">Manual Hall Pass Grant</h3>
+                <button onClick={() => setShowRequestForm(false)} className="text-slate-400 hover:text-slate-900 transition">×</button>
               </div>
               <div className="p-6">
                 <form onSubmit={handleRequestHallPass} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Student Node ID</label>
-                    <input type="text" value={requestForm.studentId} onChange={e => setRequestForm(p => ({...p, studentId: e.target.value}))} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-primary focus:ring-1 focus:ring-primary backdrop-blur-md" required />
+                    <label className="block text-sm font-medium text-slate-600 mb-2">Student Node ID</label>
+                    <input type="text" value={requestForm.studentId} onChange={e => setRequestForm(p => ({...p, studentId: e.target.value}))} className="w-full px-4 py-3 glass-input text-slate-900" required />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Duration Extent</label>
+                    <label className="block text-sm font-medium text-slate-600 mb-2">Duration Extent</label>
                     <select 
                       value={requestForm.requestedMinutes} 
                       onChange={(e) => setRequestForm(p => ({...p, requestedMinutes: safeParseInt(e.target.value, 15)}))} 
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-primary focus:ring-1 focus:ring-primary backdrop-blur-md" 
+                      className="w-full px-4 py-3 glass-input text-slate-900" 
                       required
                     >
-                      <option value={5} className="bg-obsidian-900">5 Minutes</option>
-                      <option value={10} className="bg-obsidian-900">10 Minutes</option>
-                      <option value={15} className="bg-obsidian-900">15 Minutes</option>
-                      <option value={30} className="bg-obsidian-900">30 Minutes</option>
+                      <option value={5} className="bg-white">5 Minutes</option>
+                      <option value={10} className="bg-white">10 Minutes</option>
+                      <option value={15} className="bg-white">15 Minutes</option>
+                      <option value={30} className="bg-white">30 Minutes</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Cause Vector</label>
-                    <textarea value={requestForm.reason} onChange={e => setRequestForm(p => ({...p, reason: e.target.value}))} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-primary focus:ring-1 focus:ring-primary backdrop-blur-md" rows={3} required />
+                    <label className="block text-sm font-medium text-slate-600 mb-2">Cause Vector</label>
+                    <textarea value={requestForm.reason} onChange={e => setRequestForm(p => ({...p, reason: e.target.value}))} className="w-full px-4 py-3 glass-input text-slate-900" rows={3} required />
                   </div>
                   <div className="flex justify-end space-x-3 pt-2">
                     <Button type="button" variant="ghost" onClick={() => setShowRequestForm(false)} disabled={loading}>Abort</Button>
@@ -231,22 +231,22 @@ export const HallPassManagement: React.FC<HallPassManagementProps> = ({ facultyI
                   <div className="flex items-center space-x-3 mb-2">
                     <div className={`p-2 rounded-lg border ${getStatusColor(req.status)}`}>{getStatusIcon(req.status)}</div>
                     <div>
-                      <h4 className="text-white font-bold">{req.studentName}</h4>
+                      <h4 className="text-slate-900 font-bold">{req.studentName}</h4>
                       <p className="text-xs text-slate-500 font-mono">{req.studentId}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-                    <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                    <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-200/60">
                       <p className="text-xs text-slate-500 font-bold uppercase mb-1">Time</p>
-                      <p className="text-white text-sm">{req.requestedMinutes} Min</p>
+                      <p className="text-slate-900 text-sm">{req.requestedMinutes} Min</p>
                     </div>
-                    <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                    <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-200/60">
                       <p className="text-xs text-slate-500 font-bold uppercase mb-1">Init</p>
-                      <p className="text-white text-sm">{new Date(req.requestedAt).toLocaleTimeString()}</p>
+                      <p className="text-slate-900 text-sm">{new Date(req.requestedAt).toLocaleTimeString()}</p>
                     </div>
-                    <div className="bg-white/5 p-3 rounded-xl border border-white/5 col-span-2">
+                    <div className="bg-slate-50/80 p-3 rounded-xl border border-slate-200/60 col-span-2">
                       <p className="text-xs text-slate-500 font-bold uppercase mb-1">Reason</p>
-                      <p className="text-slate-300 text-sm">{req.reason}</p>
+                      <p className="text-slate-600 text-sm">{req.reason}</p>
                     </div>
                   </div>
                 </div>
@@ -268,18 +268,18 @@ export const HallPassManagement: React.FC<HallPassManagementProps> = ({ facultyI
                 <div className="flex items-center space-x-3 mb-4">
                   <div className={`p-2 rounded-lg border ${getStatusColor(pass.status)}`}>{getStatusIcon(pass.status)}</div>
                   <div>
-                    <h4 className="text-white font-bold">{pass.studentName}</h4>
+                    <h4 className="text-slate-900 font-bold">{pass.studentName}</h4>
                     <p className="text-xs text-emerald-400 font-medium">Cleared for Transit</p>
                   </div>
                 </div>
                 <div className="flex space-x-6">
-                  <div className="bg-white/5 p-4 rounded-xl border border-white/5 flex-1">
+                  <div className="bg-slate-50/80 p-4 rounded-xl border border-slate-200/60 flex-1">
                     <p className="text-xs text-slate-500 font-bold uppercase mb-1">Terminal Countdown</p>
-                    <p className="text-2xl font-bold text-white tracking-widest">{getTimeRemaining(pass.processedAt, pass.requestedMinutes)}</p>
+                    <p className="text-2xl font-bold text-slate-900 tracking-widest">{getTimeRemaining(pass.processedAt, pass.requestedMinutes)}</p>
                   </div>
-                  <div className="flex-1 space-y-2 text-sm text-slate-300 py-2">
-                    <div className="flex justify-between"><span className="text-slate-500">Duration Limit</span><span className="text-white font-mono">{pass.requestedMinutes}M</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500">Initiated At</span><span className="text-white font-mono">{pass.processedAt ? new Date(pass.processedAt).toLocaleTimeString() : 'N/A'}</span></div>
+                  <div className="flex-1 space-y-2 text-sm text-slate-600 py-2">
+                    <div className="flex justify-between"><span className="text-slate-500">Duration Limit</span><span className="text-slate-900 font-mono">{pass.requestedMinutes}M</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500">Initiated At</span><span className="text-slate-900 font-mono">{pass.processedAt ? new Date(pass.processedAt).toLocaleTimeString() : 'N/A'}</span></div>
                   </div>
                 </div>
               </div>
