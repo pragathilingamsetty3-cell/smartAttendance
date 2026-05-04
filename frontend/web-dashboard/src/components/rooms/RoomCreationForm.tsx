@@ -469,8 +469,8 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
               <Building className="h-5 w-5 text-green-400" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Create New Room</h2>
-              <p className="text-gray-400 text-sm">Add a new room with boundary definition</p>
+              <h2 className="text-xl font-bold text-slate-900">Create New Room</h2>
+              <p className="text-slate-500 text-sm">Add a new room with boundary definition</p>
             </div>
           </div>
         </CardHeader>
@@ -500,7 +500,7 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Information */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white flex items-center">
+              <h3 className="text-lg font-semibold text-slate-900 flex items-center">
                 <Building className="h-4 w-4 mr-2" />
                 Basic Information
               </h3>
@@ -568,7 +568,7 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
 
             {/* Boundary Definition */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white flex items-center">
+              <h3 className="text-lg font-semibold text-slate-900 flex items-center">
                 <Map className="h-4 w-4 mr-2" />
                 Boundary Definition
               </h3>
@@ -642,9 +642,9 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                   </div>
 
                   {/* Instructions */}
-                  <div className="p-4 bg-gray-800/30 rounded-lg border border-gray-700">
-                    <h4 className="text-white font-medium mb-2">Drawing Instructions:</h4>
-                    <ul className="text-gray-400 text-sm space-y-1">
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    <h4 className="text-slate-900 font-medium mb-2">Drawing Instructions:</h4>
+                    <ul className="text-slate-500 text-sm space-y-1">
                       {isCalibrationMode ? (
                         <>
                           <li>• <strong>Step 1:</strong> Select source (URL or Upload)</li>
@@ -664,12 +664,12 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                   {isCalibrationMode && (
                     <div className="space-y-4">
                       {/* Source Selection Tabs */}
-                      <div className="flex bg-[#0F0F16] p-1 rounded-xl border border-white/10">
+                      <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
                         <button
                           type="button"
                           onClick={() => setCalibrationSource('url')}
                           className={`flex-1 flex items-center justify-center py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                            calibrationSource === 'url' ? 'bg-[#7C3AED] text-white shadow-lg' : 'text-gray-400 hover:text-white'
+                            calibrationSource === 'url' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'
                           }`}
                         >
                           <MapPin className="h-4 w-4 mr-2" />
@@ -679,7 +679,7 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                           type="button"
                           onClick={() => setCalibrationSource('upload')}
                           className={`flex-1 flex items-center justify-center py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                            calibrationSource === 'upload' ? 'bg-[#7C3AED] text-white shadow-lg' : 'text-gray-400 hover:text-white'
+                            calibrationSource === 'upload' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'
                           }`}
                         >
                           <Save className="h-4 w-4 mr-2" />
@@ -689,7 +689,7 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                           type="button"
                           onClick={() => setCalibrationSource('camera')}
                           className={`flex-1 flex items-center justify-center py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                            calibrationSource === 'camera' ? 'bg-[#7C3AED] text-white shadow-lg' : 'text-gray-400 hover:text-white'
+                            calibrationSource === 'camera' ? 'bg-primary text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'
                           }`}
                         >
                           <Camera className="h-4 w-4 mr-2" />
@@ -711,7 +711,7 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                       {calibrationSource === 'upload' && (
                         <div 
                           onClick={() => fileInputRef.current?.click()}
-                          className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center cursor-pointer hover:border-[#7C3AED]/50 hover:bg-[#7C3AED]/5 transition-all"
+                          className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all"
                         >
                           <input 
                             type="file" 
@@ -720,8 +720,8 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                             accept="image/*" 
                             onChange={handleFileUpload} 
                           />
-                          <Save className="h-8 w-8 text-gray-500 mx-auto mb-2" />
-                          <p className="text-gray-300 font-medium">Click to upload room snapshot</p>
+                          <Save className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                          <p className="text-slate-700 font-medium">Click to upload room snapshot</p>
                           <p className="text-gray-500 text-xs mt-1">Supports JPG, PNG from sensor perspective</p>
                         </div>
                       )}
@@ -731,10 +731,10 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                           {!isCameraActive ? (
                             <div 
                               onClick={startCamera}
-                              className="border-2 border-dashed border-white/10 rounded-xl p-12 text-center cursor-pointer hover:border-[#7C3AED]/50 hover:bg-[#7C3AED]/5 transition-all"
+                              className="border-2 border-dashed border-slate-200 rounded-xl p-12 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all"
                             >
-                              <Camera className="h-8 w-8 text-gray-500 mx-auto mb-2" />
-                              <p className="text-gray-300 font-medium">Start Room Camera</p>
+                              <Camera className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                              <p className="text-slate-700 font-medium">Start Room Camera</p>
                               <p className="text-gray-500 text-xs mt-1">Take a real-time photo for calibration</p>
                               {cameraError && <p className="text-red-400 text-xs mt-2">{cameraError}</p>}
                             </div>
@@ -837,7 +837,7 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                     width={400}
                     height={400}
                     onClick={handleCanvasClick}
-                    className="w-full h-96 bg-gray-800/50 border-2 border-dashed border-gray-600 rounded-lg cursor-crosshair"
+                    className="w-full h-96 bg-slate-100 border-2 border-dashed border-slate-200 rounded-lg cursor-crosshair"
                     style={{ maxHeight: '400px' }}
                   />
                   
@@ -859,13 +859,13 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                   </div>
                   <div>
                     <h4 className="text-emerald-400 font-bold uppercase tracking-widest text-xs">Calibration Successful</h4>
-                    <p className="text-white text-sm font-semibold">4 Geographic Corners Generated</p>
+                    <p className="text-slate-900 text-sm font-semibold">4 Geographic Corners Generated</p>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {formData.boundaryPoints.map((coord, idx) => (
-                    <div key={idx} className="bg-black/20 p-3 rounded-xl border border-white/5">
+                    <div key={idx} className="bg-white/50 p-3 rounded-xl border border-slate-100">
                       <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Corner {idx + 1}</p>
                       <p className="text-xs text-emerald-300 font-mono tracking-tighter">
                         {coord.latitude.toFixed(7)}, {coord.longitude.toFixed(7)}
@@ -878,11 +878,11 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                   <div className="mt-4 pt-4 border-t border-white/5 flex gap-6">
                     <div>
                       <p className="text-[10px] text-gray-500 font-bold uppercase">Estimated Width</p>
-                      <p className="text-sm text-white">{boundaryData.widthMeters}m</p>
+                      <p className="text-sm text-slate-900">{boundaryData.widthMeters}m</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-gray-500 font-bold uppercase">Estimated Length</p>
-                      <p className="text-sm text-white">{boundaryData.heightMeters}m</p>
+                      <p className="text-sm text-slate-900">{boundaryData.heightMeters}m</p>
                     </div>
                   </div>
                 )}
@@ -890,7 +890,7 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
             )}
 
             {/* Form Actions */}
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-700">
+            <div className="flex justify-end space-x-4 pt-6 border-t border-slate-200">
               <Button
                 type="button"
                 variant="glass"

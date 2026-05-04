@@ -49,42 +49,42 @@ export const RoomViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, room 
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <motion.div 
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+          onClick={onClose} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" 
         />
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-          className="relative w-full max-w-lg bg-[#0F0F16] border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
+          className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl"
         >
-          <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between bg-blue-500/5">
-            <h2 className="text-xl font-bold text-white flex items-center gap-3">
-              <Info className="text-blue-400" /> Room Intelligence
+          <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-primary/5">
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-3">
+              <Info className="text-primary" /> Room Intelligence
             </h2>
-            <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl text-slate-400"><X size={20} /></button>
+            <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl text-slate-400"><X size={20} /></button>
           </div>
 
           <div className="p-8 space-y-6">
-            <div className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
-              <div className="p-3 bg-blue-500/20 rounded-xl">
-                <Building className="text-blue-400" size={24} />
+            <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <div className="p-3 bg-primary/10 rounded-xl">
+                <Building className="text-primary" size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">{room.name}</h3>
-                <p className="text-slate-400 text-sm">{room.building}, Floor {room.floor}</p>
+                <h3 className="text-lg font-bold text-slate-900">{room.name}</h3>
+                <p className="text-slate-500 text-sm">{room.building}, Floor {room.floor}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl">
+              <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
                 <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-1">Capacity</p>
-                <div className="flex items-center gap-2 text-white font-bold text-lg">
-                  <Users size={18} className="text-purple-400" /> {room.capacity} students
+                <div className="flex items-center gap-2 text-slate-900 font-bold text-lg">
+                  <Users size={18} className="text-purple-600" /> {room.capacity} students
                 </div>
               </div>
-              <div className="p-4 bg-white/[0.02] border border-white/5 rounded-2xl">
+              <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
                 <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-1">Boundary</p>
-                <div className="flex items-center gap-2 text-white font-bold">
-                  <MapPin size={18} className={room.hasBoundary ? 'text-green-400' : 'text-slate-500'} />
-                  <span className={room.hasBoundary ? 'text-green-400' : 'text-slate-500'}>
+                <div className="flex items-center gap-2 text-slate-900 font-bold">
+                  <MapPin size={18} className={room.hasBoundary ? 'text-green-600' : 'text-slate-400'} />
+                  <span className={room.hasBoundary ? 'text-green-600' : 'text-slate-400'}>
                     {room.hasBoundary ? room.boundaryType : 'Not Set'}
                   </span>
                 </div>
@@ -94,7 +94,7 @@ export const RoomViewModal: React.FC<ViewModalProps> = ({ isOpen, onClose, room 
             {details?.description && (
               <div className="space-y-2">
                 <p className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Asset Description</p>
-                <p className="text-slate-300 text-sm leading-relaxed p-4 bg-white/[0.03] rounded-2xl border border-white/5 italic">
+                <p className="text-slate-600 text-sm leading-relaxed p-4 bg-slate-50 rounded-2xl border border-slate-100 italic">
                   "{details.description}"
                 </p>
               </div>
@@ -185,13 +185,13 @@ export const RoomEditModal: React.FC<EditModalProps> = ({ isOpen, onClose, room,
         />
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-          className="relative w-full max-w-xl bg-[#0F0F16] border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
+          className="relative w-full max-w-xl bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl"
         >
-          <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white flex items-center gap-3">
+          <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-3">
                Edit Room Configuration
             </h2>
-            <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl text-slate-400"><X size={20} /></button>
+            <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl text-slate-400"><X size={20} /></button>
           </div>
 
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
@@ -235,7 +235,7 @@ export const RoomEditModal: React.FC<EditModalProps> = ({ isOpen, onClose, room,
               <textarea 
                 value={formData.description} 
                 onChange={e => setFormData({...formData, description: e.target.value})}
-                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all min-h-[100px]"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all min-h-[100px] placeholder:text-slate-400"
                 placeholder="Details about equipment or room usage..."
               />
             </div>
@@ -295,7 +295,7 @@ export const RoomDeleteModal: React.FC<DeleteModalProps> = ({ isOpen, onClose, r
         />
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-          className="relative w-full max-w-md bg-[#0F0F16] border border-accent/20 rounded-3xl overflow-hidden shadow-2xl"
+          className="relative w-full max-w-md bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-2xl"
         >
           <div className="p-8 text-center space-y-6">
             <div className="w-20 h-20 bg-accent/10 rounded-full flex items-center justify-center mx-auto border border-accent/20">
@@ -303,9 +303,9 @@ export const RoomDeleteModal: React.FC<DeleteModalProps> = ({ isOpen, onClose, r
             </div>
             
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-white">Critical Action</h2>
-              <p className="text-slate-400">
-                Are you sure you want to delete <span className="text-white font-bold">"{room.name}"</span>? 
+              <h2 className="text-2xl font-bold text-slate-900">Critical Action</h2>
+              <p className="text-slate-500">
+                Are you sure you want to delete <span className="text-slate-900 font-bold">"{room.name}"</span>? 
                 This action is irreversible and will remove all boundary data.
               </p>
             </div>
