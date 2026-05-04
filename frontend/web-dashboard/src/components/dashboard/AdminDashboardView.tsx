@@ -91,7 +91,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ stats, l
               </motion.h1>
               <motion.p variants={item} className="text-slate-500">
                 {activeTab === "overview" 
-                  ? "Live monitoring of attendance sessions and zero-trust anomalies." 
+                  ? "Live monitoring of attendance sessions and system performance." 
                   : "Manage institutional holidays and exam schedules."}
               </motion.p>
             </div>
@@ -131,7 +131,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ stats, l
 
         {activeTab === "overview" ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
             {/* Card 1: Users/Students */}
             <motion.div variants={item} className="bg-white border border-slate-200 p-6 rounded-2xl relative overflow-hidden group shadow-sm hover:shadow-xl transition-all">
@@ -189,24 +189,6 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ stats, l
               </div>
             </motion.div>
 
-            {/* Card 4: Anomalies */}
-            <motion.div variants={item} className="bg-white border border-red-200 p-6 rounded-2xl relative overflow-hidden group shadow-sm hover:shadow-xl transition-all">
-              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <ShieldAlert size={64} className="text-red-500" />
-              </div>
-              <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Zero-Trust Anomalies</p>
-              {loading ? (
-                <Skeleton className="h-10 w-24 mb-4" />
-              ) : (
-                <p className="text-4xl font-bold text-red-600 mb-4">
-                  <AnimatedCounter value={stats?.anomalies ?? 0} />
-                </p>
-              )}
-              <div className="flex items-center text-xs font-bold text-red-600">
-                <span className="bg-red-500/10 px-2 py-0.5 rounded-full mr-2">Needs Review</span>
-                System Violations
-              </div>
-            </motion.div>
 
         </div>
 
