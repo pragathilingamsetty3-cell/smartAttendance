@@ -110,55 +110,55 @@ export default function CRLRAssignments() {
   return (
     <div className="p-8 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-          <ShieldCheck className="text-violet-500" /> CR/LR Governance
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+          <ShieldCheck className="text-sky-500" /> CR/LR Governance
         </h1>
-        <p className="text-slate-400 mt-1">Appoint and manage Class Representatives (CR) and Lady Representatives (LR)</p>
+        <p className="text-slate-500 mt-1">Appoint and manage Class Representatives (CR) and Lady Representatives (LR)</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-1 space-y-6">
           <Card glass className="p-6">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-              <Filter size={14} className="text-violet-500" /> Control Filters
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Filter size={14} className="text-sky-500" /> Control Filters
             </h3>
             <div className="space-y-4">
               <div>
                 <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Department</label>
                 <select 
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-violet-500/50"
+                  className="w-full bg-slate-50 border border-slate-200/60 rounded-lg px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-500/50"
                   value={selectedDept}
                   onChange={(e) => setSelectedDept(e.target.value)}
                 >
-                  <option value="" className="bg-[#0F0F16]">Select Department</option>
-                  {departments.map(d => <option key={d.id} value={d.id} className="bg-[#0F0F16]">{d.label}</option>)}
+                  <option value="" className="bg-slate-50">Select Department</option>
+                  {departments.map(d => <option key={d.id} value={d.id} className="bg-slate-50">{d.label}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Section</label>
                 <select 
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-violet-500/50"
+                  className="w-full bg-slate-50 border border-slate-200/60 rounded-lg px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-500/50"
                   value={selectedSection}
                   onChange={(e) => setSelectedSection(e.target.value)}
                   disabled={!selectedDept}
                 >
-                  <option value="" className="bg-[#0F0F16]">Select Section</option>
-                  {sections.map(s => <option key={s.id} value={s.id} className="bg-[#0F0F16]">{s.label}</option>)}
+                  <option value="" className="bg-slate-50">Select Section</option>
+                  {sections.map(s => <option key={s.id} value={s.id} className="bg-slate-50">{s.label}</option>)}
                 </select>
               </div>
             </div>
           </Card>
 
           <Card glass className="p-6">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4">Current Assignments</h3>
+            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Current Assignments</h3>
             <div className="space-y-3">
               {currentAssignments.length === 0 ? (
                 <p className="text-xs text-slate-500 italic text-center py-4">No active appointments</p>
               ) : (
                 currentAssignments.map(asgn => (
-                  <div key={asgn.assignmentId} className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5">
+                  <div key={asgn.assignmentId} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-200/60">
                     <div>
-                      <p className="text-xs font-bold text-white">{asgn.studentName}</p>
+                      <p className="text-xs font-bold text-slate-900">{asgn.studentName}</p>
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${asgn.roleType === 'CR' ? 'bg-blue-500/20 text-blue-400' : 'bg-pink-500/20 text-pink-400'}`}>
                         {asgn.roleType}
                       </span>
@@ -179,12 +179,12 @@ export default function CRLRAssignments() {
         </div>
 
         <div className="md:col-span-3 space-y-6">
-          <div className="flex items-center gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl">
+          <div className="flex items-center gap-4 bg-slate-50 border border-slate-200/60 p-4 rounded-2xl">
             <Search className="text-slate-500" size={20} />
             <input 
               type="text" 
               placeholder="Search students by name or registration ID..."
-              className="bg-transparent border-none outline-none text-white w-full text-lg font-medium placeholder:text-slate-600"
+              className="bg-transparent border-none outline-none text-slate-900 w-full text-lg font-medium placeholder:text-slate-600"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -208,16 +208,16 @@ export default function CRLRAssignments() {
                     layout
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className={`glass-card p-4 flex items-center justify-between group hover:border-violet-500/30 transition-all ${
+                    className={`glass-card p-4 flex items-center justify-between group hover:border-sky-500/30 transition-all ${
                       currentAssignments.some(a => a.studentId === student.id) ? 'opacity-50 pointer-events-none grayscale' : ''
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-bold text-white border border-white/5 group-hover:border-violet-500/50">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-900 border border-slate-200/60 group-hover:border-sky-500/50">
                         {student.name.charAt(0)}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white">{student.name}</p>
+                        <p className="text-sm font-bold text-slate-900">{student.name}</p>
                         <p className="text-[10px] text-slate-500 font-mono">{student.registrationNumber}</p>
                       </div>
                     </div>

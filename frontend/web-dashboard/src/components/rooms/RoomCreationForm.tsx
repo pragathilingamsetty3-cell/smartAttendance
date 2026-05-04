@@ -478,13 +478,13 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
         <CardContent>
           {/* 📍 GPS Status Header (The Honest Proof) */}
           {calibrationData && (
-            <div className="mb-6 p-4 bg-violet-600/10 border border-violet-500/20 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="mb-6 p-4 bg-sky-600/10 border border-sky-500/20 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-violet-500/20 rounded-lg">
-                    <MapPin className="h-4 w-4 text-violet-400" />
+                  <div className="p-2 bg-sky-500/20 rounded-lg">
+                    <MapPin className="h-4 w-4 text-sky-400" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-violet-400 uppercase tracking-widest">GPS Sensor Internal Tracking</p>
+                    <p className="text-xs font-bold text-sky-400 uppercase tracking-widest">GPS Sensor Internal Tracking</p>
                     <p className="text-sm text-white font-medium">
                       {calibrationData.lat.toFixed(6)}, {calibrationData.lng.toFixed(6)}
                     </p>
@@ -739,7 +739,7 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                               {cameraError && <p className="text-red-400 text-xs mt-2">{cameraError}</p>}
                             </div>
                           ) : (
-                            <div className="relative rounded-xl overflow-hidden border border-white/10 bg-black aspect-video">
+                            <div className="relative rounded-xl overflow-hidden border border-slate-200/60 bg-black aspect-video">
                               <video 
                                 ref={videoRef} 
                                 autoPlay 
@@ -801,7 +801,7 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                         {boundaryPoints.map((point, index) => {
                           const gps = formData.boundaryPoints[index];
                           return (
-                            <div key={index} className="flex justify-between items-center text-xs py-1 border-b border-white/5 last:border-0">
+                            <div key={index} className="flex justify-between items-center text-xs py-1 border-b border-slate-200/60 last:border-0">
                               <span className="text-gray-400">Point {index + 1}:</span>
                               {gps ? (
                                 <span className="text-emerald-400 font-mono">
@@ -865,7 +865,7 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {formData.boundaryPoints.map((coord, idx) => (
-                    <div key={idx} className="bg-white/50 p-3 rounded-xl border border-slate-100">
+                    <div key={idx} className="bg-slate-500 p-3 rounded-xl border border-slate-100">
                       <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Corner {idx + 1}</p>
                       <p className="text-xs text-emerald-300 font-mono tracking-tighter">
                         {coord.latitude.toFixed(7)}, {coord.longitude.toFixed(7)}
@@ -875,7 +875,7 @@ export const RoomCreationForm: React.FC<RoomCreationFormProps> = ({
                 </div>
                 
                 {(boundaryData.widthMeters || 0) > 0 && (
-                  <div className="mt-4 pt-4 border-t border-white/5 flex gap-6">
+                  <div className="mt-4 pt-4 border-t border-slate-200/60 flex gap-6">
                     <div>
                       <p className="text-[10px] text-gray-500 font-bold uppercase">Estimated Width</p>
                       <p className="text-sm text-slate-900">{boundaryData.widthMeters}m</p>

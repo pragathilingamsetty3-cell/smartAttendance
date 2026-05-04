@@ -113,11 +113,11 @@ export default function RoomChange() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left: Configuration */}
-        <Card glass className="p-8 border-white/10 space-y-8">
+        <Card glass className="p-8 border-slate-200/60 space-y-8">
             <div className="space-y-6">
                 <div>
                    <h3 className="text-sm font-bold text-slate-900 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                     <Users size={14} className="text-violet-500" /> 1. Select Section
+                     <Users size={14} className="text-sky-500" /> 1. Select Section
                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                        {!isFaculty && (
@@ -128,8 +128,8 @@ export default function RoomChange() {
                             value={selectedDept}
                             onChange={(e) => setSelectedDept(e.target.value)}
                           >
-                            <option value="" className="bg-[#0F0F16]">Choose Dept</option>
-                            {departments.map(d => <option key={`dept-${d.id}`} value={d.id} className="bg-[#0F0F16]">{d.label || d.name}</option>)}
+                            <option value="" className="bg-slate-50">Choose Dept</option>
+                            {departments.map(d => <option key={`dept-${d.id}`} value={d.id} className="bg-slate-50">{d.label || d.name}</option>)}
                           </select>
                         </div>
                        )}
@@ -141,8 +141,8 @@ export default function RoomChange() {
                            onChange={(e) => setSelectedSection(e.target.value)}
                            disabled={!selectedDept || sections.length === 0}
                          >
-                           <option value="" className="bg-[#0F0F16]">{sections.length === 0 ? 'No sections found' : 'Choose Section'}</option>
-                           {sections.map(s => <option key={`sec-${s.id}`} value={s.id} className="bg-[#0F0F16]">{s.label || s.name}</option>)}
+                           <option value="" className="bg-slate-50">{sections.length === 0 ? 'No sections found' : 'Choose Section'}</option>
+                           {sections.map(s => <option key={`sec-${s.id}`} value={s.id} className="bg-slate-50">{s.label || s.name}</option>)}
                          </select>
                        </div>
                     </div>
@@ -182,8 +182,8 @@ export default function RoomChange() {
                              selectedRoom === (room.roomId || (room as any).id) 
                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400 ring-2 ring-emerald-500/20' 
                                : room.isAvailable
-                                 ? 'bg-white/5 border-emerald-500/20 text-slate-300 hover:border-emerald-500/40' 
-                                 : 'bg-white/[0.02] border-red-500/10 text-slate-500 grayscale-[0.3]'
+                                 ? 'bg-slate-50 border-emerald-500/20 text-slate-300 hover:border-emerald-500/40' 
+                                 : 'bg-white border-red-500/10 text-slate-500 grayscale-[0.3]'
                            }`}
                          >
                            <div className={`absolute top-0 left-0 w-1 h-full ${room.isAvailable ? 'bg-emerald-500/40' : 'bg-red-500/20'}`} />
@@ -197,7 +197,7 @@ export default function RoomChange() {
                        {rooms.length > 8 && (
                          <button 
                            onClick={() => setShowAllRooms(!showAllRooms)}
-                           className="p-4 rounded-xl border border-dashed border-white/10 text-slate-600 hover:text-slate-400 transition-colors flex flex-col items-center justify-center"
+                           className="p-4 rounded-xl border border-dashed border-slate-200/60 text-slate-600 hover:text-slate-400 transition-colors flex flex-col items-center justify-center"
                          >
                             <Search size={16} />
                             <span className="text-[10px] font-bold mt-1">{showAllRooms ? 'Show Less' : 'View All'}</span>
@@ -246,7 +246,7 @@ export default function RoomChange() {
                  </div>
                </div>
 
-               <div className="space-y-4 pt-6 border-t border-white/5">
+               <div className="space-y-4 pt-6 border-t border-slate-200/60">
                   <div className="flex items-center gap-3 text-xs text-slate-300">
                     <CheckCircle2 size={16} className="text-emerald-500" />
                     <span>Real-time push notifications sent via Firebase</span>
@@ -283,7 +283,7 @@ export default function RoomChange() {
                           ) : (
                             <>
                                 <p>Session {result.sessionId?.slice(0,8)}... has been migrated.</p>
-                                <div className="flex justify-between items-center bg-black/20 p-3 rounded-xl mt-4 border border-white/5">
+                                <div className="flex justify-between items-center bg-black/20 p-3 rounded-xl mt-4 border border-slate-200/60">
                                    <div>
                                       <p className="text-[10px] font-bold opacity-60">NEW_ROOM_HEX</p>
                                       <p className="font-mono text-slate-900 font-bold">{result.newRoomId?.slice(0,12)}...</p>

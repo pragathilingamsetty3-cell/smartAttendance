@@ -73,7 +73,7 @@ export default function StudentHallPassRequest() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -89,8 +89,8 @@ export default function StudentHallPassRequest() {
           <CheckCircle2 size={48} />
         </motion.div>
         <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Request Submitted</h2>
-          <p className="text-slate-400">Your faculty has been notified. Redirecting to dashboard...</p>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Request Submitted</h2>
+          <p className="text-slate-500">Your faculty has been notified. Redirecting to dashboard...</p>
         </div>
       </div>
     );
@@ -99,23 +99,23 @@ export default function StudentHallPassRequest() {
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-8">
       {/* Back Button */}
-      <Link href="/dashboard" className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors group">
+      <Link href="/dashboard" className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors group">
         <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
         <span className="font-bold text-sm tracking-tight">Back to Dashboard</span>
       </Link>
 
       <div className="space-y-2">
-        <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
-          <Activity className="text-violet-500" /> Exit Request
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+          <Activity className="text-sky-500" /> Exit Request
         </h1>
-        <p className="text-slate-400 font-medium">Digital Hall Pass for active classroom session</p>
+        <p className="text-slate-500 font-medium">Digital Hall Pass for active classroom session</p>
       </div>
 
       {!stats?.activeSession ? (
         <Card glass className="border-amber-500/20 bg-amber-500/5 p-8 rounded-[2rem] text-center">
             <AlertCircle className="mx-auto text-amber-500 mb-4" size={32} />
-            <h3 className="text-lg font-bold text-white mb-2">No Active Session</h3>
-            <p className="text-slate-400 text-sm max-w-md mx-auto">
+            <h3 className="text-lg font-bold text-slate-900 mb-2">No Active Session</h3>
+            <p className="text-slate-500 text-sm max-w-md mx-auto">
                 You can only request a hall pass when you are verified in an ongoing class. 
                 Please ensure you are within the classroom geofence.
             </p>
@@ -131,15 +131,15 @@ export default function StudentHallPassRequest() {
             className="space-y-6"
         >
           {/* Active Session Context */}
-          <div className="glass-card p-6 bg-violet-600/[0.03] border-violet-500/20 rounded-[2rem]">
-            <p className="text-[10px] font-black text-violet-400 uppercase tracking-[0.2em] mb-3">Currently In</p>
+          <div className="glass-card p-6 bg-sky-600/[0.03] border-sky-500/20 rounded-[2rem]">
+            <p className="text-[10px] font-black text-sky-400 uppercase tracking-[0.2em] mb-3">Currently In</p>
             <div className="flex items-center gap-4">
-                <div className="p-3 bg-violet-600/10 rounded-2xl text-violet-400">
+                <div className="p-3 bg-sky-600/10 rounded-2xl text-sky-400">
                     <Clock size={24} />
                 </div>
                 <div>
-                    <h4 className="text-lg font-bold text-white">{stats.activeSession.subject}</h4>
-                    <p className="text-xs text-slate-400">{stats.activeSession.room?.name} • {stats.activeSession.startTime} - {stats.activeSession.endTime}</p>
+                    <h4 className="text-lg font-bold text-slate-900">{stats.activeSession.subject}</h4>
+                    <p className="text-xs text-slate-500">{stats.activeSession.room?.name} • {stats.activeSession.startTime} - {stats.activeSession.endTime}</p>
                 </div>
             </div>
           </div>
@@ -156,8 +156,8 @@ export default function StudentHallPassRequest() {
                             onClick={() => setMinutes(m)}
                             className={`p-4 rounded-2xl font-bold transition-all border ${
                                 minutes === m 
-                                ? 'bg-violet-600 border-violet-500 text-white shadow-lg shadow-violet-600/20' 
-                                : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/20'
+                                ? 'bg-sky-600 border-sky-500 text-slate-900 shadow-lg shadow-sky-600/20' 
+                                : 'bg-slate-50 border-slate-200/60 text-slate-500 hover:border-white/20'
                             }`}
                         >
                             {m}m
@@ -178,7 +178,7 @@ export default function StudentHallPassRequest() {
                         onChange={(e) => setReason(e.target.value)}
                         placeholder="e.g., Washroom visit, Water break..."
                         rows={4}
-                        className="w-full bg-[#0F0F16] border border-white/10 rounded-3xl p-4 pl-12 text-sm text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all placeholder:text-slate-600"
+                        className="w-full bg-slate-50 border border-slate-200/60 rounded-3xl p-4 pl-12 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500/50 transition-all placeholder:text-slate-600"
                         required
                     />
                 </div>
@@ -188,7 +188,7 @@ export default function StudentHallPassRequest() {
                 type="submit" 
                 loading={requesting}
                 variant="primary" 
-                className="w-full h-14 rounded-2xl text-base font-bold shadow-xl shadow-violet-600/30"
+                className="w-full h-14 rounded-2xl text-base font-bold shadow-xl shadow-sky-600/30"
             >
                 Submit Request
             </Button>

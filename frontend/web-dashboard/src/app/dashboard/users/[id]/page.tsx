@@ -162,7 +162,7 @@ export default function UserDetailsPage({ params }: { params: Promise<{ id: stri
             animate={{ opacity: 1, x: 0 }}
             className="glass-panel overflow-hidden"
           >
-            <div className="h-24 bg-gradient-to-r from-primary/40 to-violet-600/40" />
+            <div className="h-24 bg-gradient-to-r from-primary/40 to-sky-600/40" />
             <div className="px-6 pb-8 -mt-12 text-center">
               <div className="inline-block relative">
                 <div className="h-24 w-24 rounded-2xl bg-white border-4 border-white flex items-center justify-center text-primary text-3xl font-bold mx-auto shadow-xl shadow-sky-900/10">

@@ -23,7 +23,7 @@ function SettingsContent() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center">
-          <SettingsIcon className="h-8 w-8 mr-3 text-violet-500" />
+          <SettingsIcon className="h-8 w-8 mr-3 text-sky-500" />
           System Settings
         </h1>
         <p className="text-gray-400 mt-2">Manage your account preferences and global system configuration.</p>
@@ -36,9 +36,9 @@ function SettingsContent() {
             whileHover={{ y: -4 }}
             className="cursor-pointer"
           >
-            <Card className="p-6 h-full flex flex-col hover:border-violet-500/30 transition-all">
+            <Card className="p-6 h-full flex flex-col hover:border-sky-500/30 transition-all">
               <div className="flex items-center space-x-4 mb-4">
-                <div className="p-3 bg-violet-600/10 rounded-xl text-violet-400">
+                <div className="p-3 bg-sky-600/10 rounded-xl text-sky-400">
                   <section.icon className="h-6 w-6" />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900">{section.title}</h3>

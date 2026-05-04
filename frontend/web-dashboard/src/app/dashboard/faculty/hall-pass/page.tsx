@@ -97,17 +97,17 @@ export default function HallPassHub() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
-            <Activity className="text-violet-500" /> Hall Pass Hub
+            <Activity className="text-sky-500" /> Hall Pass Hub
           </h1>
           <p className="text-slate-400 mt-1">Real-time student exit request management</p>
         </div>
         
-        <div className="flex bg-white/50 backdrop-blur-xl p-1 rounded-xl border border-slate-200/60">
+        <div className="flex bg-slate-500 backdrop-blur-xl p-1 rounded-xl border border-slate-200/60">
           <button
             onClick={() => setActiveTab('pending')}
             className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'pending' 
-                ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20' 
+                ? 'bg-sky-600 text-white shadow-lg shadow-sky-600/20' 
                 : 'text-slate-500 hover:text-slate-900'
             }`}
           >
@@ -117,7 +117,7 @@ export default function HallPassHub() {
             onClick={() => setActiveTab('history')}
             className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'history' 
-                ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20' 
+                ? 'bg-sky-600 text-white shadow-lg shadow-sky-600/20' 
                 : 'text-slate-500 hover:text-slate-900'
             }`}
           >
@@ -159,7 +159,7 @@ export default function HallPassHub() {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-violet-600/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+                      <div className="w-10 h-10 rounded-full bg-sky-600/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
                         <User size={20} />
                       </div>
                       <div>
@@ -195,7 +195,7 @@ export default function HallPassHub() {
                     </Button>
                     <Button 
                       variant="glass" 
-                      className="border-white/10 hover:bg-red-500/10 hover:text-red-500 h-10"
+                      className="border-slate-200/60 hover:bg-red-500/10 hover:text-red-500 h-10"
                       onClick={() => handleDeny(req.studentId, req.sessionId)}
                       disabled={processingId === req.studentId}
                     >

@@ -124,13 +124,13 @@ export const AttendanceReport: React.FC = () => {
       {/* Header section */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
             <div className="p-2.5 bg-emerald-600/20 rounded-xl border border-emerald-500/30">
               <FileText className="h-7 w-7 text-emerald-400" />
             </div>
             Attendance Report Architect
           </h1>
-          <p className="text-gray-400 mt-2 text-sm uppercase tracking-[0.15em] font-medium opacity-70">
+          <p className="text-slate-500 mt-2 text-sm uppercase tracking-[0.15em] font-medium opacity-70">
             Generate and export academic compliance reports
           </p>
         </div>
@@ -153,13 +153,13 @@ export const AttendanceReport: React.FC = () => {
       )}
 
       <div className="grid grid-cols-1 gap-8">
-        <Card className="overflow-hidden border-white/5 bg-[#0F0F16]/40 backdrop-blur-xl">
-          <CardHeader className="bg-white/[0.02] border-b border-white/5 py-6">
+        <Card className="overflow-hidden border-slate-200/60 bg-slate-50/40 backdrop-blur-xl">
+          <CardHeader className="bg-white border-b border-slate-200/60 py-6">
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-full bg-emerald-600/20 flex items-center justify-center text-emerald-400 font-bold border border-emerald-500/30">
                 <Filter className="h-4 w-4" />
               </div>
-              <h3 className="text-lg font-semibold text-white">Report Constraints</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Report Constraints</h3>
             </div>
           </CardHeader>
           <CardContent className="p-8 space-y-8">
@@ -172,7 +172,7 @@ export const AttendanceReport: React.FC = () => {
                     value={selectedDept}
                     onChange={(e) => setSelectedDept(e.target.value)}
                     disabled={isFaculty || (isAdmin && !!selectedDept)}
-                    className="w-full bg-[#05050A] border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all appearance-none cursor-pointer disabled:opacity-60"
+                    className="w-full bg-slate-50 border border-slate-200/60 rounded-xl px-4 py-3.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all appearance-none cursor-pointer disabled:opacity-60"
                   >
                     <option value="">Select Department</option>
                     {departments.map(d => <option key={d.id} value={d.id}>{d.label}</option>)}
@@ -190,7 +190,7 @@ export const AttendanceReport: React.FC = () => {
                     value={selectedSection}
                     onChange={(e) => setSelectedSection(e.target.value)}
                     disabled={!selectedDept}
-                    className="w-full bg-[#05050A] border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all appearance-none cursor-pointer disabled:opacity-40"
+                    className="w-full bg-slate-50 border border-slate-200/60 rounded-xl px-4 py-3.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all appearance-none cursor-pointer disabled:opacity-40"
                   >
                     <option value="">Select Section</option>
                     {sections.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
@@ -212,14 +212,14 @@ export const AttendanceReport: React.FC = () => {
                     "p-4 rounded-xl border transition-all text-left group",
                     reportMode === 'COMPLETE' 
                       ? "bg-emerald-600/10 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.1)]" 
-                      : "bg-white/[0.02] border-white/5 hover:border-white/20"
+                      : "bg-white border-slate-200/60 hover:border-white/20"
                   )}
                 >
                   <div className="flex items-center gap-3 mb-2">
-                    <div className={cn("p-1.5 rounded-lg", reportMode === 'COMPLETE' ? "bg-emerald-600 text-white" : "bg-white/5 text-gray-500")}>
+                    <div className={cn("p-1.5 rounded-lg", reportMode === 'COMPLETE' ? "bg-emerald-600 text-white" : "bg-slate-50 text-gray-500")}>
                       <Users className="h-4 w-4" />
                     </div>
-                    <span className={cn("text-sm font-bold", reportMode === 'COMPLETE' ? "text-white" : "text-gray-400")}>Complete Section</span>
+                    <span className={cn("text-sm font-bold", reportMode === 'COMPLETE' ? "text-slate-900" : "text-slate-500")}>Complete Section</span>
                   </div>
                   <p className="text-[10px] text-gray-500 leading-relaxed px-1">Generate attendance data for every student in the selected section.</p>
                 </button>
@@ -229,15 +229,15 @@ export const AttendanceReport: React.FC = () => {
                   className={cn(
                     "p-4 rounded-xl border transition-all text-left group",
                     reportMode === 'THRESHOLD' 
-                      ? "bg-violet-600/10 border-violet-500/40 shadow-[0_0_15px_rgba(124,58,237,0.1)]" 
-                      : "bg-white/[0.02] border-white/5 hover:border-white/20"
+                      ? "bg-sky-600/10 border-sky-500/40 shadow-[0_0_15px_rgba(124,58,237,0.1)]" 
+                      : "bg-white border-slate-200/60 hover:border-white/20"
                   )}
                 >
                   <div className="flex items-center gap-3 mb-2">
-                    <div className={cn("p-1.5 rounded-lg", reportMode === 'THRESHOLD' ? "bg-violet-600 text-white" : "bg-white/5 text-gray-500")}>
+                    <div className={cn("p-1.5 rounded-lg", reportMode === 'THRESHOLD' ? "bg-sky-600 text-white" : "bg-slate-50 text-gray-500")}>
                       <Settings className="h-4 w-4" />
                     </div>
-                    <span className={cn("text-sm font-bold", reportMode === 'THRESHOLD' ? "text-white" : "text-gray-400")}>Below Threshold</span>
+                    <span className={cn("text-sm font-bold", reportMode === 'THRESHOLD' ? "text-slate-900" : "text-slate-500")}>Below Threshold</span>
                   </div>
                   <p className="text-[10px] text-gray-500 leading-relaxed px-1">Identifies students falling below a specified attendance percentage.</p>
                 </button>
@@ -248,14 +248,14 @@ export const AttendanceReport: React.FC = () => {
                     "p-4 rounded-xl border transition-all text-left group col-span-2",
                     reportMode === 'STUDENT_LIST' 
                       ? "bg-amber-600/10 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.1)]" 
-                      : "bg-white/[0.02] border-white/5 hover:border-white/20"
+                      : "bg-white border-slate-200/60 hover:border-white/20"
                   )}
                 >
                   <div className="flex items-center gap-3 mb-2">
-                    <div className={cn("p-1.5 rounded-lg", reportMode === 'STUDENT_LIST' ? "bg-amber-600 text-white" : "bg-white/5 text-gray-500")}>
+                    <div className={cn("p-1.5 rounded-lg", reportMode === 'STUDENT_LIST' ? "bg-amber-600 text-white" : "bg-slate-50 text-gray-500")}>
                       <FileText className="h-4 w-4" />
                     </div>
-                    <span className={cn("text-sm font-bold", reportMode === 'STUDENT_LIST' ? "text-white" : "text-gray-400")}>Student Identification List</span>
+                    <span className={cn("text-sm font-bold", reportMode === 'STUDENT_LIST' ? "text-slate-900" : "text-slate-500")}>Student Identification List</span>
                   </div>
                   <p className="text-[10px] text-gray-500 leading-relaxed px-1">Export a comprehensive list of all active students in the selected section (Names, Reg Nos, Emails).</p>
                 </button>
@@ -270,8 +270,8 @@ export const AttendanceReport: React.FC = () => {
                   exit={{ opacity: 0, height: 0 }}
                   className="space-y-4 text-left overflow-hidden"
                 >
-                  <div className="p-6 rounded-2xl bg-violet-600/5 border border-violet-500/20">
-                    <label className="text-xs font-bold text-violet-400 uppercase tracking-widest block mb-4">Set Attendance Range (%)</label>
+                  <div className="p-6 rounded-2xl bg-sky-600/5 border border-sky-500/20">
+                    <label className="text-xs font-bold text-sky-400 uppercase tracking-widest block mb-4">Set Attendance Range (%)</label>
                     <div className="flex items-center gap-6">
                       <input 
                         type="range" 
@@ -279,13 +279,13 @@ export const AttendanceReport: React.FC = () => {
                         max="100" 
                         value={threshold} 
                         onChange={(e) => setThreshold(safeParseInt(e.target.value, 75))}
-                        className="flex-1 accent-violet-500 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                        className="flex-1 accent-sky-500 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
                       />
-                      <div className="w-16 h-10 bg-[#05050A] border border-violet-500/30 rounded-lg flex items-center justify-center font-bold text-violet-400">
+                      <div className="w-16 h-10 bg-slate-50 border border-sky-500/30 rounded-lg flex items-center justify-center font-bold text-sky-400">
                         {threshold}%
                       </div>
                     </div>
-                    <p className="text-[10px] text-violet-500/70 mt-3 italic">Listing students with cumulative attendance less than or equal to {threshold}%</p>
+                    <p className="text-[10px] text-sky-500/70 mt-3 italic">Listing students with cumulative attendance less than or equal to {threshold}%</p>
                   </div>
                 </motion.div>
               )}
@@ -300,7 +300,7 @@ export const AttendanceReport: React.FC = () => {
                     type="date" 
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-[#05050A] border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-200/60 rounded-xl px-4 py-3.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all cursor-pointer"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
                     <Calendar className="h-4 w-4" />
@@ -315,7 +315,7 @@ export const AttendanceReport: React.FC = () => {
                     type="date" 
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full bg-[#05050A] border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-200/60 rounded-xl px-4 py-3.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 transition-all cursor-pointer"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
                     <Calendar className="h-4 w-4" />
@@ -330,7 +330,7 @@ export const AttendanceReport: React.FC = () => {
                 variant="primary" 
                 className={cn(
                   "w-full h-14 group relative overflow-hidden transition-all",
-                  reportMode === 'THRESHOLD' ? "bg-violet-600 hover:bg-violet-500 border-violet-400" : 
+                  reportMode === 'THRESHOLD' ? "bg-sky-600 hover:bg-sky-500 border-sky-400" : 
                   reportMode === 'STUDENT_LIST' ? "bg-amber-600 hover:bg-amber-500 border-amber-400" :
                   "bg-emerald-600 hover:bg-emerald-500 border-emerald-400"
                 )}
