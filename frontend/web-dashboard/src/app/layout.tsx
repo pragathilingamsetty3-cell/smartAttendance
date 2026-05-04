@@ -34,7 +34,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-screen bg-gradient-to-br from-slate-900 via-[#1a103c] to-slate-900 text-white antialiased">
+      <body className="min-h-screen text-slate-900 antialiased">
         <AppWrapper>
           {children}
         </AppWrapper>

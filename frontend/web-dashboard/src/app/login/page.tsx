@@ -68,10 +68,10 @@ export default function LoginPage() {
     paddingRight: '16px',
     paddingTop: '14px',
     paddingBottom: '14px',
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    border: '1px solid rgba(255,255,255,0.1)',
+    backgroundColor: '#f8fafc',
+    border: '1px solid #e2e8f0',
     borderRadius: '14px',
-    color: '#fff',
+    color: '#0f172a',
     fontSize: '14px',
     outline: 'none',
     transition: 'all 0.3s ease',
@@ -79,15 +79,15 @@ export default function LoginPage() {
 
   const inputFocusStyle: React.CSSProperties = {
     ...inputStyle,
-    backgroundColor: 'rgba(155,81,224,0.08)',
-    border: '1px solid rgba(155,81,224,0.4)',
-    boxShadow: '0 0 0 3px rgba(155,81,224,0.15)',
+    backgroundColor: 'rgba(14,165,233,0.05)',
+    border: '1px solid #0ea5e9',
+    boxShadow: '0 0 0 3px rgba(14,165,233,0.15)',
   };
 
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f0920 0%, #1a103c 50%, #0f0920 100%)',
+      background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #f1f5f9 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -99,13 +99,13 @@ export default function LoginPage() {
       <div style={{
         position: 'absolute', top: '-200px', right: '-100px',
         width: '600px', height: '600px',
-        background: 'radial-gradient(circle, rgba(155,81,224,0.15) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(14,165,233,0.05) 0%, transparent 70%)',
         borderRadius: '50%', pointerEvents: 'none',
       }} />
       <div style={{
         position: 'absolute', bottom: '-200px', left: '-100px',
         width: '600px', height: '600px',
-        background: 'radial-gradient(circle, rgba(45,156,219,0.1) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(14,165,233,0.1) 0%, transparent 70%)',
         borderRadius: '50%', pointerEvents: 'none',
       }} />
 
@@ -117,11 +117,11 @@ export default function LoginPage() {
       >
         {/* Card */}
         <div style={{
-          background: 'linear-gradient(180deg, rgba(26,16,60,0.95) 0%, rgba(15,9,32,0.98) 100%)',
+          background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(40px)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid rgba(0,0,0,0.05)',
           borderRadius: '24px',
-          boxShadow: '0 25px 50px rgba(0,0,0,0.5), 0 0 80px rgba(155,81,224,0.05)',
+          boxShadow: '0 25px 50px rgba(14,165,233,0.1)',
           padding: '48px 40px',
         }}>
           
@@ -135,10 +135,10 @@ export default function LoginPage() {
             >
               <div style={{
                 width: '72px', height: '72px',
-                background: 'linear-gradient(135deg, #9b51e0 0%, #7c3aed 50%, #2d9cdb 100%)',
+                background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
                 borderRadius: '18px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 8px 32px rgba(155,81,224,0.35)',
+                boxShadow: '0 8px 32px rgba(14,165,233,0.3)',
                 transform: 'rotate(3deg)',
               }}>
                 <Shield style={{ width: '36px', height: '36px', color: '#fff', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }} />
@@ -148,13 +148,13 @@ export default function LoginPage() {
                 width: '22px', height: '22px',
                 backgroundColor: '#34d399',
                 borderRadius: '50%',
-                border: '3px solid #0f0920',
+                border: '3px solid #ffffff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Fingerprint style={{ width: '12px', height: '12px', color: '#0f0920' }} />
+                <Fingerprint style={{ width: '12px', height: '12px', color: '#ffffff' }} />
               </div>
             </motion.div>
-            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em', margin: 0 }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a', letterSpacing: '-0.02em', margin: 0 }}>
               Smart Attendance
             </h1>
             <p style={{ fontSize: '10px', fontWeight: 600, color: '#64748b', letterSpacing: '0.2em', textTransform: 'uppercase', marginTop: '6px' }}>
@@ -278,14 +278,14 @@ export default function LoginPage() {
               style={{
                 width: '100%',
                 padding: '14px',
-                background: 'linear-gradient(135deg, #9b51e0 0%, #7c3aed 50%, #6d28d9 100%)',
+                background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
                 color: '#fff',
                 fontWeight: 600,
                 fontSize: '14px',
                 border: 'none',
                 borderRadius: '14px',
                 cursor: isLoading ? 'not-allowed' : 'pointer',
-                boxShadow: '0 8px 24px rgba(155,81,224,0.3)',
+                boxShadow: '0 8px 24px rgba(14,165,233,0.3)',
                 transition: 'all 0.3s ease',
                 opacity: isLoading ? 0.6 : 1,
               }}
@@ -305,7 +305,7 @@ export default function LoginPage() {
           <div style={{
             marginTop: '32px',
             paddingTop: '24px',
-            borderTop: '1px solid rgba(255,255,255,0.05)',
+            borderTop: '1px solid rgba(0,0,0,0.05)',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
           }}>
             <div style={{
@@ -332,7 +332,7 @@ export default function LoginPage() {
           50% { opacity: 0.4; }
         }
         input::placeholder {
-          color: #334155 !important;
+          color: #94a3b8 !important;
         }
       `}</style>
     </div>
