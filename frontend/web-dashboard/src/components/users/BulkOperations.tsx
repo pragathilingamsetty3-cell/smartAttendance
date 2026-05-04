@@ -101,7 +101,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({ onOperationCompl
               <ArrowUp className="h-5 w-5 text-green-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">Bulk Student Promotion</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Bulk Student Promotion</h3>
               <p className="text-gray-400 text-sm">Promote multiple students to next semester/section</p>
             </div>
           </div>
@@ -117,7 +117,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({ onOperationCompl
               <textarea
                 value={selectedStudents.join(', ')}
                 onChange={(e) => setSelectedStudents(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
-                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 glass-input"
+                className="w-full px-4 py-3 glass-input text-slate-900 placeholder-slate-400"
                 rows={3}
                 placeholder="Enter student IDs separated by commas..."
               />
@@ -131,7 +131,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({ onOperationCompl
               <select
                 value={targetSection}
                 onChange={(e) => setTargetSection(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 glass-input"
+                className="w-full px-4 py-3 glass-input text-slate-900"
               >
                 <option value="">Select Target Section</option>
                 {sections.map(section => (
@@ -181,7 +181,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({ onOperationCompl
               <Upload className="h-5 w-5 text-blue-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">Import & Export</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Import & Export</h3>
               <p className="text-gray-400 text-sm">Bulk import users or export data</p>
             </div>
           </div>
@@ -191,10 +191,10 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({ onOperationCompl
           <div className="space-y-6">
             {/* Import Section */}
             <div>
-              <h4 className="text-white font-medium mb-4">Import Users</h4>
+              <h4 className="text-slate-900 font-medium mb-4">Import Users</h4>
               <div className="border-2 border-dashed border-gray-700 rounded-lg p-6 text-center hover:border-blue-500/50 transition-colors">
                 <Upload className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-                <h5 className="text-white font-medium mb-2">Upload Excel or CSV File</h5>
+                <h5 className="text-slate-900 font-medium mb-2">Upload Excel or CSV File</h5>
                 <p className="text-gray-400 text-sm mb-4">
                   Supported formats: .xlsx, .csv, .xls
                 </p>
@@ -217,7 +217,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({ onOperationCompl
 
             {/* Export Section */}
             <div>
-              <h4 className="text-white font-medium mb-4">Export Users</h4>
+              <h4 className="text-slate-900 font-medium mb-4">Export Users</h4>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -226,7 +226,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({ onOperationCompl
                   <select
                     value={exportRole}
                     onChange={(e) => setExportRole(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 glass-input"
+                    className="w-full px-4 py-3 glass-input text-slate-900"
                   >
                     <option value="">All Users</option>
                     <option value="STUDENT">Students</option>
@@ -259,7 +259,7 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({ onOperationCompl
               <AlertTriangle className="h-5 w-5 text-yellow-400" />
             </div>
             <div className="flex-1">
-              <h4 className="text-white font-medium mb-2">Important Notes</h4>
+              <h4 className="text-slate-900 font-medium mb-2">Important Notes</h4>
               <ul className="text-gray-400 text-sm space-y-2">
                 <li>• Bulk operations cannot be undone. Please review data before proceeding.</li>
                 <li>• Import files should follow the specified template format.</li>

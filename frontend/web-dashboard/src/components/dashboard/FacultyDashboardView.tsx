@@ -34,9 +34,9 @@ export const FacultyDashboardView: React.FC<FacultyDashboardViewProps> = ({ stat
     {
       title: 'Hall Pass Hub',
       desc: 'Approve or deny student exits',
-      icon: <Activity className="text-violet-400" size={20} />,
+      icon: <Activity className="text-sky-400" size={20} />,
       href: '/dashboard/faculty/hall-pass',
-      color: 'violet',
+      color: 'sky',
       count: stats?.pendingHallPasses || 0
     },
     {
@@ -77,11 +77,11 @@ export const FacultyDashboardView: React.FC<FacultyDashboardViewProps> = ({ stat
 
             <motion.div variants={itemVariants} className="glass-card p-6 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <Clock size={64} className="text-violet-500" />
+                <Clock size={64} className="text-sky-500" />
               </div>
               <p className="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Active Sessions</p>
               <p className="text-4xl font-bold text-slate-900 mb-4">{stats?.activeSessions || 0}</p>
-              <div className="flex items-center text-xs text-violet-400">
+              <div className="flex items-center text-xs text-sky-400">
                 <Link href="/attendance" className="hover:underline flex items-center gap-1">
                   Manage live feed <ArrowRight size={12} />
                 </Link>
@@ -89,7 +89,7 @@ export const FacultyDashboardView: React.FC<FacultyDashboardViewProps> = ({ stat
             </motion.div>
           </div>
 
-          <motion.div variants={itemVariants} className="glass-card p-8 bg-gradient-to-br from-violet-600/[0.05] to-transparent border-violet-500/20">
+          <motion.div variants={itemVariants} className="glass-card p-8 bg-gradient-to-br from-sky-600/[0.05] to-transparent border-sky-500/20">
             <div className="flex items-start justify-between mb-8">
               <div>
                 <h3 className="text-xl font-bold text-slate-900">
@@ -111,17 +111,17 @@ export const FacultyDashboardView: React.FC<FacultyDashboardViewProps> = ({ stat
                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Present</p>
                 <p className="text-2xl font-bold text-slate-900">{stats?.currentSession?.presentCount || 0}</p>
               </div>
-              <div className="text-center md:text-left border-l border-white/5 pl-6">
+              <div className="text-center md:text-left border-l border-slate-200/60 pl-6">
                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Total</p>
                 <p className="text-2xl font-bold text-slate-500">{stats?.currentSession?.totalStudents || 0}</p>
               </div>
-              <div className="text-center md:text-left border-l border-white/5 pl-6">
+              <div className="text-center md:text-left border-l border-slate-200/60 pl-6">
                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Anomalies</p>
                 <p className="text-2xl font-bold text-amber-500">{stats?.currentSession?.anomalies || 0}</p>
               </div>
-              <div className="text-center md:text-left border-l border-white/5 pl-6">
+              <div className="text-center md:text-left border-l border-slate-200/60 pl-6">
                 <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Out of Room</p>
-                <p className="text-2xl font-bold text-violet-400">{stats?.currentSession?.outOfRoom || 0}</p>
+                <p className="text-2xl font-bold text-sky-400">{stats?.currentSession?.outOfRoom || 0}</p>
               </div>
             </div>
           </motion.div>
@@ -141,7 +141,7 @@ export const FacultyDashboardView: React.FC<FacultyDashboardViewProps> = ({ stat
               <Link key={action.title} href={action.href}>
                 <motion.div
                   whileHover={{ x: 6 }}
-                  className="glass-card p-5 group flex items-center justify-between hover:border-violet-500/30 transition-all border-white/5"
+                  className="glass-card p-5 group flex items-center justify-between hover:border-sky-500/30 transition-all border-slate-200/60"
                 >
                   <div className="flex items-center gap-4">
                     <div className={`p-3 rounded-2xl bg-${action.color}-500/10 border border-${action.color}-500/20`}>
@@ -153,7 +153,7 @@ export const FacultyDashboardView: React.FC<FacultyDashboardViewProps> = ({ stat
                     </div>
                   </div>
                   {action.count !== undefined && action.count > 0 && (
-                    <div className="bg-violet-600 text-slate-900 text-[10px] font-black px-2 py-1 rounded-lg shadow-lg shadow-violet-600/30 animate-bounce">
+                    <div className="bg-sky-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg shadow-sky-600/30 animate-bounce">
                       {action.count}
                     </div>
                   )}

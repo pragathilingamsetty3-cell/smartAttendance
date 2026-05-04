@@ -93,22 +93,22 @@ export default function HallPassHub() {
   };
 
   return (
-    <div className="p-8 space-y-8 text-white">
+    <div className="p-8 space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
             <Activity className="text-violet-500" /> Hall Pass Hub
           </h1>
           <p className="text-slate-400 mt-1">Real-time student exit request management</p>
         </div>
         
-        <div className="flex bg-[#0F0F16] p-1 rounded-xl border border-white/5">
+        <div className="flex bg-white/50 backdrop-blur-xl p-1 rounded-xl border border-slate-200/60">
           <button
             onClick={() => setActiveTab('pending')}
             className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'pending' 
                 ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20' 
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             Pending ({pendingRequests.length})
@@ -118,7 +118,7 @@ export default function HallPassHub() {
             className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
               activeTab === 'history' 
                 ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20' 
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             History
@@ -145,9 +145,9 @@ export default function HallPassHub() {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {pendingRequests.length === 0 ? (
-              <div className="col-span-full py-20 text-center glass-card border-dashed border-white/10">
+              <div className="col-span-full py-20 text-center glass-card border-dashed border-slate-200/60">
                 <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500/50 mb-4" />
-                <h3 className="text-xl font-bold text-white">All Clear</h3>
+                <h3 className="text-xl font-bold text-slate-900">All Clear</h3>
                 <p className="text-slate-400">No pending hall pass requests at the moment.</p>
               </div>
             ) : (
@@ -163,7 +163,7 @@ export default function HallPassHub() {
                         <User size={20} />
                       </div>
                       <div>
-                        <h4 className="text-white font-bold">{req.studentName || 'Student'}</h4>
+                        <h4 className="text-slate-900 font-bold">{req.studentName || 'Student'}</h4>
                         <p className="text-[10px] text-slate-400 uppercase tracking-widest">{req.studentId.substring(0, 8) || 'REG-ID'}</p>
                       </div>
                     </div>
@@ -176,9 +176,9 @@ export default function HallPassHub() {
                   <div className="space-y-3 mb-6">
                     <div className="flex justify-between text-xs text-slate-400">
                       <span>Request Time</span>
-                      <span className="text-white">{new Date(req.requestedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="text-slate-900">{new Date(req.requestedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
-                    <div className="text-xs text-slate-400 bg-white/5 p-2 rounded-lg italic">
+                    <div className="text-xs text-slate-400 bg-slate-50/80 p-2 rounded-lg italic">
                       "Reason: {req.reason}"
                     </div>
                   </div>
@@ -218,7 +218,7 @@ export default function HallPassHub() {
              <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-white/5 border-b border-white/5 text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                    <tr className="bg-slate-50/80 border-b border-slate-200/60 text-[10px] uppercase tracking-[0.2em] text-slate-500">
                       <th className="px-6 py-4 font-bold">Student</th>
                       <th className="px-6 py-4 font-bold">Reason</th>
                       <th className="px-6 py-4 font-bold">Status</th>
@@ -226,17 +226,17 @@ export default function HallPassHub() {
                       <th className="px-6 py-4 font-bold">Processed At</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-slate-200/60">
                     {history.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="px-6 py-12 text-center text-slate-500 uppercase tracking-widest text-[10px]">No historical records found</td>
                       </tr>
                     ) : (
                       history.map((record) => (
-                        <tr key={record.requestId} className="hover:bg-white/[0.02] transition-colors">
+                        <tr key={record.requestId} className="hover:bg-slate-50/50 transition-colors">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold">
+                              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold">
                                 {record.studentName?.substring(0, 2).toUpperCase() || 'JD'}
                               </div>
                               <div>

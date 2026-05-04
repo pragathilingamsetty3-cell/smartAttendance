@@ -36,7 +36,7 @@ export const AnomalyChart: React.FC<AnomalyChartProps> = ({ data }) => {
   return (
     <Card glass className="border-[#ff007a]/20 bg-black/20">
       <CardHeader>
-        <h3 className="text-lg font-semibold text-white tracking-tight drop-shadow-md">
+        <h3 className="text-lg font-semibold text-slate-900 tracking-tight">
           Triple-Lock Anomalies Caught
         </h3>
         <p className="text-sm text-gray-400">

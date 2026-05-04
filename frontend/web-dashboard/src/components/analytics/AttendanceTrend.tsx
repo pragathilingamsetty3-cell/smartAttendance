@@ -22,7 +22,7 @@ const GlassTooltip = ({ active, payload, label }: { active?: boolean; payload?: 
     return (
       <div className="bg-gray-900/40 backdrop-blur-md border border-gray-700/50 p-3 rounded-lg shadow-[0_0_15px_rgba(155,81,224,0.3)]">
         <p className="text-gray-300 text-sm mb-1">{`Time: ${label}`}</p>
-        <p className="text-xl font-bold text-white drop-shadow-[0_0_8px_rgba(155,81,224,0.8)]">
+        <p className="text-xl font-bold text-slate-900">
           {`Velocity: ${(payload as Array<{value: number}>)[0].value}`}
         </p>
       </div>
@@ -35,7 +35,7 @@ export const AttendanceTrend: React.FC<AttendanceTrendProps> = ({ data }) => {
   return (
     <Card glass className="border-gray-800 bg-black/20">
       <CardHeader>
-        <h3 className="text-lg font-semibold text-white tracking-tight drop-shadow-md">
+        <h3 className="text-lg font-semibold text-slate-900 tracking-tight">
           Live Heartbeat Velocity
         </h3>
         <p className="text-sm text-gray-400">

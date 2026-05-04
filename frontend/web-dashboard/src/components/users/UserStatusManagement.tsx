@@ -130,7 +130,7 @@ export const UserStatusManagement: React.FC<UserStatusManagementProps> = ({
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <Card glass className="w-full max-w-md">
             <CardHeader>
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-slate-900">
                 Update User Status
               </h3>
               <p className="text-gray-400 text-sm">
@@ -159,7 +159,7 @@ export const UserStatusManagement: React.FC<UserStatusManagementProps> = ({
                   <select
                     value={newStatus}
                     onChange={(e) => setNewStatus(e.target.value as 'ACTIVE' | 'INACTIVE' | 'SUSPENDED')}
-                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 glass-input"
+                    className="w-full px-4 py-3 glass-input text-slate-900"
                   >
                     <option value="ACTIVE">Active</option>
                     <option value="INACTIVE">Inactive</option>
@@ -169,7 +169,7 @@ export const UserStatusManagement: React.FC<UserStatusManagementProps> = ({
 
                 {/* Status Description */}
                 <div className="p-3 bg-gray-800/30 rounded-lg border border-gray-700">
-                  <h4 className="text-white font-medium mb-2">Status Meanings:</h4>
+                  <h4 className="text-slate-900 font-medium mb-2">Status Meanings:</h4>
                   <ul className="text-gray-400 text-sm space-y-1">
                     <li>• <span className="text-green-400">Active:</span> User can access all features</li>
                     <li>• <span className="text-red-400">Inactive:</span> User cannot login or access system</li>
@@ -185,7 +185,7 @@ export const UserStatusManagement: React.FC<UserStatusManagementProps> = ({
                   <textarea
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 glass-input"
+                    className="w-full px-4 py-3 glass-input text-slate-900 placeholder-slate-400"
                     rows={3}
                     placeholder="Please provide a reason for this status change..."
                     required

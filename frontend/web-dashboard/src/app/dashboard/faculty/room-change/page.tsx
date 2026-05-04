@@ -105,7 +105,7 @@ export default function RoomChange() {
   return (
     <div className="p-8 space-y-8 max-w-5xl mx-auto">
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
           <RefreshCw className="text-emerald-500" /> Immediate Room Transition
         </h1>
         <p className="text-slate-400 mt-1 uppercase text-[10px] font-bold tracking-[0.2em]">Geo-Fencing Class Relocation System</p>
@@ -116,7 +116,7 @@ export default function RoomChange() {
         <Card glass className="p-8 border-white/10 space-y-8">
             <div className="space-y-6">
                 <div>
-                   <h3 className="text-sm font-bold text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                      <Users size={14} className="text-violet-500" /> 1. Select Section
                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -124,7 +124,7 @@ export default function RoomChange() {
                         <div className="space-y-1.5">
                           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Department</label>
                           <select 
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-violet-500/50 transition-all font-medium"
+                            className="w-full glass-input text-slate-900"
                             value={selectedDept}
                             onChange={(e) => setSelectedDept(e.target.value)}
                           >
@@ -136,7 +136,7 @@ export default function RoomChange() {
                        <div className={`space-y-1.5 ${isFaculty ? 'md:col-span-2' : ''}`}>
                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Target Section</label>
                          <select 
-                           className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-violet-500/50 transition-all font-medium"
+                           className="w-full glass-input text-slate-900"
                            value={selectedSection}
                            onChange={(e) => setSelectedSection(e.target.value)}
                            disabled={!selectedDept || sections.length === 0}
@@ -149,7 +149,7 @@ export default function RoomChange() {
                 </div>
 
                 <div>
-                   <h3 className="text-sm font-bold text-white uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                      <Building size={14} className="text-emerald-500" /> 2. Select New Room
                    </h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -207,9 +207,9 @@ export default function RoomChange() {
                 </div>
 
                 <div>
-                   <h3 className="text-sm font-bold text-white uppercase tracking-[0.2em] mb-4">3. Relocation Reason</h3>
+                   <h3 className="text-sm font-bold text-slate-900 uppercase tracking-[0.2em] mb-4">3. Relocation Reason</h3>
                    <textarea 
-                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500/50 transition-all h-24 resize-none"
+                     className="w-full glass-input text-slate-900 h-24 resize-none"
                      placeholder="Brief description for records..."
                      value={reason}
                      onChange={(e) => setReason(e.target.value)}
@@ -241,7 +241,7 @@ export default function RoomChange() {
                     <AlertTriangle size={28} />
                  </div>
                  <div>
-                    <h3 className="text-lg font-bold text-white">Transition Protocol</h3>
+                    <h3 className="text-lg font-bold text-slate-900">Transition Protocol</h3>
                     <p className="text-sm text-slate-400 mt-1">Triggering a transition will immediately notify all students and grant a **15-minute grace period** for physical relocation.</p>
                  </div>
                </div>
@@ -286,11 +286,11 @@ export default function RoomChange() {
                                 <div className="flex justify-between items-center bg-black/20 p-3 rounded-xl mt-4 border border-white/5">
                                    <div>
                                       <p className="text-[10px] font-bold opacity-60">NEW_ROOM_HEX</p>
-                                      <p className="font-mono text-white font-bold">{result.newRoomId?.slice(0,12)}...</p>
+                                      <p className="font-mono text-slate-900 font-bold">{result.newRoomId?.slice(0,12)}...</p>
                                    </div>
                                    <div className="text-right">
                                       <p className="text-[10px] font-bold opacity-60">GRACE_PERIOD</p>
-                                      <p className="font-mono text-white font-bold">{result.gracePeriodMinutes || 15} MINS</p>
+                                      <p className="font-mono text-slate-900 font-bold">{result.gracePeriodMinutes || 15} MINS</p>
                                    </div>
                                 </div>
                             </>

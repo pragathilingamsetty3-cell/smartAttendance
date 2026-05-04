@@ -22,7 +22,7 @@ function SettingsContent() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight flex items-center">
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center">
           <SettingsIcon className="h-8 w-8 mr-3 text-violet-500" />
           System Settings
         </h1>
@@ -41,7 +41,7 @@ function SettingsContent() {
                 <div className="p-3 bg-violet-600/10 rounded-xl text-violet-400">
                   <section.icon className="h-6 w-6" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">{section.title}</h3>
+                <h3 className="text-lg font-semibold text-slate-900">{section.title}</h3>
               </div>
               <p className="text-gray-400 text-sm leading-relaxed flex-1">
                 {section.description}
@@ -53,11 +53,11 @@ function SettingsContent() {
 
       {/* Account Actions */}
       <div className="pt-8 border-t border-[#ffffff0a]">
-        <h2 className="text-xl font-bold text-white mb-6">Account Actions</h2>
+        <h2 className="text-xl font-bold text-slate-900 mb-6">Account Actions</h2>
         <div className="flex flex-wrap gap-4">
           <button 
             onClick={() => logout()}
-            className="flex items-center px-6 py-3 bg-[#13131F] text-red-400 rounded-xl border border-red-500/20 hover:bg-red-500/10 transition-colors"
+            className="flex items-center px-6 py-3 bg-red-50 text-red-400 rounded-xl border border-red-500/20 hover:bg-red-500/10 transition-colors"
           >
             <LogOut className="h-5 w-5 mr-3" />
             Sign Out of System

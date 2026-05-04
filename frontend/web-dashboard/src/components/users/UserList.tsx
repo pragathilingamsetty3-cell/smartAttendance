@@ -142,7 +142,7 @@ export const UserList: React.FC<UserListProps> = ({ role, department, onEditUser
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold text-white flex items-center">
+              <h2 className="text-xl font-bold text-slate-900 flex items-center">
                 <Users className="h-5 w-5 mr-2" />
                 {role ? `${role.replace('_', ' ')}s` : 'All Users'}
               </h2>
@@ -209,7 +209,7 @@ export const UserList: React.FC<UserListProps> = ({ role, department, onEditUser
                   <select
                     value={filters.status}
                     onChange={(e) => handleFilter('status', e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full px-3 py-2 glass-input text-slate-900"
                   >
                     <option value="">All Status</option>
                     <option value="ACTIVE">Active</option>
@@ -225,7 +225,7 @@ export const UserList: React.FC<UserListProps> = ({ role, department, onEditUser
                   <select
                     value={filters.department}
                     onChange={(e) => handleFilter('department', e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full px-3 py-2 glass-input text-slate-900"
                   >
                     <option value="">All Departments</option>
                     <option value="cs">Computer Science</option>
@@ -288,13 +288,13 @@ export const UserList: React.FC<UserListProps> = ({ role, department, onEditUser
                         <div className="flex items-center">
                           <div className="h-10 w-10 flex-shrink-0">
                             <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-                              <span className="text-white font-medium">
+                              <span className="text-slate-900 font-medium">
                                 {user.name.charAt(0).toUpperCase()}
                               </span>
                             </div>
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-white">
+                            <div className="text-sm font-medium text-slate-900">
                               {user.name}
                             </div>
                             <div className="text-sm text-gray-400">
@@ -356,7 +356,7 @@ export const UserList: React.FC<UserListProps> = ({ role, department, onEditUser
               {users.length === 0 && !loading && (
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 text-gray-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-white mb-2">No users found</h3>
+                  <h3 className="text-lg font-medium text-slate-900 mb-2">No users found</h3>
                   <p className="text-gray-400">
                     {filters.search || filters.status || filters.department
                       ? 'Try adjusting your filters'

@@ -201,9 +201,9 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
     {
       title: 'Exit Request',
       desc: 'Digital Hall Pass request',
-      icon: <Activity className="text-violet-400" size={20} />,
+      icon: <Activity className="text-sky-400" size={20} />,
       href: '/dashboard/student/hall-pass/request',
-      color: 'violet'
+      color: 'sky'
     },
     {
       title: 'My Schedule',
@@ -224,9 +224,9 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
         {
           title: 'Biometric Setup',
           desc: 'Register fingerprint & device',
-          icon: <Shield className="text-violet-400" size={20} />,
+          icon: <Shield className="text-sky-400" size={20} />,
           href: '/setup',
-          color: 'violet'
+          color: 'sky'
         },
         ...quickActions
       ]
@@ -235,7 +235,7 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -285,7 +285,7 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
         </div>
         <div className="bg-white/50 border border-white/50 px-4 py-2 rounded-2xl backdrop-blur-xl">
           <p className="text-[10px] font-bold text-slate-500 uppercase mb-0.5 tracking-tighter">Reg Number</p>
-          <p className="text-sm font-mono text-violet-400 font-bold">{stats?.registrationNumber}</p>
+          <p className="text-sm font-mono text-sky-500 font-bold">{stats?.registrationNumber}</p>
         </div>
       </motion.div>
 
@@ -316,15 +316,15 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
             </motion.div>
 
             {/* Session Info Card */}
-            <motion.div variants={itemVariants} className="glass-card p-6 relative overflow-hidden group border-violet-500/10">
+            <motion.div variants={itemVariants} className="glass-card p-6 relative overflow-hidden group border-sky-500/10">
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity whitespace-nowrap overflow-hidden">
-                <Clock size={64} className="text-violet-500" />
+                <Clock size={64} className="text-sky-500" />
               </div>
               <p className="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Classes This Month</p>
               <p className="text-5xl font-black text-slate-900 tracking-tighter mb-4">
                 {stats?.attendedClasses || 0}<span className="text-slate-400 text-2xl font-light">/{stats?.totalClasses || 0}</span>
               </p>
-              <div className="flex items-center text-xs text-violet-400">
+              <div className="flex items-center text-xs text-sky-500">
                 <Link href="/attendance" className="hover:underline flex items-center gap-1 font-bold">
                   View full history <ArrowRight size={12} />
                 </Link>
@@ -333,10 +333,10 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
           </div>
 
           {/* Current Active Session */}
-          <motion.div variants={itemVariants} className={`glass-card p-8 bg-gradient-to-br from-violet-600/[0.05] to-transparent border-violet-500/20 ${!stats?.activeSession && 'opacity-60'}`}>
+          <motion.div variants={itemVariants} className={`glass-card p-8 bg-gradient-to-br from-sky-600/[0.05] to-transparent border-sky-500/20 ${!stats?.activeSession && 'opacity-60'}`}>
             <div className="flex items-start justify-between mb-8">
               <div className="flex gap-4">
-                <div className={`p-4 rounded-3xl ${stats?.activeSession ? 'bg-violet-600 shadow-xl shadow-violet-600/20 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                <div className={`p-4 rounded-3xl ${stats?.activeSession ? 'bg-sky-500 shadow-xl shadow-sky-500/20 text-white' : 'bg-slate-100 text-slate-400'}`}>
                     <BookOpen size={24} />
                 </div>
                 <div>
@@ -374,16 +374,16 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
                                 </div>
                             </div>
                             <Link href="/dashboard/student/hall-pass/request">
-                                <Button variant="glass" size="sm" className="rounded-xl border-violet-500/30 hover:bg-violet-500/10 text-violet-400 font-bold tracking-tight">
+                                <Button variant="glass" size="sm" className="rounded-xl border-sky-500/30 hover:bg-sky-500/10 text-sky-600 font-bold tracking-tight">
                                     Request Exit
                                 </Button>
                             </Link>
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-4 p-6 rounded-3xl bg-violet-500/5 border border-violet-500/20">
+                        <div className="flex flex-col gap-4 p-6 rounded-3xl bg-sky-500/5 border border-sky-500/20">
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
                                 <div className="flex gap-4 items-center">
-                                    <div className="p-3 bg-violet-500/20 rounded-2xl text-violet-400">
+                                    <div className="p-3 bg-sky-500/20 rounded-2xl text-sky-600">
                                         <Fingerprint size={24} />
                                     </div>
                                     <div>
@@ -392,7 +392,7 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
                                     </div>
                                 </div>
                                 <Button 
-                                    className="bg-violet-600 hover:bg-violet-500 text-white font-bold rounded-xl px-6"
+                                    className="bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl px-6"
                                     onClick={handleMarkAttendance}
                                     disabled={isMarking}
                                 >
@@ -434,22 +434,22 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
                 stats.todayClasses.map((cls, idx) => (
                   <div key={cls.id || idx} className="flex gap-4 group">
                     <div className="flex flex-col items-center">
-                        <div className={`w-3 h-3 rounded-full mt-1.5 border-2 ${stats?.activeSession?.id === cls.id ? 'bg-violet-500 border-violet-400 shadow-lg shadow-violet-500/40' : 'bg-transparent border-slate-300 group-hover:border-slate-400'}`} />
+                        <div className={`w-3 h-3 rounded-full mt-1.5 border-2 ${stats?.activeSession?.id === cls.id ? 'bg-sky-500 border-sky-400 shadow-lg shadow-sky-500/40' : 'bg-transparent border-slate-300 group-hover:border-slate-400'}`} />
                         {idx !== stats.todayClasses.length - 1 && <div className="w-0.5 grow bg-slate-200 my-1 group-hover:bg-slate-300 transition-colors" />}
                     </div>
-                    <div className={`grow glass-card p-4 flex items-center justify-between transition-all group-hover:bg-white/80 ${stats?.activeSession?.id === cls.id ? 'border-violet-500/30 bg-violet-50' : 'border-transparent'}`}>
+                    <div className={`grow glass-card p-4 flex items-center justify-between transition-all group-hover:bg-white/80 ${stats?.activeSession?.id === cls.id ? 'border-sky-500/30 bg-sky-50/50' : 'border-transparent'}`}>
                         <div className="flex gap-4">
                             <div className="min-w-[60px]">
                                 <p className="text-[10px] font-black text-slate-900 tracking-tighter">{cls.startTime}</p>
                                 <p className="text-[10px] text-slate-500 font-medium">{cls.endTime}</p>
                             </div>
                             <div>
-                                <p className={`text-sm font-bold tracking-tight ${stats?.activeSession?.id === cls.id ? 'text-violet-600' : 'text-slate-900'}`}>{cls.subject}</p>
+                                <p className={`text-sm font-bold tracking-tight ${stats?.activeSession?.id === cls.id ? 'text-sky-600' : 'text-slate-900'}`}>{cls.subject}</p>
                                 <p className="text-[10px] text-slate-500 uppercase tracking-widest">{cls.room?.name} • {cls.faculty?.name}</p>
                             </div>
                         </div>
                         {stats?.activeSession?.id === cls.id ? (
-                             <Activity size={16} className="text-violet-500 animate-pulse" />
+                             <Activity size={16} className="text-sky-500 animate-pulse" />
                         ) : (
                             <Clock size={16} className="text-slate-400 group-hover:text-slate-600" />
                         )}
@@ -470,12 +470,12 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
           {/* AI Verification Strength (NEW) */}
           <motion.div 
             variants={itemVariants}
-            className="p-6 rounded-[2rem] border border-violet-500/20 bg-violet-500/[0.03] overflow-hidden relative group"
+            className="p-6 rounded-[2rem] border border-sky-500/20 bg-sky-500/[0.03] overflow-hidden relative group"
           >
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                <Shield size={48} className="text-violet-500" />
+                <Shield size={48} className="text-sky-500" />
             </div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 text-violet-400">AI Verification Strength</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 text-sky-600">AI Verification Strength</p>
             
             <div className="flex items-center gap-4 mb-4">
                 <div className="relative w-16 h-16 flex items-center justify-center">
@@ -499,7 +499,7 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
                             strokeWidth="4"
                             strokeDasharray="175"
                             fill="transparent"
-                            className="text-violet-500"
+                            className="text-sky-500"
                         />
                     </svg>
                     <span className="absolute text-xs font-black text-slate-900">
@@ -525,7 +525,7 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
                  <Link key={action.title} href={action.href}>
                     <motion.div
                     whileHover={{ x: 6 }}
-                    className="glass-card p-5 group flex items-center justify-between hover:border-violet-500/30 transition-all border-white/5"
+                    className="glass-card p-5 group flex items-center justify-between hover:border-sky-500/30 transition-all border-slate-200/60"
                     >
                     <div className="flex items-center gap-4">
                         <div className={`p-3 rounded-2xl bg-${action.color}-500/10 border border-${action.color}-500/20 text-${action.color}-400 group-hover:scale-110 transition-transform`}>
@@ -579,8 +579,8 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
                 
                 {stats.recentHallPass.facultyNotes && (
                     <div className="mt-4 p-3 rounded-2xl bg-slate-50/80 border border-slate-200/60">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Faculty Note</p>
-                        <p className="text-[10px] text-slate-300 italic">"{stats.recentHallPass.facultyNotes}"</p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Faculty Note</p>
+                        <p className="text-[10px] text-slate-700 italic">"{stats.recentHallPass.facultyNotes}"</p>
                     </div>
                 )}
             </motion.div>
@@ -603,13 +603,13 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
           )}
 
           {/* System Notice */}
-          <Card glass className="p-6 border-violet-500/10 bg-violet-500/[0.01] rounded-[2rem]">
+          <Card glass className="p-6 border-sky-500/10 bg-sky-500/[0.01] rounded-[2rem]">
             <div className="flex gap-4">
-              <div className="p-3 bg-violet-600/10 rounded-2xl text-violet-500 shrink-0 h-fit">
+              <div className="p-3 bg-sky-500/10 rounded-2xl text-sky-600 shrink-0 h-fit">
                 <AlertCircle size={20} />
               </div>
               <div>
-                <p className="text-xs font-black text-violet-400 uppercase tracking-widest mb-1">Live Sync Active</p>
+                <p className="text-xs font-black text-sky-600 uppercase tracking-widest mb-1">Live Sync Active</p>
                 <p className="text-[10px] text-slate-500 leading-relaxed font-medium">Your mobile device is successfully paired with the classroom sensor network. Attendance is being tracked automatically.</p>
               </div>
             </div>

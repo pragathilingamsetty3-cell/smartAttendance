@@ -831,7 +831,7 @@ export const DepartmentSectionManagement: React.FC = () => {
           <div className="flex items-center justify-between">
             <button 
               onClick={() => setViewMode('grid')}
-              className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors group"
+              className="flex items-center space-x-2 text-gray-400 hover:text-slate-900 transition-colors group"
             >
               <div className="p-2 bg-white/5 rounded-xl group-hover:bg-white/10">
                 <ChevronRight size={18} className="rotate-180" />
