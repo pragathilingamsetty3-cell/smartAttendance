@@ -51,7 +51,7 @@ export const Select: React.FC<SelectProps> = ({
   return (
     <div className={cn("relative w-full group", className)}>
       {label && (
-        <label className="block text-sm font-medium text-gray-400 mb-2 group-focus-within:text-violet-400 transition-colors">
+        <label className="block text-sm font-medium text-slate-500 mb-2 group-focus-within:text-primary transition-colors">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
@@ -70,8 +70,8 @@ export const Select: React.FC<SelectProps> = ({
           <div className="relative">
             <Combobox.Input
               className={cn(
-                "relative w-full cursor-text rounded-xl bg-[#0F0F16] border border-white/10 py-3.5 pl-4 pr-12 text-left text-gray-100 transition-all duration-300 hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-[#7C3AED40] focus:border-[#7C3AED] placeholder:text-gray-500",
-                disabled && "opacity-60 cursor-not-allowed bg-[#07070C]"
+                "relative w-full cursor-text rounded-xl bg-slate-50 border border-slate-200 py-3.5 pl-4 pr-12 text-left text-slate-900 transition-all duration-300 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary placeholder:text-slate-400",
+                disabled && "opacity-60 cursor-not-allowed bg-slate-100"
               )}
               displayValue={() => (selectedOption?.label || (selectedOption as any)?.name || '')}
               onChange={(event) => setQuery(event.target.value)}
@@ -86,7 +86,7 @@ export const Select: React.FC<SelectProps> = ({
               autoComplete="off"
             />
             <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-4">
-              <ChevronDown className="h-5 w-5 text-gray-400 hover:text-gray-200 transition-colors" />
+              <ChevronDown className="h-5 w-5 text-slate-400 hover:text-slate-900 transition-colors" />
             </Combobox.Button>
           </div>
 
@@ -100,7 +100,7 @@ export const Select: React.FC<SelectProps> = ({
             enterFrom="opacity-0 -translate-y-2"
             enterTo="opacity-100 translate-y-0"
           >
-            <Combobox.Options className="absolute z-[100] mt-2 max-h-60 w-full overflow-auto rounded-xl bg-[#13131F] py-2 text-base shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/10 focus:outline-none sm:text-sm ring-1 ring-white/5 backdrop-blur-xl">
+            <Combobox.Options className="absolute z-[100] mt-2 max-h-60 w-full overflow-auto rounded-xl bg-white py-2 text-base shadow-xl shadow-sky-900/10 border border-slate-200 focus:outline-none sm:text-sm ring-1 ring-slate-100 backdrop-blur-xl">
               {filteredOptions.length === 0 && query !== '' ? (
                 creatable ? (
                   <Combobox.Option
@@ -108,11 +108,11 @@ export const Select: React.FC<SelectProps> = ({
                     className={({ active }) =>
                       cn(
                         "relative cursor-pointer select-none py-3 pl-11 pr-4 transition-all duration-200",
-                        active ? "bg-violet-500/20 text-white" : "text-gray-300"
+                        active ? "bg-primary/20 text-slate-900" : "text-slate-600"
                       )
                     }
                   >
-                    Select "<span className="text-violet-400 font-medium">{query}</span>"
+                    Select "<span className="text-primary font-medium">{query}</span>"
                   </Combobox.Option>
                 ) : (
                   <div className="relative cursor-default select-none py-4 px-4 text-gray-400 text-center italic">
@@ -130,12 +130,12 @@ export const Select: React.FC<SelectProps> = ({
                       value={query}
                       className={({ active }) =>
                         cn(
-                          "relative cursor-pointer select-none py-3 pl-11 pr-4 transition-all duration-200 border-b border-white/5",
-                          active ? "bg-violet-500/20 text-white" : "text-gray-300"
+                          "relative cursor-pointer select-none py-3 pl-11 pr-4 transition-all duration-200 border-b border-slate-100",
+                          active ? "bg-primary/20 text-slate-900" : "text-slate-600"
                         )
                       }
                     >
-                      Select "<span className="text-violet-400 font-medium">{query}</span>"
+                      Select "<span className="text-primary font-medium">{query}</span>"
                     </Combobox.Option>
                   )}
                   {filteredOptions.map((option) => (
@@ -144,26 +144,26 @@ export const Select: React.FC<SelectProps> = ({
                       className={({ active, selected }) =>
                         cn(
                           "relative cursor-pointer select-none py-3 pl-11 pr-4 transition-all duration-200 font-medium",
-                          active ? "bg-violet-500/20 text-white" : "text-gray-300",
-                          selected ? "bg-violet-500/10" : ""
+                          active ? "bg-primary/20 text-slate-900" : "text-slate-600",
+                          selected ? "bg-primary/10" : ""
                         )
                       }
                       value={option.value.toString()}
                     >
                       {({ selected, active }) => (
                         <>
-                          <span className={cn("block truncate transition-all", selected ? "font-semibold text-white" : "font-normal")}>
+                          <span className={cn("block truncate transition-all", selected ? "font-semibold text-slate-900" : "font-normal")}>
                             {option.label || (option as any).name}
                           </span>
                           {selected ? (
                             <span className={cn(
                               "absolute inset-y-0 left-0 flex items-center pl-3",
-                              active ? "text-white" : "text-violet-400"
+                              active ? "text-slate-900" : "text-primary"
                             )}>
                               <Check className="h-4 w-4" />
                             </span>
                           ) : active ? (
-                             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-violet-400 opacity-20">
+                             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-primary opacity-20">
                                <Search className="h-4 w-4" />
                              </span>
                           ) : null}

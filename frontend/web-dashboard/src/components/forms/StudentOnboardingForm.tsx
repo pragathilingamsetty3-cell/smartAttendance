@@ -139,12 +139,12 @@ export const StudentOnboardingForm: React.FC<StudentOnboardingFormProps> = ({
       <Card glass>
         <CardHeader>
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 bg-violet-500/15 rounded-xl border border-violet-500/20">
-              <User className="h-5 w-5 text-violet-400" />
+            <div className="p-2.5 bg-primary/10 rounded-xl border border-primary/20">
+              <User className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-white tracking-tight">Student Onboarding</h2>
-              <p className="text-gray-400 text-sm">Add a new student to the system</p>
+              <h2 className="text-xl font-semibold text-slate-900 tracking-tight">Student Onboarding</h2>
+              <p className="text-slate-500 text-sm">Add a new student to the system</p>
             </div>
           </div>
         </CardHeader>
@@ -153,8 +153,8 @@ export const StudentOnboardingForm: React.FC<StudentOnboardingFormProps> = ({
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Information */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white tracking-tight flex items-center">
-                <User className="h-4 w-4 mr-2 text-violet-400" />
+              <h3 className="text-lg font-semibold text-slate-900 tracking-tight flex items-center">
+                <User className="h-4 w-4 mr-2 text-primary" />
                 Basic Information
               </h3>
               
@@ -262,8 +262,8 @@ export const StudentOnboardingForm: React.FC<StudentOnboardingFormProps> = ({
 
             {/* Parent/Guardian Information */}
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-white flex items-center">
-                <Users className="h-4 w-4 mr-2 text-violet-400" />
+              <h3 className="text-lg font-semibold text-slate-900 flex items-center">
+                <Users className="h-4 w-4 mr-2 text-primary" />
                 Parent/Guardian Information
               </h3>
               
@@ -306,7 +306,7 @@ export const StudentOnboardingForm: React.FC<StudentOnboardingFormProps> = ({
             </div>
 
             {/* Form Actions */}
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-800/50">
+            <div className="flex justify-end space-x-4 pt-6 border-t border-slate-200">
               <Button
                 type="button"
                 variant="glass"

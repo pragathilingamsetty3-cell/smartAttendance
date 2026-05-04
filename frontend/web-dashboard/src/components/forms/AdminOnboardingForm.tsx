@@ -98,12 +98,12 @@ export const AdminOnboardingForm: React.FC<AdminOnboardingFormProps> = ({
       <Card glass>
         <CardHeader>
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 bg-violet-500/15 rounded-xl border border-violet-500/20">
-              <Shield className="h-5 w-5 text-violet-400" />
+            <div className="p-2.5 bg-primary/10 rounded-xl border border-primary/20">
+              <Shield className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-white tracking-tight">Admin Onboarding</h2>
-              <p className="text-gray-400 text-sm">Add a new administrator to the system</p>
+              <h2 className="text-xl font-semibold text-slate-900 tracking-tight">Admin Onboarding</h2>
+              <p className="text-slate-500 text-sm">Add a new administrator to the system</p>
             </div>
           </div>
         </CardHeader>
@@ -182,28 +182,28 @@ export const AdminOnboardingForm: React.FC<AdminOnboardingFormProps> = ({
             </div>
 
             {/* Admin Level Description */}
-            <div className="p-4 bg-[#05050A] rounded-xl border border-gray-800">
-              <h4 className="text-sm font-semibold text-gray-200 mb-3">Admin Level Permissions:</h4>
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <h4 className="text-sm font-semibold text-slate-900 mb-3">Admin Level Permissions:</h4>
               <div className="space-y-3 text-sm">
                 <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-violet-500 rounded-full mt-1.5"></div>
+                  <div className="w-2 h-2 bg-primary rounded-full mt-1.5"></div>
                   <div>
-                    <p className="text-gray-200 font-medium">Administrator:</p>
-                    <p className="text-gray-500 text-xs">Can manage users, rooms, attendance, and view analytics</p>
+                    <p className="text-slate-900 font-medium">Administrator:</p>
+                    <p className="text-slate-500 text-xs">Can manage users, rooms, attendance, and view analytics</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
                   <div className="w-2 h-2 bg-red-500 rounded-full mt-1.5"></div>
                   <div>
-                    <p className="text-gray-200 font-medium">Super Administrator:</p>
-                    <p className="text-gray-500 text-xs">Full system access including AI configuration and system settings</p>
+                    <p className="text-slate-900 font-medium">Super Administrator:</p>
+                    <p className="text-slate-500 text-xs">Full system access including AI configuration and system settings</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Form Actions */}
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-800/50">
+            <div className="flex justify-end space-x-4 pt-6 border-t border-slate-200">
               <Button
                 type="button"
                 variant="glass"
