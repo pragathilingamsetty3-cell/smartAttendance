@@ -21,10 +21,10 @@ function DepartmentsContent() {
   if (!hasRole(['ADMIN', 'SUPER_ADMIN'])) {
 
     return (
-      <div className="text-center py-12">
-        <Building className="h-16 w-16 text-gray-500 mx-auto mb-4" />
-        <h2 className="text-xl font-semibold text-white mb-2">Access Denied</h2>
-        <p className="text-gray-400">
+      <div className="text-center py-12 bg-white rounded-3xl border border-slate-200 shadow-xl shadow-sky-900/5 max-w-lg mx-auto">
+        <Building className="h-16 w-16 text-slate-200 mx-auto mb-4" />
+        <h2 className="text-xl font-semibold text-slate-900 mb-2">Access Denied</h2>
+        <p className="text-slate-500">
           You don't have permission to access department management.
         </p>
       </div>
@@ -36,11 +36,11 @@ function DepartmentsContent() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold gradient-text flex items-center">
-            <Building className="h-6 w-6 mr-3" />
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center">
+            <Building className="h-6 w-6 mr-3 text-primary" />
             Department & Section Management
           </h1>
-          <p className="text-gray-400">
+          <p className="text-slate-500">
             Manage academic departments and sections
           </p>
         </div>
