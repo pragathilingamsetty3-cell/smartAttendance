@@ -320,15 +320,10 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
               <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity whitespace-nowrap overflow-hidden">
                 <Clock size={64} className="text-sky-500" />
               </div>
-              <p className="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Classes This Month</p>
+              <p className="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Classes This Week</p>
               <p className="text-5xl font-black text-slate-900 tracking-tighter mb-4">
-                {stats?.attendedClasses || 0}<span className="text-slate-400 text-2xl font-light">/{stats?.totalClasses || 0}</span>
+                {stats?.attendedClassesThisWeek || 0}<span className="text-slate-400 text-2xl font-light">/{stats?.totalClassesThisWeek || 0}</span>
               </p>
-              <div className="flex items-center text-xs text-sky-500">
-                <Link href="/attendance" className="hover:underline flex items-center gap-1 font-bold">
-                  View full history <ArrowRight size={12} />
-                </Link>
-              </div>
             </motion.div>
           </div>
 

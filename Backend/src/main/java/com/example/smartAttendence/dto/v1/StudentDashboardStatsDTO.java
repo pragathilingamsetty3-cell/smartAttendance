@@ -20,6 +20,9 @@ public class StudentDashboardStatsDTO {
     private double overallAttendance;
     private int attendedClasses;
     private int totalClasses;
+
+    private int attendedClassesThisWeek;
+    private int totalClassesThisWeek;
     
     // Day-wise attendance trend (e.g., "2024-04-01" -> 100.0)
     private Map<String, Double> attendanceTrend;

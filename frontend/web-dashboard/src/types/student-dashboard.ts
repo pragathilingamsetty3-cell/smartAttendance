@@ -32,6 +32,8 @@ export interface StudentDashboardStatsDTO {
   overallAttendance: number;
   attendedClasses: number;
   totalClasses: number;
+  attendedClassesThisWeek: number;
+  totalClassesThisWeek: number;
   attendanceTrend: Record<string, number>;
   todayClasses: TimetableResponseDTO[];
   activeSession?: TimetableResponseDTO;

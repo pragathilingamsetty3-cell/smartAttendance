@@ -79,6 +79,24 @@ public class StudentV1Service {
             totalSessionsForSection = allRecordsRaw.stream().filter(r -> r.getSession() != null && !r.getSession().isActive()).count();
             totalSessionsThisMonth = allRecordsRaw.stream().filter(r -> r.getRecordedAt().isAfter(startOfMonth) && r.getSession() != null && !r.getSession().isActive()).count();
         }
+
+        // 🚀 WEEKLY METRICS: Start from Monday of the current week (IST)
+        java.time.ZonedDateTime startOfWeekDT = now.with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY)).truncatedTo(java.time.temporal.ChronoUnit.DAYS);
+        java.time.Instant startOfWeek = startOfWeekDT.toInstant();
+
+        long attendedThisWeek = allRecordsRaw.stream()
+                .filter(r -> r.getRecordedAt().isAfter(startOfWeek))
+                .filter(r -> "PRESENT".equals(r.getStatus()) || "LATE".equals(r.getStatus()))
+                .count();
+
+        long totalSessionsThisWeek = 0;
+        if (sectionId != null) {
+            totalSessionsThisWeek = classroomSessionRepository.countBySectionIdAndActiveFalseAndStartTimeAfter(sectionId, startOfWeek);
+        } else {
+            totalSessionsThisWeek = allRecordsRaw.stream()
+                    .filter(r -> r.getRecordedAt().isAfter(startOfWeek) && r.getSession() != null && !r.getSession().isActive())
+                    .count();
+        }
         
         double overallAttendance = totalSessionsForSection == 0 ? 0.0 : (double) attendedAllTime * 100.0 / totalSessionsForSection;
         
@@ -233,6 +251,8 @@ public class StudentV1Service {
                 .overallAttendance(Math.round(overallAttendance * 10.0) / 10.0)
                 .attendedClasses((int) attendedAllTime)
                 .totalClasses((int) totalSessionsForSection)
+                .attendedClassesThisWeek((int) attendedThisWeek)
+                .totalClassesThisWeek((int) totalSessionsThisWeek)
                 .attendanceTrend(attendanceTrend)
                 .todayClasses(todayClasses)
                 .activeSession(activeSession)
