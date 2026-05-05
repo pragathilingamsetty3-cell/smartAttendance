@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Activity,
@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/Button';
 import { StudentDashboardStatsDTO, EnhancedUserDTO } from '@/types';
 import { attendanceService } from '@/services/attendance.service';
 import { verifyBiometric, isBiometricSupported } from '@/lib/biometrics';
+import { useDynamicHeartbeat } from '@/hooks/useDynamicHeartbeat';
 
 interface StudentDashboardViewProps {
   stats: StudentDashboardStatsDTO | null;
@@ -33,6 +34,25 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
   const [isMarking, setIsMarking] = useState(false);
   const [markError, setMarkError] = useState<string | null>(null);
   const [markSuccess, setMarkSuccess] = useState<string | null>(null);
+
+  // 🛰️ CONTINUOUS HEARTBEAT: Feeds walk-out detection pipeline
+  const deviceFingerprint = typeof window !== 'undefined' ? (localStorage.getItem('sa_fingerprint') || 'UNKNOWN') : 'UNKNOWN';
+  const { startTracking, stopTracking } = useDynamicHeartbeat({
+    studentId: user?.id || '',
+    sessionId: stats?.activeSession?.id || '',
+    deviceFingerprint,
+  });
+
+  // Auto-start/stop continuous heartbeat based on session & attendance state
+  useEffect(() => {
+    if (stats?.activeSession && stats?.attendanceMarked && user?.id) {
+      console.log('🛰️ [HEARTBEAT] Starting continuous walk-out monitoring');
+      startTracking();
+    } else {
+      stopTracking();
+    }
+    return () => stopTracking();
+  }, [stats?.activeSession?.id, stats?.attendanceMarked, user?.id]);
 
   // 🛠️ MOBILE DEBUG CONSOLE (Eruda)
   useEffect(() => {
