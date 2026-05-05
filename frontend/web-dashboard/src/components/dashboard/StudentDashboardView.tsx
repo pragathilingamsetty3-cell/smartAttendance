@@ -133,6 +133,14 @@ export const StudentDashboardView: React.FC<StudentDashboardViewProps> = ({ stat
       });
       console.log('🔵 [MARK-ATTENDANCE] Step 3 ✓ Location:', position.coords.latitude, position.coords.longitude, '| Accuracy:', position.coords.accuracy, 'm');
 
+      // Validate location
+      if (position.coords.latitude === 0 && position.coords.longitude === 0) {
+        throw new Error('Location not available. Please ensure GPS is enabled.');
+      }
+      if (position.coords.accuracy > 100) {
+        throw new Error('GPS accuracy too low. Please move to an open area.');
+      }
+
       // Step 4: Build payload with biometric + device fingerprint
       const deviceFingerprint = localStorage.getItem('sa_fingerprint') || 'UNKNOWN';
       console.log('🔵 [MARK-ATTENDANCE] Step 4: Device fingerprint:', deviceFingerprint.substring(0, 12) + '...');

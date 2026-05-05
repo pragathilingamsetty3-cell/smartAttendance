@@ -204,6 +204,13 @@ public class AttendanceV1Service {
         
         // 🌐 GPS ACCURACY-AWARE GEOFENCE CHECK
         // Indoor GPS often has 30-50m accuracy. We buffer the polygon to account for this.
+        
+        // Reject if location is (0,0) — indicates GPS failure
+        if (ping.latitude() == 0.0 && ping.longitude() == 0.0) {
+            logger.warn("🔴 [PROCESS-HB] Student {} sent invalid location (0,0). Rejecting.", studentId);
+            return "Unable to determine your location. Please ensure GPS is enabled and try again.";
+        }
+        
         Point point = GEOMETRY_FACTORY.createPoint(new Coordinate(ping.longitude(), ping.latitude()));
         point.setSRID(SRID_WGS84);
         
@@ -502,13 +509,11 @@ public class AttendanceV1Service {
     private String driftKey(UUID sessionId, UUID studentId) { return sessionId + ":" + studentId; }
 
     boolean verifyHardwareSignature(User student, String signature) {
-        // 🌐 WEB DASHBOARD FIX: Web browsers send "UNKNOWN" as fingerprint
-        // since they don't have access to device hardware IDs.
-        // Allow these through so web-based attendance marking works.
+        // Require valid device signature for all platforms
         if (signature == null) return false;
         if ("UNKNOWN".equalsIgnoreCase(signature)) {
-            logger.info("🌐 [HARDWARE] Web dashboard detected (fingerprint='UNKNOWN'). Allowing through.");
-            return true;
+            logger.warn("🔴 [HARDWARE] Web dashboard sent 'UNKNOWN' fingerprint. Rejecting — device enrollment required.");
+            return false;
         }
         if (student.getDeviceId() == null) {
             student.setDeviceId(signature);

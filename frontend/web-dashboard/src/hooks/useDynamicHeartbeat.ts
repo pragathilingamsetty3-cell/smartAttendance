@@ -97,6 +97,12 @@ export const useDynamicHeartbeat = ({ studentId, sessionId, deviceFingerprint }:
       const motion = motionRef.current;
       const location = locationRef.current;
 
+      // Skip heartbeat if location is not available
+      if (location.latitude === 0 && location.longitude === 0) {
+        console.warn('Location not available, skipping heartbeat');
+        return;
+      }
+
       const payload: EnhancedHeartbeatPing = {
         studentId,
         sessionId,
