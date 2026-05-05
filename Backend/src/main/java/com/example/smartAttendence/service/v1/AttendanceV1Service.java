@@ -231,12 +231,19 @@ public class AttendanceV1Service {
         }
 
         if (!inside) {
-            // 🧠 ELITE ACCURACY: Hysteresis (Anti-Jitter)
+            // 🚀 STRICT GEOFENCE: On INITIAL attendance marking, reject immediately.
+            // Hysteresis (anti-jitter) only applies to subsequent continuous heartbeats.
+            if (isInitial) {
+                logger.warn("🔴 [PROCESS-HB] Student {} OUTSIDE geofence on INITIAL mark. Rejecting immediately.", studentId);
+                return "You are outside the classroom boundary. Move inside the classroom and try again.";
+            }
+
+            // 🧠 ELITE ACCURACY: Hysteresis (Anti-Jitter) — only for continuous monitoring
             int currentFailures = hysteresisCache.asMap().getOrDefault(studentId, 0) + 1;
             hysteresisCache.put(studentId, currentFailures);
             
             if (currentFailures >= 3) {
-                // 🚀 NEW: Check if room transition is in progress for this student's section
+                // Check if room transition is in progress for this student's section
                 if (spatialEngine.isRoomTransitionInProgress(student.getSectionId())) {
                     logger.info("🟡 [PROCESS-HB] Student {} outside geofence but room transition is active. Holding status.", studentId);
                     return null;
