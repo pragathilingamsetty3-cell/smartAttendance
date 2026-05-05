@@ -19,8 +19,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Loading } from '@/components/ui/Loading';
 import { DropdownDTO } from '@/types/user-management';
+import { useAuth } from '@/stores/authContext';
 
 export default function CRLRAssignments() {
+  const { user } = useAuth();
   const [departments, setDepartments] = useState<DropdownDTO[]>([]);
   const [sections, setSections] = useState<DropdownDTO[]>([]);
   const [selectedDept, setSelectedDept] = useState<string>('');
@@ -36,12 +38,20 @@ export default function CRLRAssignments() {
       try {
         const depts = await userManagementService.getDepartments();
         setDepartments(depts);
+        
+        // Auto-select and lock department for FACULTY
+        if (user && user.role === 'FACULTY' && user.department) {
+          const matchingDept = depts.find(d => d.label === user.department || d.id === user.department);
+          if (matchingDept) {
+            setSelectedDept(matchingDept.id);
+          }
+        }
       } catch (err) {
         console.error('Failed to load departments');
       }
     };
     init();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (selectedDept) {
@@ -126,9 +136,10 @@ export default function CRLRAssignments() {
               <div>
                 <label className="text-[10px] font-bold text-slate-500 uppercase mb-1.5 block">Department</label>
                 <select 
-                  className="w-full bg-slate-50 border border-slate-200/60 rounded-lg px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-500/50"
+                  className="w-full bg-slate-50 border border-slate-200/60 rounded-lg px-3 py-2 text-sm text-slate-900 outline-none focus:border-sky-500/50 disabled:opacity-60 disabled:cursor-not-allowed"
                   value={selectedDept}
                   onChange={(e) => setSelectedDept(e.target.value)}
+                  disabled={user?.role === 'FACULTY'}
                 >
                   <option value="" className="bg-slate-50">Select Department</option>
                   {departments.map(d => <option key={d.id} value={d.id} className="bg-slate-50">{d.label}</option>)}
