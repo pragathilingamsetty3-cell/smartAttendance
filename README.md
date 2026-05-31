@@ -15,12 +15,10 @@ A robust, AI-driven attendance management platform designed to prevent proxy att
 * **Real-time Sync:** Instant synchronization between the mobile/web interface and the central database.
 * **Role-Based Access:** Dedicated portals for students, mentors, and administrators.
 
-## 🔗 Live Demo
-[🔗 View Live Demo](https://smartattendance-b44.pages.dev)
-*Note: This demo is hosted on a free-tier service and may experience downtime. If the link is unavailable, please see the screenshots below.*
 
-## 📸 System Dashboard
-*(Drag and drop your screenshots here)*
+## 📸 Working
+
+https://github.com/user-attachments/assets/21095cc3-d26d-4c4e-9ed2-2f878004f9b6
 
 ## 🛠️ How to Run Locally
 1. **Clone the repo:** `git clone https://github.com/manikantapathakoti08-eng/smartAttendance.git`
