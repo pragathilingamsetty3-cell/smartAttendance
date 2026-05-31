@@ -24,4 +24,4 @@ https://github.com/user-attachments/assets/21095cc3-d26d-4c4e-9ed2-2f878004f9b6
 ## 🛠️ How to Run Locally
 1. **Clone the repo:** `git clone https://github.com/manikantapathakoti08-eng/smartAttendance.git`
 2. **Backend:** Navigate to the backend folder and run `mvn spring-boot:run`.
-3. **Frontend:** Navigate to the frontend folder, run `npm install`, then `npm start`.
+3. **Frontend:** Navigate to the frontend folder, run `npm install`, then `npm start`. 
